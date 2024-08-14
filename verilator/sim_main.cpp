@@ -1,5 +1,5 @@
 #include <verilated.h>
-#include "Vmsx1__Syms.h"
+#include "Vemu__Syms.h"
 
 #include "imgui.h"
 #include "implot.h"
@@ -46,13 +46,65 @@ const char* windowTitle_Control = "Simulation control";
 const char* windowTitle_DebugLog = "Debug log";
 const char* windowTitle_Video = "VGA output";
 const char* windowTitle_Trace = "Trace/VCD control";
+const char* windowTitle_HPS = "HPS control";
 const char* windowTitle_Audio = "Audio output";
+
 bool showDebugLog = true;
 DebugConsole console;
 MemoryEditor mem_edit;
 
+struct FileDialogData
+{
+	uint8_t ioctl_id;
+	bool reset;
+	uint32_t addr;
+	SimDDR* mem;
+};
+
+FileDialogData fileData;
+
 // HPS emulator
 // ------------
+VL_OUTW(status, 127, 0, 4);
+
+const char* slotA1[] = { "ROM","SCC","SCC +","FM - PAC","MegaFlashROM SCC + SD","GameMaster2","FDC","Empty"};
+const char* slotA2[] = { "ROM","SCC","SCC +","FM - PAC","MegaFlashROM SCC + SD","GameMaster2","Empty" };
+const char* slotB[] = { "ROM","SCC","SCC +","FM - PAC","Empty" };
+const char* mapperA[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
+const char* mapperB[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
+const char* sramA[] = { "auto","1kB","2kB","4kB","8kB","16kB","32kB","none" };
+int currentSlotA = 0;
+int currentSlotB = 0;
+int currentMapperA = 0;
+int currentMapperB = 0;
+int currentSramA = 0;
+
+
+
+
+//[0]     RESET					0
+//[2:1]   Aspect ratio			00
+//[4:3]   Scanlines             00
+//[6:5]   Scale                 00  
+//[7]     Vertical crop         0 
+//[8]     Tape input            0
+//[9]     Tape rewind           0
+//[10]    Reset & Detach        0
+//[11]    MSX type              0
+//[12]    MSX1 VideoMode        0 
+//[14:13] MSX2 VideoMode        00
+//[16:15] MSX2 RAM Size         00
+//[19:17] SLOT A CART TYPE      000  currentSlotA & 0x7
+//[23:20] ROM A TYPE MAPPER     0000 currentMapperA & 0xF
+//[25:24] RESERVA               00 
+//[28:26] SRAM SIZE             000  currentSramA  & 0x7
+//[31:29] SLOT B CART TYPE      000  currentSlotB & 0x7
+//[34:32] ROM B TYPE MAPPER     000  currentMapperB & 0x7 
+//[37:35] RESERVA               000 
+//[38]    BORDER                0
+
+
+
 SimBus bus(console);
 
 // Video
@@ -67,7 +119,7 @@ float vga_scale = 2.5;
 
 // Memory
 
-#define systemRAM top->msx1->systemRAM
+#define systemRAM top->emu->systemRAM
 
 SimSDRAM SDram(console);
 SimDDR DDR(console);
@@ -75,7 +127,7 @@ SimMemory Rams(console);
 
 // Verilog module
 // --------------
-Vmsx1* top = NULL;
+Vemu* top = NULL;
 
 vluint64_t main_time = 0;	// Current simulation time.
 double sc_time_stamp() {	// Called by $time in Verilog.
@@ -97,6 +149,22 @@ char Trace_Deep_tmp[3] = "99";
 char Trace_File_tmp[30] = "sim.vcd";
 int  iTrace_Deep_tmp = 99;
 char SaveModel_File_tmp[20] = "test", SaveModel_File[20] = "test";
+
+
+
+void ChangeStatus(void) {
+	status[1] = 0;
+	status[0] = 0;
+	status[0] |= static_cast<uint64_t>(currentSlotA & 0x7) << 17;
+	status[0] |= static_cast<uint64_t>(currentMapperA & 0xF) << 20;
+	status[0] |= static_cast<uint64_t>(currentSramA & 0x7) << 26;
+	status[0] |= static_cast<uint64_t>(currentSlotB & 0x7) << 29;
+	status[0] |= static_cast<uint64_t>(currentMapperB & 0x7) << 32;
+	console.AddLog("New Status %X", status);
+}
+
+
+
 
 //Trace Save/Restore
 void save_model(const char* filenamep) {
@@ -120,7 +188,7 @@ void restore_model(const char* filenamep) {
 // Reset simulation variables and clocks
 void resetSim() {
 	main_time = 0;
-	top->reset = 1;
+	top->RESET = 1;
 	clk_sys.Reset();
 }
 
@@ -129,17 +197,18 @@ int verilate() {
 
 		// Assert reset during startup
 		if (main_time < initialReset) { 
-			top->reset = 1; 
+			top->RESET = 1;
 		}
 		// Deassert reset after startup
-		if (main_time == initialReset) { top->reset = 0; }
+		if (main_time == initialReset) { top->RESET = 0; }
 
 		// Clock dividers
 		clk_sys.Tick();
 
 
 		// Set clocks in core
-		top->clk21m = clk_sys.clk;
+		top->emu->pll->outclk_1 = clk_sys.clk;
+		top->emu->hps_io->status = status;
 
 		// Simulate both edges of fastest clock
 		if (clk_sys.clk != clk_sys.old) {
@@ -198,7 +267,7 @@ int verilate() {
 int main(int argc, char** argv, char** env) {
 
 	// Create core and initialise
-	top = new Vmsx1();
+	top = new Vemu();
 
 	Verilated::commandArgs(argc, argv);
 
@@ -225,28 +294,43 @@ int main(int argc, char** argv, char** env) {
 		&systemRAM->wren_b,
 		1 << systemRAM->addr_width);
 
-	DDR.addr = &top->msx1->buffer->addr;
-	DDR.dout = &top->msx1->buffer->dout;
-	DDR.rd = &top->msx1->buffer->rd;
-	DDR.ready = &top->msx1->buffer->ready;
+	DDR.addr = &top->emu->buffer->addr;
+	DDR.dout = &top->emu->buffer->dout;
+	DDR.rd = &top->emu->buffer->rd;
+	DDR.ready = &top->emu->buffer->ready;
 
+	SDram.channels_rtl[0].ch_addr = &top->emu->sdram->ch1_addr;
+	SDram.channels_rtl[0].ch_din = &top->emu->sdram->ch1_din;
+	SDram.channels_rtl[0].ch_dout = &top->emu->sdram->ch1_dout;
+	SDram.channels_rtl[0].ch_req = &top->emu->sdram->ch1_req;
+	SDram.channels_rtl[0].ch_rnw = &top->emu->sdram->ch1_rnw;
+	SDram.channels_rtl[0].ch_ready = &top->emu->sdram->ch1_ready;
+	
+	SDram.channels_rtl[1].ch_addr = &top->emu->sdram->ch2_addr;
+	SDram.channels_rtl[1].ch_din = &top->emu->sdram->ch2_din;
+	SDram.channels_rtl[1].ch_dout = &top->emu->sdram->ch2_dout;
+	SDram.channels_rtl[1].ch_req = &top->emu->sdram->ch2_req;
+	SDram.channels_rtl[1].ch_rnw = &top->emu->sdram->ch2_rnw;
+	SDram.channels_rtl[1].ch_ready = &top->emu->sdram->ch2_ready;
 
-	SDram.q = &top->sdram_dout;
-	SDram.data = &top->sdram_din;
-	SDram.addr = &top->sdram_addr;
-	SDram.rd = &top->sdram_rd;
-	SDram.we = &top->sdram_we;
-	SDram.ready = &top->sdram_ready;
-	SDram.size = &top->sdram_size;
+	SDram.channels_rtl[2].ch_addr = &top->emu->sdram->ch3_addr;
+	SDram.channels_rtl[2].ch_din = &top->emu->sdram->ch3_din;
+	SDram.channels_rtl[2].ch_dout = &top->emu->sdram->ch3_dout;
+	SDram.channels_rtl[2].ch_req = &top->emu->sdram->ch3_req;
+	SDram.channels_rtl[2].ch_rnw = &top->emu->sdram->ch3_rnw;
+	SDram.channels_rtl[2].ch_ready = &top->emu->sdram->ch3_ready;
+	SDram.channels_rtl[2].ch_done = &top->emu->sdram->ch3_done;
 	SDram.Initialise(0x1000000);
 
 	DDR.Initialise(256*1024*1024); //256Mb
-	bus.ioctl_addr = &top->ioctl_addr;
-	bus.ioctl_index = &top->ioctl_index;
-	bus.ioctl_wait = &top->ioctl_wait;
-	bus.ioctl_download = &top->ioctl_download;
-	bus.ioctl_wr = &top->ioctl_wr;
-	bus.ioctl_dout = &top->ioctl_dout;
+	
+	bus.ioctl_addr = &top->emu->hps_io->ioctl_addr;
+	bus.ioctl_index = &top->emu->hps_io->ioctl_index;
+	bus.ioctl_wait = &top->emu->hps_io->ioctl_wait;
+	bus.ioctl_download = &top->emu->hps_io->ioctl_download;
+	bus.ioctl_wr = &top->emu->hps_io->ioctl_wr;
+	bus.ioctl_dout = &top->emu->hps_io->ioctl_dout;
+	top->emu->hps_io->sdram_sz = SDram.getHPSsize();
 
 	// Setup video output
 	if (video.Initialise(windowTitle) == 1) { return 1; }
@@ -260,9 +344,9 @@ int main(int argc, char** argv, char** env) {
 	//31700000 CAS 
 	//40000000 Maximum					
 
-	bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
-	bus.QueueDownload("./rom/output_data.bin", 6, true, 0x31600000, &DDR);
-	bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
+	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
+	bus.QueueDownload("./rom/Mappers/output_data.bin", 6, true, 0x31600000, &DDR);
+	bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, false);
@@ -340,6 +424,87 @@ int main(int argc, char** argv, char** env) {
 		mem_edit.DrawContents(RAM.mem, RAM.mem_size, 0);
 		ImGui::End();
 */
+		
+		//HPS emulace
+		ImGui::Begin(windowTitle_HPS);
+		ImGui::SetWindowPos(windowTitle_Trace, ImVec2(0, 870), ImGuiCond_Once);
+		ImGui::SetWindowSize(windowTitle_Trace, ImVec2(500, 150), ImGuiCond_Once);
+		
+		
+
+		if (ImGui::Button("Load ROM PACK")) {
+			fileData.addr = 0x30000000;
+			fileData.ioctl_id = 1;
+			fileData.mem = &DDR;
+			fileData.reset = true;
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "ROM PACK LOAD", ".msx", "./rom/ROMpack/", 1, &fileData);
+		}
+		if (ImGui::Button("Load FW PACK")) {
+			fileData.addr = 0x30300000;
+			fileData.ioctl_id = 2;
+			fileData.mem = &DDR;
+			fileData.reset = true;
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "FW PACK LOAD", ".msx", "./rom/FWpack/", 1, &fileData);
+		}
+
+		if (ImGui::Button("Load DB MAPPER")) {
+			fileData.addr = 0x31600000;
+			fileData.ioctl_id = 6;
+			fileData.mem = &DDR;
+			fileData.reset = true;
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "DB MAPPERS LOAD", ".db", "./rom/Mappers/", 1, &fileData);
+		}
+
+		if (ImGui::Button("Load ROM A")) {
+			fileData.addr = 0x30C00000;
+			fileData.ioctl_id = 3;
+			fileData.mem = &DDR;
+			fileData.reset = true;
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "ROM A", ".rom", "./rom/roms/", 1, &fileData);
+		}
+
+		if (ImGui::Button("Load ROM B")) {
+			fileData.addr = 0x31100000;
+			fileData.ioctl_id = 4;
+			fileData.mem = &DDR;
+			fileData.reset = true;
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "ROM B", ".rom", "./rom/roms/", 1, &fileData);
+		}
+
+		ImGui::PushItemWidth(180.0f);
+		if (ImGui::Combo("SLOT A", &currentSlotA, slotA1, IM_ARRAYSIZE(slotA1)))
+		{
+			ChangeStatus();
+		}
+		if (ImGui::Combo("MAPPER A", &currentMapperA, mapperA, IM_ARRAYSIZE(mapperA)))
+		{
+			ChangeStatus();
+		}
+		if (ImGui::Combo("SRAM A", &currentSramA, sramA, IM_ARRAYSIZE(sramA)))
+		{
+			ChangeStatus();
+		}
+		if (ImGui::Combo("SLOT B", &currentSlotB, slotB, IM_ARRAYSIZE(slotB)))
+		{
+			ChangeStatus();
+		}
+		if (ImGui::Combo("MAPPER B", &currentMapperB, mapperB, IM_ARRAYSIZE(mapperB)))
+		{
+			ChangeStatus();
+		}
+		ImGui::PopItemWidth();
+		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+			if (ImGuiFileDialog::Instance()->IsOk()) {
+				std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+				std::string fileName = ImGuiFileDialog::Instance()->GetCurrentFileName();
+				FileDialogData *data = static_cast<FileDialogData*>(ImGuiFileDialog::Instance()->GetUserDatas());
+				bus.QueueDownload(ImGuiFileDialog::Instance()->GetFilePathName(), data->ioctl_id, data->reset, data->addr, data->mem);
+			}
+			ImGuiFileDialog::Instance()->Close();
+		}
+		ImGui::End();
+
+
 		// Trace/VCD window
 		ImGui::Begin(windowTitle_Trace);
 		ImGui::SetWindowPos(windowTitle_Trace, ImVec2(0, 870), ImGuiCond_Once);

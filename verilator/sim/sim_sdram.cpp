@@ -15,17 +15,28 @@ SimSDRAM::SimSDRAM(DebugConsole c)
 	console = c;
 	mem_size = 0;
 	mem = NULL;
-	addr = NULL;
-	data = NULL;
-	q = NULL;
-	we = NULL;
-	rd = NULL;
-	ready = NULL;
-	size = NULL;
+
+
+	for (int i = 0; i <= 2; i++)
+	{
+		channels[i].rq = false;
+		channels[i].req_last = false;
+		channels_rtl[i].ch_addr = NULL;
+		channels_rtl[i].ch_din = NULL;
+		channels_rtl[i].ch_done = NULL;
+		channels_rtl[i].ch_dout = NULL;
+		channels_rtl[i].ch_ready = NULL;
+		channels_rtl[i].ch_req = NULL;
+		channels_rtl[i].ch_rnw = NULL;
+	}
 	mem_addr = 0;
-	mem_q = 0xff;
 	mem_wait_cnt = 0;
+	mem_ready = true;
+	mem_curr_rq = 0;
 }
+
+
+
 
 SimSDRAM::~SimSDRAM()
 {
@@ -56,61 +67,100 @@ void SimSDRAM::FreeMemory(void)
 void SimSDRAM::Initialise(int size) {
 	
 	this->AllocateMemory(size);
+	for (int i = 0; i <= 2; i++)
+	{
+		if (channels_rtl[i].ch_ready) {
+			*channels_rtl[i].ch_ready = 1;
+		}
+	}
+}
 
+int SimSDRAM::getHPSsize(void) {
 	//0 - none, 1 - 32MB, 2 - 64MB, 3 - 128MB
+	
 	if (mem_size == 0)
-		*this->size = 0;
+		return 0;
 	else if (mem_size <= 0x400000)
-		*this->size = 1;
+		return 0x8001;
 	else if (mem_size <= 0x800000)
-		*this->size = 2;
+		return 0x8002;
 	else if (mem_size <= 0x1000000)
-		*this->size = 3;
-	else 
-		*this->size = 0;
-	*ready = mem_size > 0 ? 1 : 0;
-	mem_wait_cnt = 1;
+		return 0x8003;
+	
+	return 0;
 }
 
 void SimSDRAM::BeforeEval(void) {
 }
 
 void SimSDRAM::AfterEval(void) {
-	if (ready == NULL) return;
+	for (int i = 0; i <= 2; i++)
+	{
+		if (channels_rtl[i].ch_req) {
+			if (channels_rtl[i].ch_req && *channels_rtl[i].ch_req && !channels[i].req_last)
+			{
+				channels[i].addr = *channels_rtl[i].ch_addr;
+				channels[i].rnw = *channels_rtl[i].ch_rnw; // 1 - read, 0 - write
+				channels[i].din = *channels_rtl[i].ch_din;
+				channels[i].rq = true;
+			}
 
-	if (*ready == 1) {
-		if (addr != NULL) {
-			if (*addr < mem_size) {
-				if (*we == 1) {
-					mem_wait_cnt = 4;
-					*ready = 0;
-					mem_q = *data;
-					mem_addr = *addr;
-					mem[mem_addr] = *data;
+			channels[i].req_last = *channels_rtl[i].ch_req;
+		}
+		
+		if (channels_rtl[i].ch_req == 0 && channels_rtl[i].ch_done) {
+			*channels_rtl[i].ch_done = 0;
+		}
+	}
+	
+	if (mem_ready)
+	{
+		for (int i = 0; i <= 2; i++)
+		{
+			if (channels[i].rq)
+			{
+				mem_wait_cnt = 4;
+				mem_ready = false;
+				mem_curr_rq = i;
+				channels[i].rq = false;
+				*channels_rtl[i].ch_ready = 0;
+
+				if (channels[i].rnw) {
+					//Read
+					mem_addr = channels[i].addr;
 				}
 				else {
-					if (*rd == 1 && *addr != mem_addr) {
-						mem_wait_cnt = 4;
-						*ready = 0;
-						mem_addr = *addr;
-						mem_q = mem[mem_addr];
+					//Write
+					if (channels[i].addr < mem_size)
+					{
+						mem[channels[i].addr] = channels[i].din;
 					}
 				}
-			}
-			else {
-				mem_q = 0xFF;
-				mem_addr = *addr;
-				mem_wait_cnt = 1;
+				break;
 			}
 		}
 	}
-	else {
-		if (mem_size > 0) {
-			mem_wait_cnt--;
-			if (mem_wait_cnt == 0) {
-				*q = mem_q;
-				*ready = 1;
+	else
+	{
+		//Not ready
+		mem_wait_cnt--;
+		if (mem_wait_cnt == 0)
+		{
+			if (channels[mem_curr_rq].rnw) {
+				if (channels[mem_curr_rq].addr < mem_size)
+				{
+					*channels_rtl[mem_curr_rq].ch_dout = mem[channels[mem_curr_rq].addr];
+				}
+				else {
+					*channels_rtl[mem_curr_rq].ch_dout = 0xFF;
+				}
 			}
+
+			*channels_rtl[mem_curr_rq].ch_ready = 1;
+			if (channels_rtl[mem_curr_rq].ch_done) {
+				*channels_rtl[mem_curr_rq].ch_done = 1;
+			}
+			mem_ready = true;
 		}
 	}
 }
