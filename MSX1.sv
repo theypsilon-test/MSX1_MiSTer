@@ -186,7 +186,7 @@ assign AUDIO_L = audio;
 assign AUDIO_R = audio;
 assign AUDIO_MIX = 0;
 
-assign LED_POWER = 0;
+//assign LED_POWER = 0;
 assign LED_USER  = vsd_sel & sd_act;
 assign LED_DISK  = {1'b1, ~vsd_sel & sd_act};
 assign BUTTONS = 0;
@@ -631,7 +631,8 @@ memory_upload memory_upload(
     .cart_device(cart_device),
     .msx_device(msx_device),
     .msx_dev_ref_ram(msx_dev_ref_ram),
-    .load_sram(load_sram)
+    .load_sram(load_sram),
+    .led_out(LED_POWER)
 );
 
 wire [27:0] ddr3_addr, ddr3_addr_download, ddr3_addr_cas;

@@ -107,10 +107,6 @@ wire         [15:0] size_sram  = lookup_SRAM[ref_sram].size;
 
 assign ram_addr   = device_kanji_ram_ce ? device_kanji_addr                                   :
                                           (sram_cs ? 27'(base_sram) : base_ram) + mapper_addr ;
-
-wire cart_ascii8  = mapper == MAPPER_ASCII8  | mapper == MAPPER_KOEI | mapper == MAPPER_WIZARDY;
-wire cart_ascii16 = mapper == MAPPER_ASCII16 | mapper == MAPPER_RTYPE;
-
 wire [26:0] mapper_addr = mem_unmaped                 ? 27'hDEAD                    :
                           mapper == MAPPER_NONE       ? 27'(mapper_none_addr)       :
                           mapper == MAPPER_RAM        ? 27'(mapper_ram_addr)        :
@@ -123,10 +119,10 @@ wire [26:0] mapper_addr = mem_unmaped                 ? 27'hDEAD                
                           mapper == MAPPER_MFRSD2     ? 27'(mapper_mfrsd2_addr)     :
                           mapper == MAPPER_MFRSD3     ? 27'(mapper_mfrsd3_addr)     :
                           mapper == MAPPER_HALNOTE    ? 27'(mapper_halnote_addr)    :
-                          cart_ascii8                 ? 27'(mapper_ascii8_addr)     :
-                          cart_ascii16                ? 27'(mapper_ascii16_addr)    :
                           mapper == MAPPER_GM2        ? 27'(mapper_gm2_addr)        :
-                                                        27'hDEAD                    ;
+                                                        mapper_ascii8_addr 
+                                                      & mapper_ascii16_addr;
+
 
 assign cpu_din          = mapper_ram_dout                        //IO
                         & mapper_mfrsd2_dout                     //IO
@@ -304,8 +300,11 @@ cart_konami konami
 );
 
 wire [24:0] mapper_ascii8_addr;
-wire        mapper_ascii8_unmaped;
+wire        cart_ascii8, mapper_ascii8_unmaped;
 wire        ascii8_sram_cs, ascii8_sram_wr;
+
+assign cart_ascii8 = mapper == MAPPER_ASCII8  | mapper == MAPPER_KOEI | mapper == MAPPER_WIZARDY;
+
 cart_ascii8 ascii8
 (
    .rom_size(25'(size) << 14),
@@ -316,12 +315,17 @@ cart_ascii8 ascii8
    .mem_addr(mapper_ascii8_addr),
    .sram_cs(ascii8_sram_cs),
    .sram_we(ascii8_sram_wr),
+   .mode_wizardy(mapper == MAPPER_WIZARDY),
+   .mode_koei(mapper == MAPPER_KOEI),
    .*
 );
 
 wire [24:0] mapper_ascii16_addr;
-wire        mapper_ascii16_unmaped;
+wire        cart_ascii16, mapper_ascii16_unmaped;
 wire        ascii16_sram_cs, ascii16_sram_wr;
+
+assign cart_ascii16 = mapper == MAPPER_ASCII16 | mapper == MAPPER_RTYPE;
+
 cart_ascii16 ascii16
 (
    .rom_size(25'(size) << 14),
@@ -331,6 +335,7 @@ cart_ascii16 ascii16
    .mem_addr(mapper_ascii16_addr),
    .sram_cs(ascii16_sram_cs),
    .sram_we(ascii16_sram_wr),
+   .mode_rtype(mapper == MAPPER_RTYPE),
    .*
 );
 
