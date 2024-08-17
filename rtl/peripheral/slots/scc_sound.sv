@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module scc_sound
 (
    input                clk,
@@ -15,7 +16,7 @@ module scc_sound
    input          [1:0] sccPlusChip,
    input          [1:0] sccPlusMode
 );
-/*verilator tracing_off*/
+
 wire signed [14:0] wave_A, wave_B;
 
 assign scc_dout = scc_dout_A & scc_dout_B;

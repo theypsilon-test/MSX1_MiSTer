@@ -18,7 +18,7 @@
 //
 //============================================================================
 // https://konamiman.github.io/MSX2-Technical-Handbook/md/Chapter5a.html#2-cassette-interface
-
+/*verilator tracing_off*/
 module tape
 (
 	input           clk,

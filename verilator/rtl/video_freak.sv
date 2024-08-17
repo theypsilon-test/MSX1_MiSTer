@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module video_freak
 (
 	input             CLK_VIDEO,

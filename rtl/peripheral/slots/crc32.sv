@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module CRC_32(clk,rst,we,crc_in,crc_out);
     input clk;
     input rst;

@@ -21,7 +21,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 //============================================================================
-
+/*verilator tracing_off*/
 module wd1793 #(parameter RWMODE=0, EDSK=1)
 (
 	input        clk_sys,     // sys clock
@@ -66,6 +66,8 @@ module wd1793 #(parameter RWMODE=0, EDSK=1)
 	output       buff_read,	  // buffer RAM read enable
 	input  [7:0] buff_din     // buffer RAM data input
 );
+
+/* verilator lint_off IMPLICIT */
 
 // Possible track configs:
 // 0: 26 x 128  = 3.3KB

@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module cart_gamemaster2
 (
    input            clk,
@@ -11,7 +12,7 @@ module cart_gamemaster2
    output           sram_we,
    output           sram_cs
 );
-/*verilator tracing_off*/
+
 logic [5:0] bank1, bank2, bank3;
 
 always @(posedge reset, posedge clk) begin

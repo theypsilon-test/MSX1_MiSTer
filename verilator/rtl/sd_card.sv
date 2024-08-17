@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module sd_card #(parameter WIDE = 0, OCTAL=0)
 (
 	input             clk_sys,

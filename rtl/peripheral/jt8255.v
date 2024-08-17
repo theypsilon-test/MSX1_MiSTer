@@ -13,7 +13,7 @@
     Version: 1.0
     Date: 28-3-2021
  */
-
+/*verilator tracing_off*/
 module jt8255(
     input               rst,
     input               clk,

@@ -1,3 +1,4 @@
+/*averilator tracing_off*/
 module mapper_detect
 (
     input               clk,
@@ -10,7 +11,6 @@ module mapper_detect
     output        [7:0] mode,
     output        [7:0] param
 );
-/*averilator tracing_off*/
 
 logic [7:0]  head  [0:7];
 logic [7:0]  head2 [0:7];

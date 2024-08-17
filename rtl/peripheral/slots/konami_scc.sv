@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module cart_konami_scc
 (
    input            clk,
@@ -16,7 +17,7 @@ module cart_konami_scc
    output           scc_req,
    output    [1:0]  scc_mode
 );
-   /*verilator tracing_off*/
+   
    logic [7:0] sccMode[2];
    logic [7:0] bank[2][4];
    logic [1:0] sccEnable;

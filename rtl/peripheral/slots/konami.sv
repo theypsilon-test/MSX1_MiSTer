@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module cart_konami
 (
     input            clk,
@@ -12,7 +13,7 @@ module cart_konami
     output           mem_unmaped,
     output    [24:0] mem_addr
 );
-/*verilator tracing_off*/
+
 reg  [7:0] bank1[2], bank2[2], bank3[2];
 
 always @(posedge clk) begin

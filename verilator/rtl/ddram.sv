@@ -1,4 +1,4 @@
-
+/*verilator tracing_off*/
 module ddram (
   input         reset,
 	input         DDRAM_CLK,

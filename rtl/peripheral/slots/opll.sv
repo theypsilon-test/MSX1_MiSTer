@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module opll
 (
    input clk,
@@ -9,8 +10,6 @@ module opll
    input [2:0] cs,
    output signed [15:0] sound
 );
-
-/*verilator tracing_off*/
 
 assign sound = (cs[0] ? sound_OPL_A   : 16'd0) +
                (cs[1] ? sound_OPL_B   : 16'd0) +

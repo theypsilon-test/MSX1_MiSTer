@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module cart_fm_pac
 (
    input                clk,
@@ -17,7 +18,7 @@ module cart_fm_pac
    output         [1:0] opll_wr, 
    output         [1:0] opll_io_enable
 );
-   /*verilator tracing_off*/
+   
     wire [24:0] mem_addr_A, mem_addr_B;
     wire  [7:0] d_to_cpu_A, d_to_cpu_B;
     wire        sram_we_A, sram_we_B;

@@ -79,7 +79,7 @@ module msx
    output                   sd_tx,
    output                   sd_rx
 );
-
+/*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
 //  -- Audio MIX
 //  -----------------------------------------------------------------------------
@@ -308,7 +308,7 @@ rtc rtc
    .dbi(d_from_rtc),
    .dbo(d_from_cpu)
 );
-
+/*verilator tracing_on*/
 //  -----------------------------------------------------------------------------
 //  -- Video
 //  -----------------------------------------------------------------------------
@@ -399,7 +399,7 @@ vdp18_core #(.compat_rgb_g(0)) vdp_vdp18
    .blank_n_o(DE_vdp18),
    .is_pal_i(msxConfig.video_mode == PAL)
 );
-
+/*verilator tracing_off*/
 wire        int_n_vdp;
 wire  [7:0] d_from_vdp;
 wire  [5:0] R_vdp, G_vdp, B_vdp;

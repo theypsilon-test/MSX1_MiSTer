@@ -171,6 +171,8 @@ module emu
    input         OSD_STATUS
 );
 
+/*verilator tracing_off*/
+
 ///////// Default values for ports not used in this core /////////
 assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
@@ -373,7 +375,7 @@ clock clock
 
 /////////////////    RESET   /////////////////
 wire reset = RESET | status[0] | status[10] | reset_rq;
-
+/*verilator tracing_on*/
 ///////////////// Computer /////////////////
 wire  [7:0] R, G, B, cpu_din, cpu_dout;
 wire [15:0] cpu_addr, audio;
@@ -432,7 +434,7 @@ msx MSX
    .sd_rx(sd_rx),
    .*
 );
-
+/*verilator tracing_off*/
 //////////////////   SD   ///////////////////
 wire sdclk;
 wire sdmosi;

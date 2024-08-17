@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module msx
 (
    input                    reset,

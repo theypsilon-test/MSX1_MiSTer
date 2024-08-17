@@ -51,3 +51,4 @@ verilator/obj_dir/
 verilator/x64/
 *.ini
 *.vcd
+verilator/rom/

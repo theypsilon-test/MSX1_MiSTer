@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module msx2_ram_mapper
 (
    input                   clk,
@@ -13,7 +14,7 @@ module msx2_ram_mapper
    output            [7:0] mapper_dout,
    output           [21:0] mapper_addr
 );
-   /*verilator tracing_off*/
+   
    wire mpr_wr, mpr_rq;
    logic [7:0] mem_seg [0:3];
 

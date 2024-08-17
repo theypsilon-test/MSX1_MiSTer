@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module flash (
 	input             clk,
 	input             clk_sdram,
@@ -15,7 +16,6 @@ module flash (
 	input      [26:0] sdram_offset,
 	output            debug_erase
 );
-/*verilator tracing_off*/
 
 	reg [2:0] index;
 	reg [7:0] cmd[5];
