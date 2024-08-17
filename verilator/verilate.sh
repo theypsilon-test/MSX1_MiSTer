@@ -1,6 +1,6 @@
 rm obj_dir/*
 verilator \
--cc -exe --trace --public --public-depth 15 \
+-cc -exe --trace \
 --compiler msvc +define+SIMULATION=1 \
 -O3 --x-assign fast --x-initial fast --noassert \
 -Wno-PINMISSING \
@@ -28,6 +28,18 @@ verilator \
 ./rtl/video_freak.sv \
 ./rtl/video_mixer.sv \
 ./rtl/wd1793.sv \
+./rtl/halnote.sv         \
+./rtl/flash.sv         \
+./rtl/mfrsd.sv         \
+./rtl/konami.sv         \
+./rtl/konami_scc.sv         \
+./rtl/scc_sound.sv         \
+./rtl/gamemaster2.sv         \
+./rtl/fm_pac.sv         \
+./rtl/opll.sv         \
+./rtl/kanji.sv         \
+./rtl/psg.sv         \
+./rtl/fdc.sv         \
 ../rtl/peripheral/clock.sv \
 ../rtl/msx_config.sv \
 ../rtl/nvram_backup.sv \
@@ -53,22 +65,24 @@ verilator \
 ../rtl/peripheral/slots/msx2_ram_mapper.sv \
 ../rtl/peripheral/slots/memory_upload.sv   \
 ../rtl/peripheral/slots/mapper_detect.sv   \
-../rtl/peripheral/slots/fdc.sv             \
-../rtl/peripheral/slots/fm_pac.sv          \
 ../rtl/peripheral/slots/ascii8.sv          \
 ../rtl/peripheral/slots/ascii16.sv         \
-../rtl/peripheral/slots/konami.sv          \
-../rtl/peripheral/slots/konami_scc.sv      \
-../rtl/peripheral/slots/mfrsd.sv           \
-../rtl/peripheral/slots/opll.sv            \
-../rtl/peripheral/slots/scc_sound.sv       \
-../rtl/peripheral/slots/flash.sv           \
-../rtl/peripheral/slots/gamemaster2.sv     \
-../rtl/peripheral/slots/psg.sv             \
-../rtl/peripheral/slots/kanji.sv           \
-../rtl/peripheral/slots/halnote.sv         \
 ../rtl/peripheral/slots/reset_status.sv    \
 ../rtl/peripheral/slots/crc32.sv           \
+
+
+#../rtl/peripheral/slots/fdc.sv             \
+#../rtl/peripheral/slots/fm_pac.sv          \
+#../rtl/peripheral/slots/konami.sv          \
+#../rtl/peripheral/slots/konami_scc.sv      \
+#../rtl/peripheral/slots/mfrsd.sv           \
+#../rtl/peripheral/slots/opll.sv            \
+#../rtl/peripheral/slots/scc_sound.sv       \
+#../rtl/peripheral/slots/flash.sv           \
+#../rtl/peripheral/slots/gamemaster2.sv     \
+#../rtl/peripheral/slots/psg.sv             \
+#../rtl/peripheral/slots/kanji.sv           \
+#../rtl/peripheral/slots/halnote.sv         \
 
 # --public-flat-rw --public-depth 3
 # --public
