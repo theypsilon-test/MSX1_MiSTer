@@ -447,10 +447,9 @@ assign SD_SCK  = sdclk  & ~vsd_sel;
 assign SD_MOSI = sdmosi & ~vsd_sel;
 
 reg sd_act;
-
+reg [31:0] timeout = 0;
 always @(posedge clk21m) begin
     reg old_mosi, old_miso;
-    integer timeout = 0;
 
     old_mosi <= sdmosi;
     old_miso <= sdmiso;

@@ -21,9 +21,8 @@ logic [7:0] pos;
 assign kb_data    = row_state[kb_row];
 assign key_decode = ps2_key[8:0];
 
+logic [10:0] old_key = 11'd0;
 always @(posedge clk) begin
-   logic [10:0] old_key = 11'd0;
-   
    change     <= 1'b0;
    old_key <= ps2_key;
    if (old_key != ps2_key) begin
