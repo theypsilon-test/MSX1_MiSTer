@@ -95,6 +95,7 @@ assign audio            = compr[audio_mix[16:14]];
 wire [15:0] a;
 wire [7:0] d_to_cpu, d_from_cpu;
 wire mreq_n, wr_n, m1_n, iorq_n, rd_n, rfrsh_n;
+/*
 t80pa #(.Mode(0)) T80
 (
    .RESET_n(~reset),
@@ -116,6 +117,27 @@ t80pa #(.Mode(0)) T80
    .A(a),
    .DI(d_to_cpu),
    .DO(d_from_cpu)
+);
+*/
+tv80n Z80
+(
+   .reset_n(~reset),
+   .clk(ce_3m58_n),
+   .wait_n(wait_n),
+   .int_n(vdp_int_n),
+   .nmi_n(1'b1),
+   .busrq_n(1'b1),
+   .m1_n(m1_n),
+   .mreq_n(mreq_n),
+   .iorq_n(iorq_n),
+   .rd_n(rd_n),
+   .wr_n(wr_n),
+   .rfsh_n(rfrsh_n),
+   .halt_n(),
+   .busak_n(),
+   .A(a),
+   .di(d_to_cpu),
+   .dout(d_from_cpu)
 );
 
 //  -----------------------------------------------------------------------------
