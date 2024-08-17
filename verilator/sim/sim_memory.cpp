@@ -16,88 +16,96 @@ SimMemory::SimMemory(DebugConsole c)
 	console = c;
 }
 
-bool SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size, std::string filename)
+char* SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size, std::string filename)
 {
 	SimMemoryRam ram(console);
-	if (!ram.AllocateMemory(size))
-		return false;
+	char* ret = NULL;
+	if (!ret)
+		return NULL;
 	ram.LoadFile(filename);
 	ram.MapSignals(addr, data, q, we);
 	Rams.push_back(ram);
-	return true;
+	return ret;
 }
 
-bool SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size)
+char* SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size)
 {
 	SimMemoryRam ram(console);
+	char* ret = ram.AllocateMemory(size);
 	if (!ram.AllocateMemory(size))
-		return false;
+		return NULL;
 	ram.MapSignals(addr, data, q, we);
 	Rams.push_back(ram);
-	return true;
+	return ret;
 }
 
-bool SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size, std::string filename)
+char* SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size, std::string filename)
 {
 	SimMemoryRam ram(console);
-	if (!ram.AllocateMemory(size))
-		return false;
+	char* ret = ram.AllocateMemory(size);
+	if (!ret)
+		return NULL;
 	ram.LoadFile(filename);
 	ram.MapSignals(addr, data, q, we);
 	Rams.push_back(ram);
-	return true;
+	return ret;
 }
 
-bool SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size)
+char* SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size)
 {
 	SimMemoryRam ram(console);
-	if (!ram.AllocateMemory(size))
-		return false;
+	char* ret = ram.AllocateMemory(size);
+	if (!ret)
+		return NULL;
 	ram.MapSignals(addr, data, q, we);
 	Rams.push_back(ram);
-	return true;
+	return ret;
 }
 
-bool SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string filename)
+char* SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string filename)
 {
 	SimMemoryRam ram(console);
-	if (!ram.AllocateMemory(size))
-		return false;
+	char* ret = ram.AllocateMemory(size);
+	if (!ret)
+		return NULL;
 	ram.LoadFile(filename);
 	ram.MapSignals(addr_a, data_a, q_a, we_a, addr_b, data_b, q_b, we_b);
 	Rams.push_back(ram);
-	return true;
+	return ret;
 }
 
-bool SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size)
+char* SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size)
 {
 	SimMemoryRam ram(console);
-	if (!ram.AllocateMemory(size))
-		return false;
+	char* ret = ram.AllocateMemory(size);
+	if (!ret)
+		return NULL;
 	ram.MapSignals(addr_a, data_a, q_a, we_a, addr_b, data_b, q_b, we_b);
 	Rams.push_back(ram);
-	return true;
+	return ret;
 }
 
-bool SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string filename)
+char* SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string filename)
 {
 	SimMemoryRam ram(console);
-	if (!ram.AllocateMemory(size))
-		return false;
+	char* ret = ram.AllocateMemory(size);
+	if (!ret)
+		return NULL;
 	ram.LoadFile(filename);
 	ram.MapSignals(addr_a, data_a, q_a, we_a, addr_b, data_b, q_b, we_b);
 	Rams.push_back(ram);
-	return true;
+	return ret;
 }
 
-bool SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size)
+char* SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size)
 {
 	SimMemoryRam ram(console);
-	if (!ram.AllocateMemory(size))
-		return false;
+	char* ret = ram.AllocateMemory(size);
+	if (!ret)
+		return NULL;
 	ram.MapSignals(addr_a, data_a, q_a, we_a, addr_b, data_b, q_b, we_b);
 	Rams.push_back(ram);
-	return true;
+	return ret;
 }
 
 SimMemory::~SimMemory()
@@ -136,16 +144,16 @@ SimMemoryRam::SimMemoryRam(DebugConsole c)
 	we_b = NULL;
 }
 
-bool SimMemoryRam::AllocateMemory(int size) {
+char * SimMemoryRam::AllocateMemory(int size) {
 	mem = (char*)malloc(size);
 	if (!mem) {
 		console.AddLog("Memory not allocate: %d", size);
-		return false;
+		return NULL;
 	}
 	
 	mem_size = size;
 	memset(mem, 0, mem_size);
-	return true;
+	return mem;
 }
 
 void SimMemoryRam::FreeMemory(void)
@@ -213,35 +221,39 @@ void SimMemoryRam::MapSignals(IData* addr_a, CData* data_a, CData* q_a, CData* w
 }
 
 void SimMemoryRam::BeforeEval(void) {
-	uint32_t addr = 0;
-	if (this->addr != NULL) {
-		addr = *this->addr;
-	}
-	else if (this->addr32 != NULL) {
-		addr = *this->addr32;
-	}
-	else {
+	if (q)
+	{
 		*q = 0xFF;
-		return;
+		if (addr) {
+			if (mem && *addr <= mem_size)
+			{
+				*q = mem[*addr];
+			}
+		}
+		if (addr32) {
+			if (mem && *addr32 <= mem_size)
+			{
+				*q = mem[*addr32];
+			}
+		}
 	}
 	
-	if (this->addr_b != NULL) {
-		addr = *this->addr_b;
-	}
-	else if (this->addr32_b != NULL) {
-		addr = *this->addr32_b;
-	}
-	else {
+	if (q_b)
+	{
 		*q_b = 0xFF;
-		return;
+		if (addr) {
+			if (mem && *addr_b <= mem_size)
+			{
+				*q_b = mem[*addr_b];
+			}
+		}
+		if (addr32_b) {
+			if (mem && *addr32_b <= mem_size)
+			{
+				*q_b = mem[*addr32_b];
+			}
+		}
 	}
-	if (addr <= mem_size && mem != NULL) {
-		*q_b = mem[addr];
-	}
-	else {
-		*q_b = 0xFF;
-	}
-	
 }
 
 void SimMemoryRam::AfterEval(void) {

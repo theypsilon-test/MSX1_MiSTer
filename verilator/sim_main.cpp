@@ -109,17 +109,22 @@ SimBus bus(console);
 
 // Video
 // -----
-#define VGA_WIDTH 320
-#define VGA_HEIGHT 240
-#define VGA_ROTATE -1  // 90 degrees anti-clockwise
+#define VGA_WIDTH 256 //320
+#define VGA_HEIGHT 180 //240
+#define VGA_ROTATE 0
 #define VGA_SCALE_X vga_scale
 #define VGA_SCALE_Y vga_scale
 SimVideo video(VGA_WIDTH, VGA_HEIGHT, VGA_ROTATE);
-float vga_scale = 2.5;
+float vga_scale = 1.5;
 
 // Memory
 
 #define systemRAM top->emu->systemRAM
+#define VRAMhi top->emu->MSX->vram_hi
+#define VRAMlo top->emu->MSX->vram_lo
+char* systemRAM_mem;
+char* vdp_mem_hi;
+char* vdp_mem_lo;
 
 SimSDRAM SDram(console);
 SimDDR DDR(console);
@@ -164,8 +169,6 @@ void ChangeStatus(void) {
 }
 
 
-
-
 //Trace Save/Restore
 void save_model(const char* filenamep) {
 	/*
@@ -205,7 +208,6 @@ int verilate() {
 		// Clock dividers
 		clk_sys.Tick();
 
-
 		// Set clocks in core
 		top->emu->pll->outclk_1 = clk_sys.clk;
 		top->emu->hps_io->status = status;
@@ -232,6 +234,11 @@ int verilate() {
 			if (clk_sys.IsRising()) {
 				SDram.AfterEval();
 				DDR.AfterEval();
+
+				if (top->emu->MSX->vdp_vdp18->ce_pix) {
+					uint32_t colour = 0xFF000000 | top->emu->MSX->vdp_vdp18->rgb_b_o << 16 | top->emu->MSX->vdp_vdp18->rgb_g_o << 8 | top->emu->MSX->vdp_vdp18->rgb_r_o;
+					video.Clock(top->emu->MSX->vdp_vdp18->hblank_o, top->emu->MSX->vdp_vdp18->vblank_o, top->emu->MSX->vdp_vdp18->hsync_n_o, top->emu->MSX->vdp_vdp18->vsync_n_o, colour);
+				}
 			}
 			
 			
@@ -239,6 +246,7 @@ int verilate() {
 				if (!tfp->isOpen()) tfp->open(Trace_File);
 				tfp->dump(main_time); //Trace
 			}
+			
 			if (clk_sys.IsFalling()) {
 				bus.AfterEval();
 			}
@@ -282,8 +290,7 @@ int main(int argc, char** argv, char** env) {
 #endif
 
 	// Attach bus
-
-	Rams.AddRAM(
+	systemRAM_mem = Rams.AddRAM(
 		&systemRAM->address_a,
 		&systemRAM->data_a,
 		&systemRAM->q_a,
@@ -293,6 +300,20 @@ int main(int argc, char** argv, char** env) {
 		&systemRAM->q_b,
 		&systemRAM->wren_b,
 		1 << systemRAM->addr_width);
+
+	vdp_mem_hi = Rams.AddRAM(
+		&VRAMhi->address,
+		&VRAMhi->data,
+		&VRAMhi->q,
+		&VRAMhi->wren,
+		1 << VRAMhi->addr_width);
+
+	vdp_mem_lo = Rams.AddRAM(
+		&VRAMlo->address,
+		&VRAMlo->data,
+		&VRAMlo->q,
+		&VRAMlo->wren,
+		1 << VRAMlo->addr_width);
 
 	DDR.addr = &top->emu->buffer->addr;
 	DDR.dout = &top->emu->buffer->dout;
@@ -346,8 +367,9 @@ int main(int argc, char** argv, char** env) {
 
 	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
 	bus.QueueDownload("./rom/Mappers/output_data.bin", 6, true, 0x31600000, &DDR);
-	bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
-
+	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.MSX", 1, true, 0x30000000, &DDR);
+	bus.QueueDownload("./rom/roms/10th Frame - Access Software [ASCII16] .rom", 3, true, 0x30C00000, &DDR);
+	
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, false);
 
@@ -405,26 +427,31 @@ int main(int argc, char** argv, char** env) {
 		// Debug log window
 		console.Draw(windowTitle_DebugLog, &showDebugLog, ImVec2(500, 700));
 		ImGui::SetWindowPos(windowTitle_DebugLog, ImVec2(0, 160), ImGuiCond_Once);
+/*
 		// Memory debug
 		ImGui::Begin("DDRAM");
 		mem_edit.DrawContents(DDR.GetMem(), 256*1024*1024, 0x30000000);
 		ImGui::End();
-
-
 		
 		ImGui::Begin("SDRAM");
 		mem_edit.DrawContents(SDram.GetMem(), 0x1000000, 0);
 		ImGui::End();
-/*
-		ImGui::Begin("VRAM Editor");
-		mem_edit.DrawContents(VRAM.mem, VRAM.mem_size, 0);
+
+
+		ImGui::Begin("VRAM Editor HI");
+		mem_edit.DrawContents(vdp_mem_hi, 1 << VRAMhi->addr_width, 0);
 		ImGui::End();
 
-		ImGui::Begin("RAM Editor");
-		mem_edit.DrawContents(RAM.mem, RAM.mem_size, 0);
+		ImGui::Begin("VRAM Editor LO");
+		mem_edit.DrawContents(vdp_mem_lo, 1 << VRAMlo->addr_width, 0);
 		ImGui::End();
-*/
-		
+
+
+		ImGui::Begin("RAM Editor");
+		mem_edit.DrawContents(systemRAM_mem, 1 << systemRAM->addr_width, 0);
+		ImGui::End();
+
+*/		
 		//HPS emulace
 		ImGui::Begin(windowTitle_HPS);
 		ImGui::SetWindowPos(windowTitle_Trace, ImVec2(0, 870), ImGuiCond_Once);

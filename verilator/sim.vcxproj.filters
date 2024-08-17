@@ -171,6 +171,27 @@
     <ClCompile Include="obj_dir\Vemu_MSX__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h8c31a98a__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h8c31a98a__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h55edc9f1__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h55edc9f1__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_ha89b63dc__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_hc8c990d7__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="obj_dir\Vemu_pll__DepSet_hc0a77e1e__0__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -181,6 +202,36 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_sdram__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_spram__A10_M56524132__DepSet_h377701ec__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_spram__A10_M56524132__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_spram__A10_M56524133__DepSet_he586788a__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_spram__A10_M56524133__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__DepSet_h368a78f1__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_vdp18_core__DepSet_h947ea413__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_vdp18_core__DepSet_h947ea413__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_vdp18_core__DepSet_ha184f5b5__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_vdp18_core__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -278,10 +329,25 @@
     <ClInclude Include="obj_dir\Vemu_MSX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="obj_dir\Vemu_pll.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="obj_dir\Vemu_sdram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_spram__A10_M56524132.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_spram__A10_M56524133.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_vdp18_col_pack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_vdp18_core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

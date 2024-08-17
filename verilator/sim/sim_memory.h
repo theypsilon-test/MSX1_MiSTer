@@ -24,7 +24,7 @@ public:
 	
 	SimMemoryRam(DebugConsole c);
 	~SimMemoryRam();
-	bool AllocateMemory(int size);
+	char* AllocateMemory(int size);
 	void FreeMemory(void);
 	bool LoadFile(std::string filename);
 	void MapSignals(SData* addr, CData* data, CData* q, CData* we);
@@ -43,14 +43,14 @@ struct SimMemory {
 public:
 	SimMemory(DebugConsole c);
 	~SimMemory();
-	bool SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size, std::string file);
-	bool SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size);
-	bool SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size, std::string file);
-	bool SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size);
-	bool SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string file);
-	bool SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size);
-	bool SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string file);
-	bool SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size);
+	char* SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size, std::string file);
+	char* SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size);
+	char* SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size, std::string file);
+	char* SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size);
+	char* SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string file);
+	char* SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size);
+	char* SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string file);
+	char* SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size);
 	void BeforeEval(void);
 	void AfterEval(void);
 private:
