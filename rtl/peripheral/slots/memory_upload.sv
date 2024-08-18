@@ -478,7 +478,7 @@ module memory_upload
                         cart_device[curr_conf == CONFIG_SLOT_B] <= cart_device[curr_conf == CONFIG_SLOT_B] | conf_device;
                     end
                     $display("              FINAL mode:%0x-%x-%x-%x param:%x-%x-%x-%x", conf[9][7:6], conf[9][5:4], conf[9][3:2], conf[9][1:0], conf[10][7:6], conf[10][5:4], conf[10][3:2], conf[10][1:0]);
-
+                    $display("              FINAL mapper:%x mode:%x param:%x mem_dev:%x", mapper, mode, param, mem_device);
                     for (int i = 0; i < 4; i++) begin
                         if (mode[i*2 +: 2] != 2'd0) begin
                             $display("              STORE block %d mapper:%d mode:%d param:%d mem_device:%d", i, mapper, mode[i*2 +: 2], param[i*2 +: 2], mem_device);
