@@ -201,6 +201,7 @@ MSX::config_cart_t cart_conf[2];
 MSX::block_t       slot_layout[64];
 MSX::lookup_RAM_t  lookup_RAM[16];
 MSX::lookup_SRAM_t lookup_SRAM[4];
+wire       [2:0] dev_enable[0:(1 << $bits(device_t))-1];
 
 wire             forced_scandoubler;
 wire      [21:0] gamma_bus;
@@ -416,6 +417,7 @@ msx MSX
    .sd_buff_din(sd_buff_din[5]),
    .sd_buff_wr(sd_buff_wr),
    .slot_layout(slot_layout),
+   .dev_enable(dev_enable),
    .lookup_RAM(lookup_RAM),
    .lookup_SRAM(lookup_SRAM),
    .bios_config(bios_config),
@@ -589,7 +591,7 @@ ltc2308_tape #(.ADC_RATE(120000), .CLK_RATE(21477272)) tape
 );
 
 /////////////////  LOAD PACK   /////////////////
-
+/*verilator tracing_on*/
 wire upload_ram_ce, upload_sdram_rq, upload_bram_rq, upload_ram_ready, reset_rq;
 wire  [7:0] upload_ram_din, config_msx;
 wire [26:0] upload_ram_addr;
@@ -617,8 +619,8 @@ memory_upload memory_upload(
     .ram_dout(),
     .ram_ce(upload_ram_ce),
     .sdram_ready(upload_ram_ready),
-    .sdram_rq(upload_sdram_rq),
-    .bram_rq(upload_bram_rq),
+    //.sdram_rq(upload_sdram_rq),
+    //.bram_rq(upload_bram_rq),
     .kbd_request(kbd_request),
     .kbd_addr(kbd_addr),
     .kbd_din(kbd_din),
@@ -634,6 +636,7 @@ memory_upload memory_upload(
     .msx_device(msx_device),
     .msx_dev_ref_ram(msx_dev_ref_ram),
     .load_sram(load_sram),
+    .dev_enable(dev_enable),
     .led_out(LED_POWER)
 );
 
@@ -676,7 +679,7 @@ sdram sdram
    .ch1_dout(),
    .ch1_din(upload_ram_din),
    .ch1_addr(upload_ram_addr),
-   .ch1_req(upload_ram_ce & upload_sdram_rq),
+   .ch1_req(upload_ram_ce),
    .ch1_rnw(1'd0),
    .ch1_ready(upload_ram_ready),   
   
@@ -709,7 +712,7 @@ dpram #(.addr_width(18)) systemRAM
    .data_b(sd_buff_dout),
    .q_b(sram_dout)
 );
-
+/*verilator tracing_off*/
 ///////////////// NVRAM BACKUP ////////////////
 wire [26:0] sram_addr;
 wire  [7:0] sram_dout;

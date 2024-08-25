@@ -37,6 +37,7 @@ module msx
    input  mapper_typ_t      selected_mapper[2],
    input                    sram_save,
    input                    sram_load,
+   input              [2:0] dev_enable[0:(1 << $bits(device_t))-1], 
    //IOCTL
    input                    ioctl_download,
    input             [15:0] ioctl_index,
@@ -120,6 +121,7 @@ t80pa #(.Mode(0)) T80
    .DO(d_from_cpu)
 );
 */
+/*verilator tracing_on*/
 tv80n Z80
 (
    .reset_n(~reset),
@@ -140,7 +142,7 @@ tv80n Z80
    .di(d_to_cpu),
    .dout(d_from_cpu)
 );
-
+/*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
 //  -- WAIT CPU
 //  -----------------------------------------------------------------------------
@@ -226,6 +228,7 @@ assign d_to_cpu = rd_n   ? 8'hFF           :
 //  -----------------------------------------------------------------------------
 //  -- Keyboard decoder
 //  -----------------------------------------------------------------------------
+/*verilator tracing_on*/
 wire [7:0] d_from_kb;
 keyboard msx_key
 (
@@ -239,7 +242,7 @@ keyboard msx_key
    .kbd_we(kbd_we),
    .kbd_request(kbd_request)
 );
-
+/*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
 //  -- Sound AY-3-8910
 //  -----------------------------------------------------------------------------
@@ -464,6 +467,24 @@ spram #(.addr_width(16),.mem_name("VRA3")) vram_hi
    .data(VRAM_do),
    .q(VRAM_di_hi)
 );
+
+devices devices
+(
+   .clk(clk21m),
+   .clk_en(ce_3m58_p),
+   .reset(reset),
+   .dev_enable(dev_enable),               //Konfigurace zařízení z load. Povoluje jednotlivé zařízení
+   .device(),
+   .device_num(),
+   .dev_addr(),
+   .dev_din(),
+   .dev_dout(),
+   .dev_wr(),
+   .dev_rd(),
+   .sound()
+);
+
+/*verilator tracing_on*/
 
 wire         [7:0] d_from_slots;
 wire signed [15:0] cart_sound;

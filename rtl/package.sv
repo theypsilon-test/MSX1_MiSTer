@@ -2,24 +2,35 @@ typedef enum logic [1:0] {AUTO,PAL,NTSC} video_mode_t;
 typedef enum logic {CAS_AUDIO_FILE,CAS_AUDIO_ADC} cas_audio_src_t;
 typedef enum logic [3:0] {CONFIG_NONE, CONFIG_FDC, CONFIG_SLOT_A, CONFIG_SLOT_B, CONFIG_SLOT_INTERNAL, CONFIG_KBD_LAYOUT, CONFIG_CONFIG, CONFIG_DEVICE} config_typ_t;
 typedef enum logic [2:0] {CART_TYP_ROM, CART_TYP_SCC, CART_TYP_SCC2, CART_TYP_FM_PAC, CART_TYP_MFRSD, CART_TYP_GM2, CART_TYP_FDC, CART_TYP_EMPTY } cart_typ_t;
-typedef enum logic [4:0] {MAPPER_UNUSED, MAPPER_RAM, MAPPER_AUTO, MAPPER_NONE, MAPPER_ASCII8, MAPPER_ASCII16, MAPPER_KONAMI, MAPPER_KONAMI_SCC, MAPPER_KOEI, MAPPER_LINEAR, MAPPER_RTYPE, MAPPER_WIZARDY, /*NEXT INTERNAL*/ MAPPER_FMPAC,MAPPER_OFFSET, MAPPER_MFRSD1,MAPPER_MFRSD2, MAPPER_MFRSD3, MAPPER_GM2, MAPPER_HALNOTE} mapper_typ_t;
-typedef enum logic [3:0] {DEVICE_NONE, DEVICE_ROM, DEVICE_RAM, DEVICE_FDC,  DEVICE_MFRSD0} device_typ_t;
+//typedef enum logic [4:0] {MAPPER_UNUSED, MAPPER_RAM, MAPPER_AUTO, MAPPER_NONE, MAPPER_ASCII8, MAPPER_ASCII16, MAPPER_KONAMI, MAPPER_KONAMI_SCC, MAPPER_KOEI, MAPPER_LINEAR, MAPPER_RTYPE, MAPPER_WIZARDY, /*NEXT INTERNAL*/ MAPPER_FMPAC,MAPPER_OFFSET, MAPPER_MFRSD1,MAPPER_MFRSD2, MAPPER_MFRSD3, MAPPER_GM2, MAPPER_HALNOTE} mapper_typ_t;
+//typedef enum logic [3:0] {DEVICE_NONE, DEVICE_ROM, DEVICE_RAM, DEVICE_FDC,  DEVICE_MFRSD0} device_typ_t;
 typedef enum logic [3:0] {ROM_NONE, ROM_ROM, ROM_RAM, ROM_FDC, ROM_FMPAC, ROM_MFRSD, ROM_GM2 } data_ID_t;
+typedef enum logic [3:0] {DEV_OPL3 } device_t;
 typedef enum logic {MSX1,MSX2} MSX_typ_t;
+
+
+typedef enum logic [3:0] {DEVICE_NONE, DEVICE_ROM} device_typ_t;
+typedef enum logic [4:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTYPE, MAPPER_ASCII8, MAPPER_KOEI, MAPPER_WIZARDY, MAPPER_UNUSED} mapper_typ_t;
+typedef enum logic [3:0] {BLOCK_RAM, BLOCK_ROM, BLOCK_SRAM, BLOCK_DEVICE, BLOCK_MAPPER, BLOCK_CART, BLOCK_REF_MEM, BLOCK_REF_DEV} block_t;
+typedef enum logic [2:0] {CONF_BLOCK, CONF_DEVICE, CONF_LAYOUT, CONF_CARTRIGE} conf_t;
+typedef enum logic [2:0] {ERR_NONE, ERR_BAD_MSX_CONF, ERR_NOT_SUPPORTED_CONF, ERR_NOT_SUPPORTED_BLOCK} error_t;
+
 
 typedef logic [15:0] dev_typ_t;
 
+
 /*msx*/
-parameter DEV_NONE           = dev_typ_t'(0);
-parameter DEV_KANJI          = dev_typ_t'(1 << 0);
-parameter DEV_OPL3           = dev_typ_t'(1 << 1);
-parameter DEV_RESET_STATUS   = dev_typ_t'(1 << 2);
+
+parameter DEVs_NONE           = dev_typ_t'(0);
+parameter DEVs_KANJI          = dev_typ_t'(1 << 0);
+parameter DEVs_OPL3           = dev_typ_t'(1 << 1);
+parameter DEVs_RESET_STATUS   = dev_typ_t'(1 << 2);
 /*cart*/
-parameter DEV_SCC            = dev_typ_t'(1 << 8);
-parameter DEV_SCC2           = dev_typ_t'(1 << 9);
-parameter DEV_MFRSD2         = dev_typ_t'(1 << 10);
-parameter DEV_FLASH          = dev_typ_t'(1 << 11);
-parameter DEV_PSG            = dev_typ_t'(1 << 12);
+parameter DEVs_SCC            = dev_typ_t'(1 << 8);
+parameter DEVs_SCC2           = dev_typ_t'(1 << 9);
+parameter DEVs_MFRSD2         = dev_typ_t'(1 << 10);
+parameter DEVs_FLASH          = dev_typ_t'(1 << 11);
+parameter DEVs_PSG            = dev_typ_t'(1 << 12);
 
 package MSX;
     

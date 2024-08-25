@@ -1,7 +1,7 @@
-/*verilator tracing_off*/
-module CRC_32(clk,rst,we,crc_in,crc_out);
+
+module CRC_32(clk,en,we,crc_in,crc_out);
     input clk;
-    input rst;
+    input en;
     input we;
     input [7:0] crc_in;
     output logic [31:0] crc_out;
@@ -9,7 +9,7 @@ module CRC_32(clk,rst,we,crc_in,crc_out);
     parameter POLY = 32'hEDB88320;
 
     logic [31:0] crc_reg;
-    logic last_rst;
+    logic last_en;
     integer i;
 
     initial begin
@@ -17,16 +17,17 @@ module CRC_32(clk,rst,we,crc_in,crc_out);
     end
 
     always @(posedge clk) begin
-        crc_out <= crc_out;
-        if (~rst && last_rst) begin
-            crc_reg <= 32'hFFFFFFFF;
-            crc_out <= crc_reg ^ 32'hFFFFFFFF;
-        end else begin
+        if (en) begin
             if (we) begin
                 crc_reg <= crc_next(crc_in, crc_reg);
             end
+        end else begin
+            if (last_en) begin
+                crc_reg <= 32'hFFFFFFFF;
+                crc_out <= crc_reg ^ 32'hFFFFFFFF;    
+            end
         end
-        last_rst <= rst;
+        last_en <= en;
     end
 
     function [31:0] crc_next;

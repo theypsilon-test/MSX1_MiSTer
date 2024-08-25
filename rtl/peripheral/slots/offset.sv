@@ -1,4 +1,4 @@
-module mapper_none (
+module mapper_offset (
     input               cpu_mreq,
     input               cpu_rd,
     input               cpu_wr,
@@ -10,7 +10,7 @@ module mapper_none (
     output              ram_cs
 );
 
-wire cs = (mapper == MAPPER_NONE) & cpu_mreq;
+wire cs = (mapper == MAPPER_OFFSET) & cpu_mreq;
 
 assign ram_cs   = cs;
 assign mem_addr = cs ? {offset_ram, cpu_addr[13:0]} : {27{1'b1}};
