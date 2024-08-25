@@ -1,0 +1,11 @@
+{
+  "NONE": 0,
+  "OFFSET": 1,
+  "ASCII16": 2,
+  "RTYPE": 3,
+  "ASCII8": 4,
+  "KOEI": 5,
+  "WIZARDY": 6,
+  "KONAMI": 7,
+  "FMPAC": 8
+}

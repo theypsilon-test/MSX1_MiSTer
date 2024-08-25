@@ -1,0 +1,10 @@
+{
+  "RAM": 0,
+  "ROM": 1,
+  "SRAM": 2,
+  "DEVICE": 3,
+  "MAPPER": 4,
+  "SLOT": 5,
+  "REF_MEM": 6,
+  "REF_DEV": 7
+}

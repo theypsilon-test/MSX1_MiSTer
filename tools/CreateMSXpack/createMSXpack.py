@@ -136,14 +136,108 @@ def create_FW_block(type, size):
         head.append(0)
     return head
 
+
+# MSX DEVICE_TABLE_ADDR ROM_TABLE_ID_ADDR MAX_DEVICE_ID MAX_ROM_ID
+# DEVICE TABLE 8 BYT PER DEVICE (MAX)
+# ROM TABLE 4 byt per ROM
+
+# Pro cart potřebuji vyhledat device. Pokud je do adresniho prostoru musi mit existujici mapper. Pres IO port musi mit pouze dev, ale potrebuji io base.
+# Pro slot potřebuji vyheldat device. Zde je pouze moznost mapperu. IO port nepotrebuji, ale pro jistotu ponechme cestu otevrenou
+# Pro computer potřebuji vyhledat device, ale to je mapováno pouze do IO. Je to ciste dev. Potrebuji io base.
+# Nové názvosloví (pro mně)
+# Memory mapper -- Mapper pro mapování paměti/SRAM
+# Device mapper -- Mapování z adresního prostoru na device
+# Device        -- Zařízení na IO portech
+# Cartrige muze požádat o slot expander pro subsloty a v každém subslotu různé mappery typycky MFRSD
+
+# Každé device se může namapovat na libovolný subslot a blok. Těchto namapování může být volitelné množství.
+# popis parametrů
+# 1. memory mapper / device mapper _id
+# 2. device_id 
+# 3. rom_id_id
+# 4. ram_block (16kb block)
+# 5. sram_block (2kb block)
+# 6. ram pattern
+# 7. mode
+# 8. param   
+# 9. subslot
+# 10. last.
+
+#MSX BBBB BBBB
+
+def createBlock(node, sub_slot_id, rom_hashes=None):
+    def get_text(element, tag, default=None):
+        """Helper function to extract text from an XML element."""
+        child = element.find(tag)
+        return child.text if child is not None else default
+
+    def add_block(block, block_start, block_count):
+        """Helper function to append block information to blocks list."""
+        
+        full_path = None
+        sha1 = get_text(block, 'SHA1')
+        
+        if sha1 is not None:
+            if sha1 not in rom_hashes.keys():
+                print(f"Nenalezena ROM {get_text(block, 'filename')} ignore DEVICE !!!!")
+                return None
+            else:
+                full_path = rom_hashes[sha1]
+
+        return {
+            'mapper': get_text(block, 'mapper'),
+            'device': get_text(block, 'device'),
+            'SHA1': sha1,
+            'filename': get_text(block, 'filename'),
+            'sub_slot': sub_slot_id,
+            'block_start': block_start,
+            'block_count': block_count,
+            'full_path': full_path
+        }
+
+    blocks = []
+    node_blocks = node.findall("./block")
+
+    if not node_blocks:
+        block_start = 0
+        block_count = int(get_text(node, 'block_count', 4))
+        block = add_block(node, block_start, block_count)
+        if block:
+            blocks.append(block)
+    else:
+        for block in node_blocks:
+            block_start = int(block.attrib.get("start", 0))
+            block_count = int(get_text(block, 'block_count', 4 - block_start))
+            block_info = add_block(block, block_start, block_count)
+            if block_info:
+                blocks.append(block_info)
+
+    return blocks
+
+def createDevice(node, rom_hashes=None):
+    blocks = []
+    sub_slots = node.findall("./secondary")
+
+    if not sub_slots:
+        blocks.extend(createBlock(node, 0, rom_hashes))
+    else:
+        for sub_slot in sub_slots:
+            sub_slot_id = sub_slot.attrib.get("slot", 0)
+            blocks.extend(createBlock(sub_slot, sub_slot_id, rom_hashes))
+
+    print(blocks)
+
 def createFWpack(root, fileHandle) :
     try :
         for fw in root.findall("./fw"):
+            createDevice(fw, rom_hashes)
             fw_name = fw.attrib["name"]
             fw_filename = fw.find('filename').text if fw.find('filename') is not None else None
             fw_SHA1 = fw.find('SHA1').text if fw.find('SHA1') is not None else None
             fw_size = int(fw.find('size').text) if fw.find('size') is not None else None
             fw_skip = int(fw.find('skip').text) if fw.find('skip') is not None else None
+            fw_device = fw.find('device').text if fw.find('device') is not None else None
+            fw_mapper = fw.find('mapper').text if fw.find('mapper') is not None else None
             if fw_name in EXTENSIONS :
                 typ = EXTENSIONS.index(fw_name)
                 if fw_SHA1 is not None :
@@ -278,11 +372,12 @@ def parseDir(dir) :
                 tree = ET.parse(filepath)
                 root = tree.getroot()
                 outfile = open(output_filename, "wb")               
-                print(output_filename)
                 error = True
-                if root.tag == "msxConfig" :
-                    error = createMSXpack(root, outfile)
+#                if root.tag == "msxConfig" :
+#                    print(output_filename)
+#                    error = createMSXpack(root, outfile)
                 if root.tag == "fwConfig" :
+                    print(output_filename)
                     error = createFWpack(root, outfile)
                 if error :
                     outfile.close()

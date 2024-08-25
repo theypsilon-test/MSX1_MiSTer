@@ -1,0 +1,11 @@
+{
+  "KonamiSCC": 0,
+  "MEGA_FLASH_ROMs": 1,
+  "FM_PAC": 2,
+  "DEVICE": 3,
+  "MAPPER": 4,
+  "SLOT": 5,
+  "RTYPE": 10,
+  "REF_DEV": 7,
+  "KonamiSCC+": 8
+}

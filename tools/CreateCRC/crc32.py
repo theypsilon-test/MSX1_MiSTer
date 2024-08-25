@@ -5,6 +5,10 @@ import json
 
 MAPPER_FILE = "mappers.json"
 
+# Definujeme vlastní výjimku
+class InvalidFileSizeException(Exception):
+    pass
+
 def calculate_crc32(file_path):
     """Vypočítá CRC32 kontrolní součet souboru."""
     buf_size = 65536  # Čtení po částech o velikosti 64KB
@@ -69,6 +73,56 @@ def find_files(root_dir, extensions):
             if any(file.endswith(ext) for ext in extensions):
                 yield os.path.join(dirpath, file)
 
+def calculate_values(mapper_name, sram, mode, param, file_size):
+    """Vypočítá dvě hodnoty na základě názvu mapperu a velikosti souboru."""
+    # Tuto logiku si implementujete sami podle vašich požadavků.
+    blocks = file_size // 16384
+    if file_size % 16384 :
+        blocks = blocks + 1 
+
+    if mapper_name == "0x0000":
+        if blocks > 4 :
+            raise InvalidFileSizeException(f"Velikost souboru {file_size} je příliš velká pro  mapper {mapper_name}")
+        
+        mode = 0
+        param = 0
+        for i in range(blocks):
+            mode |= 2 << (2*i)
+            param |= i << (2*i)
+
+        #print (f"Mapper {mapper_name} Velikost {file_size} mode: {mode:#x} param: {param:#x}")
+    elif mapper_name == "0x4000":
+        if blocks > 4 :
+            raise InvalidFileSizeException(f"Velikost souboru {file_size} je příliš velká pro  mapper {mapper_name}")
+        
+        mode = 0
+        param = 0
+        count = blocks
+
+        if blocks == 1 : 
+            count = 4           
+        if blocks == 2 : 
+            count = 4
+        
+        for i in range(count):
+            offset = i & (blocks - 1)
+            mode |= 2 << (2 * ((i + 1) & 3))
+            param |= offset << (2 * ((i + 1) & 3))
+        #print (f"Mapper {mapper_name} Velikost {file_size} mode: {mode:#x} param: {param:#x}")
+
+    elif mapper_name == "0x8000":
+        if blocks > 2 :
+            raise InvalidFileSizeException(f"Velikost souboru {file_size} je příliš velká pro  mapper {mapper_name}")
+        
+        mode = 0
+        param = 0
+        for i in range(blocks):
+            mode |= 2 << (2 * (i + 2))
+            param |= i << ( 2 * (i + 2))
+        #print (f"Mapper {mapper_name} Velikost {file_size} mode: {mode:#x} param: {param:#x}")
+
+    return sram, mode, param
+
 def process_files(root_dir, existing_mappers):
     """Zpracovává soubory, vypočítává CRC32 a připravuje binární výstup."""
     file_extensions = ['.ROM', '.rom', '.BIN', '.bin']
@@ -82,8 +136,9 @@ def process_files(root_dir, existing_mappers):
 
         if mapper_name:
             new_mapper_names.add(mapper_name)
-            crc32_checksum = calculate_crc32(file_path)
-            file_data.append((file_path, file_name, crc32_checksum, mapper_name))
+
+        crc32_checksum = calculate_crc32(file_path)
+        file_data.append((file_path, file_name, crc32_checksum, mapper_name))
 
     # Aktualizuje seznam mapperů
     updated_mappers, updated = update_mappers(existing_mappers, new_mapper_names)
@@ -92,9 +147,14 @@ def process_files(root_dir, existing_mappers):
     binary_data = bytearray()
     for file_path, file_name, crc32_checksum, mapper_name in file_data:
         mapper_values = updated_mappers[mapper_name]
-        # Zabalí CRC32 a hodnoty mapperu (4 byty) do binárního formátu
-        binary_data.extend(struct.pack('<I', crc32_checksum))
-        binary_data.extend(struct.pack('BBBB', *mapper_values))
+        file_size = os.path.getsize(file_path)
+        try:
+            sram, mode, param = calculate_values(mapper_name, mapper_values[1], mapper_values[2], mapper_values[3], file_size)
+            binary_data.extend(struct.pack('<I', crc32_checksum))
+            binary_data.extend(struct.pack('B', mapper_values[0]))  # Pouze první hodnota jako ID mapperu
+            binary_data.extend(struct.pack('BBB', sram, param, mode))  
+        except InvalidFileSizeException as e:
+                print(f"Chyba při zpracování souboru {file_name}: {e}")
 
     return binary_data, updated_mappers, updated, file_data
 
@@ -106,7 +166,7 @@ def write_binary_file(output_path, binary_data):
 # Hlavní část programu
 if __name__ == '__main__':
     root_directory = input("Zadejte kořenový adresář pro vyhledávání: ").strip()
-    output_file_path = "output_data.bin"
+    output_file_path = "mappers.db"
 
     # Načte existující seznam mapperů
     existing_mappers = load_existing_mappers(MAPPER_FILE)
