@@ -128,10 +128,6 @@ module memory_upload
     logic [4:0] ref_ram;
     logic       crc_en;
 
-    // Alias pro typy bloků a konfigurací
-    block_t block_typ = block_t'(conf[2]);
-    conf_t  config_typ = conf_t'(conf[0]);
-
     always @(posedge clk) begin      
         logic [24:0] data_size;
         logic [7:0]  temp[8];
@@ -392,7 +388,7 @@ module memory_upload
                 STATE_SEARCH_CRC32_INIT: begin
                     // TODO: Pokud není k dispozici CRC32 DB, nastav mapper offset a pokračuj. Nezapomeň na obnovení ddr3_addr.
                     state <= STATE_SEARCH_CRC32; 
-                    ddr3_addr <= DDR3_CRC32_TABLE_ADDR;                               // Adresa CRC32 tabulky
+                    ddr3_addr <= DDR3_CRC32_TABLE_ADDR;                     // Adresa CRC32 tabulky
                     ddr3_rd <= 1'b1;                                        // Prefetch
                     crc_en  <= 1'b0;                                        // Zastavení počítání CRC
                 end
