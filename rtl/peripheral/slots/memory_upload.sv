@@ -38,6 +38,10 @@ module memory_upload
     output logic          [1:0] led_out
 );
 
+    // Parametry
+    localparam DDR3_BASE_ADDR = 28'h300000;
+    localparam DDR3_CRC32_TABLE_ADDR = 28'h1600000;
+
     // Stavový signál, který indikuje, zda je modul resetován
     assign reset_rq = state != STATE_IDLE;
 
@@ -196,13 +200,13 @@ module memory_upload
                         if (ioctl_size[1] > 0) begin
                             state <= STATE_READ_CONF;
                             next_state <= STATE_CHECK_FW_CONF;
-                            ddr3_addr <= 'h300000;
+                            ddr3_addr <= DDR3_BASE_ADDR;
                             fw_space     <= '1;                         // Čtení firmware oblasti
                         end
                     end
                 end
                 STATE_READ_CONF: begin                                  // Přečte požadovaný počet bytů do konfigurace
-                    if (fw_space ? ioctl_size[1] > (ddr3_addr - 'h300000) : ioctl_size[0] > (ddr3_addr)) begin  // Kontrola konce dat
+                    if (fw_space ? ioctl_size[1] > (ddr3_addr - DDR3_BASE_ADDR) : ioctl_size[0] > (ddr3_addr)) begin  // Kontrola konce dat
                         conf[head_addr] <= ddr3_dout;
                         ddr3_rd <= '1;
                         if (head_addr == read_cnt) begin
@@ -388,7 +392,7 @@ module memory_upload
                 STATE_SEARCH_CRC32_INIT: begin
                     // TODO: Pokud není k dispozici CRC32 DB, nastav mapper offset a pokračuj. Nezapomeň na obnovení ddr3_addr.
                     state <= STATE_SEARCH_CRC32; 
-                    ddr3_addr <= 28'h1600000;                               // Adresa CRC32 tabulky
+                    ddr3_addr <= DDR3_CRC32_TABLE_ADDR;                               // Adresa CRC32 tabulky
                     ddr3_rd <= 1'b1;                                        // Prefetch
                     crc_en  <= 1'b0;                                        // Zastavení počítání CRC
                 end
@@ -408,7 +412,7 @@ module memory_upload
                             state <= STATE_IDLE;
                         end
                     end else begin
-                        if ((ddr3_addr - 28'h1600000) == {1'b0, ioctl_size[4]}) begin
+                        if ((ddr3_addr - DDR3_CRC32_TABLE_ADDR) == {1'b0, ioctl_size[4]}) begin
                             $display("NOT FIND CRC32: %x", rom_crc32);
                             // TODO: Nastav linear mapper a pokračuj.
                             ddr3_addr <= save_addr;
