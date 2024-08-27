@@ -162,6 +162,18 @@
     <ClCompile Include="obj_dir\Vemu_hps_io__Cz1_V6__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_h7a01e6cc__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_hecfdb33c__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_hecfdb33c__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_keyboard__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="obj_dir\Vemu_MSX__DepSet_h8aa69a26__0.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -202,6 +214,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_sdram__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_spram__A9_Mz2_MBz3__DepSet_h6ae187dc__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_spram__A9_Mz2_MBz3__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_spram__A10_M56524132__DepSet_h377701ec__0__Slow.cpp">
@@ -326,6 +344,9 @@
     <ClInclude Include="obj_dir\Vemu_hps_io__Cz1_V6.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_keyboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="obj_dir\Vemu_MSX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -336,6 +357,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="obj_dir\Vemu_sdram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_spram__A9_Mz2_MBz3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="obj_dir\Vemu_spram__A10_M56524132.h">

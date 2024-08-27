@@ -35,7 +35,6 @@ verilator \
 ./rtl/konami_scc.sv         \
 ./rtl/scc_sound.sv         \
 ./rtl/gamemaster2.sv         \
-./rtl/fm_pac.sv         \
 ./rtl/opll.sv         \
 ./rtl/kanji.sv         \
 ./rtl/psg.sv         \
@@ -45,48 +44,38 @@ verilator \
 ../rtl/nvram_backup.sv \
 ../rtl/msx.sv \
 ../rtl/peripheral/jt8255.v \
-./rtl/tv80.sv \
-./rtl/vdp18_core.sv \
-./rtl/msx_slots.sv \
-./rtl/devices.sv \
 ../rtl/peripheral/slots/memory_upload.sv   \
 ../rtl/peripheral/slots/crc32.sv           \
 ../rtl/peripheral/slots/mapper_detect.sv   \
-
-#MSX
-#../rtl/peripheral/slots/msx_slots.sv       \
-#../rtl/peripheral/slots/msx2_ram_mapper.sv \
-#../rtl/peripheral/slots/ascii8.sv          \
-#../rtl/peripheral/slots/ascii16.sv         \
-#../rtl/peripheral/slots/reset_status.sv    \
-#../rtl/peripheral/slots/subslot.sv         \
-#../rtl/peripheral/slots/none.sv            \
-#../rtl/peripheral/slots/mappers.sv         \
-#../rtl/peripheral/slots/devices.sv         \
-
-#CPU
-#../rtl/cpu/tv80_alu.v \
-#../rtl/cpu/tv80_core.v \
-#../rtl/cpu/tv80_mcode.v \
-#../rtl/cpu/tv80_reg.v \
-#../rtl/cpu/tv80n.v \
-
-#VDP
-#../rtl/video/vdp18v/vdp18_pack-p.sv     \
-#../rtl/video/vdp18v/vdp18_col_pack-p.sv \
-#../rtl/video/vdp18v/vdp18_addr_mux.sv   \
-#../rtl/video/vdp18v/vdp18_clk_gen.sv    \
-#../rtl/video/vdp18v/vdp18_col_mux.sv    \
-#../rtl/video/vdp18v/vdp18_core.sv       \
-#../rtl/video/vdp18v/vdp18_cpuio.sv      \
-#../rtl/video/vdp18v/vdp18_ctrl.sv       \
-#../rtl/video/vdp18v/vdp18_hor_vert.sv   \
-#../rtl/video/vdp18v/vdp18_pattern.sv    \
-#../rtl/video/vdp18v/vdp18_sprite.sv     \
+../rtl/peripheral/slots/msx_slots.sv       \
+../rtl/peripheral/slots/msx2_ram_mapper.sv \
+../rtl/peripheral/slots/ascii8.sv          \
+../rtl/peripheral/slots/ascii16.sv         \
+../rtl/peripheral/slots/reset_status.sv    \
+../rtl/peripheral/slots/subslot.sv         \
+../rtl/peripheral/slots/offset.sv            \
+../rtl/peripheral/slots/mappers.sv         \
+../rtl/peripheral/slots/devices.sv         \
+../rtl/peripheral/slots/fm_pac.sv          \
+../rtl/cpu/tv80_alu.v \
+../rtl/cpu/tv80_core.v \
+../rtl/cpu/tv80_mcode.v \
+../rtl/cpu/tv80_reg.v \
+../rtl/cpu/tv80n.v \
+../rtl/video/vdp18v/vdp18_pack-p.sv     \
+../rtl/video/vdp18v/vdp18_col_pack-p.sv \
+../rtl/video/vdp18v/vdp18_addr_mux.sv   \
+../rtl/video/vdp18v/vdp18_clk_gen.sv    \
+../rtl/video/vdp18v/vdp18_col_mux.sv    \
+../rtl/video/vdp18v/vdp18_core.sv       \
+../rtl/video/vdp18v/vdp18_cpuio.sv      \
+../rtl/video/vdp18v/vdp18_ctrl.sv       \
+../rtl/video/vdp18v/vdp18_hor_vert.sv   \
+../rtl/video/vdp18v/vdp18_pattern.sv    \
+../rtl/video/vdp18v/vdp18_sprite.sv     \
 
 
 #../rtl/peripheral/slots/fdc.sv             \
-#../rtl/peripheral/slots/fm_pac.sv          \
 #../rtl/peripheral/slots/konami.sv          \
 #../rtl/peripheral/slots/konami_scc.sv      \
 #../rtl/peripheral/slots/mfrsd.sv           \

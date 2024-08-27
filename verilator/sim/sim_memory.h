@@ -22,7 +22,7 @@ public:
 	char* mem;
 	int mem_size;
 	
-	SimMemoryRam(DebugConsole c);
+	SimMemoryRam(DebugConsole c, int id);
 	~SimMemoryRam();
 	char* AllocateMemory(int size);
 	void FreeMemory(void);
@@ -33,27 +33,28 @@ public:
 	void MapSignals(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b);
 	void BeforeEval(void);
 	void AfterEval(void);
-
+	char* GetMem(void);
+	int GetID(void);
 private:
 	DebugConsole console;
-
+	int ID;
 };
 
 struct SimMemory {
 public:
 	SimMemory(DebugConsole c);
 	~SimMemory();
-	char* SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size, std::string file);
-	char* SimMemory::AddRAM(SData* addr, CData* data, CData* q, CData* we, int size);
-	char* SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size, std::string file);
-	char* SimMemory::AddRAM(IData* addr, CData* data, CData* q, CData* we, int size);
-	char* SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string file);
-	char* SimMemory::AddRAM(SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size);
-	char* SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string file);
-	char* SimMemory::AddRAM(IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size);
+	SimMemoryRam* AddRAM(int id, SData* addr, CData* data, CData* q, CData* we, int size, std::string file);
+	SimMemoryRam* AddRAM(int id, SData* addr, CData* data, CData* q, CData* we, int size);
+	SimMemoryRam* AddRAM(int id, IData* addr, CData* data, CData* q, CData* we, int size, std::string file);
+	SimMemoryRam* AddRAM(int id, IData* addr, CData* data, CData* q, CData* we, int size);
+	SimMemoryRam* AddRAM(int id, SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string file);
+	SimMemoryRam* AddRAM(int id, SData* addr_a, CData* data_a, CData* q_a, CData* we_a, SData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size);
+	SimMemoryRam* AddRAM(int id, IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size, std::string file);
+	SimMemoryRam* AddRAM(int id, IData* addr_a, CData* data_a, CData* q_a, CData* we_a, IData* addr_b, CData* data_b, CData* q_b, CData* we_b, int size);
 	void BeforeEval(void);
 	void AfterEval(void);
 private:
 	DebugConsole console;
-	std::list<SimMemoryRam> Rams;
+	std::list<SimMemoryRam*> Rams;
 };

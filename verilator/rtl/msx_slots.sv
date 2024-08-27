@@ -7,8 +7,8 @@ module msx_slots
    input                       reset,
    //BASE                
    input                [15:0] cpu_addr,
-   input                 [7:0] cpu_dout,
-   output                [7:0] cpu_din,
+   input                 [7:0] cpu_data,
+   output                [7:0] data,
    input                       cpu_wr,
    input                       cpu_rd,
    input                       cpu_mreq,

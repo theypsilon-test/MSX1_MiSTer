@@ -73,7 +73,7 @@ const char* slotB[] = { "ROM","SCC","SCC +","FM - PAC","Empty" };
 const char* mapperA[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* mapperB[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* sramA[] = { "auto","1kB","2kB","4kB","8kB","16kB","32kB","none" };
-int currentSlotA = 0;
+int currentSlotA = 3;
 int currentSlotB = 0;
 int currentMapperA = 0;
 int currentMapperB = 0;
@@ -104,13 +104,13 @@ int currentSramA = 0;
 //[38]    BORDER                0
 
 
-
+SimInput input(0, console);
 SimBus bus(console);
 
 // Video
 // -----
 #define VGA_WIDTH 256 //320
-#define VGA_HEIGHT 180 //240
+#define VGA_HEIGHT 192 //240
 #define VGA_ROTATE 0
 #define VGA_SCALE_X vga_scale
 #define VGA_SCALE_Y vga_scale
@@ -122,9 +122,12 @@ float vga_scale = 1.5;
 #define systemRAM top->emu->systemRAM
 #define VRAMhi top->emu->MSX->vram_hi
 #define VRAMlo top->emu->MSX->vram_lo
-char* systemRAM_mem;
-char* vdp_mem_hi;
-char* vdp_mem_lo;
+#define kbd top->emu->MSX->msx_key->kbd_ram
+
+SimMemoryRam* systemRAM_mem;
+SimMemoryRam* vdp_mem_hi;
+SimMemoryRam* vdp_mem_lo;
+SimMemoryRam* kbd_map;
 
 SimSDRAM SDram(console);
 SimDDR DDR(console);
@@ -199,7 +202,7 @@ int verilate() {
 	if (!Verilated::gotFinish()) {
 
 		// Assert reset during startup
-		if (main_time < initialReset) { 
+		if (main_time < initialReset) {
 			top->RESET = 1;
 		}
 		// Deassert reset after startup
@@ -207,38 +210,41 @@ int verilate() {
 
 		// Clock dividers
 		clk_sys.Tick();
+		ce_11.Tick();
 
 		// Set clocks in core
 		top->emu->pll->outclk_1 = clk_sys.clk;
 		top->emu->hps_io->status = status;
-
 		// Simulate both edges of fastest clock
 		if (clk_sys.clk != clk_sys.old) {
 
 			// System clock simulates HPS functions
 			if (ce_11.clk) {
-//				input.BeforeEval();
+				input.BeforeEval();
 			}
 
 			if (clk_sys.IsRising()) {
 				if (main_time > initialReset) {
 					bus.BeforeEval();
 				}
-
+				Rams.BeforeEval();
 				SDram.BeforeEval();
 			}
-			Rams.BeforeEval();
+			
 			top->eval();
 			
-			Rams.AfterEval();
+			
 			if (clk_sys.IsRising()) {
+				Rams.AfterEval();
 				SDram.AfterEval();
 				DDR.AfterEval();
 
+				
 				if (top->emu->MSX->vdp_vdp18->ce_pix) {
 					uint32_t colour = 0xFF000000 | top->emu->MSX->vdp_vdp18->rgb_b_o << 16 | top->emu->MSX->vdp_vdp18->rgb_g_o << 8 | top->emu->MSX->vdp_vdp18->rgb_r_o;
 					video.Clock(top->emu->MSX->vdp_vdp18->hblank_o, top->emu->MSX->vdp_vdp18->vblank_o, top->emu->MSX->vdp_vdp18->hsync_n_o, top->emu->MSX->vdp_vdp18->vsync_n_o, colour);
 				}
+				
 			}
 			
 			
@@ -247,8 +253,15 @@ int verilate() {
 				tfp->dump(main_time); //Trace
 			}
 			
-			if (clk_sys.IsFalling()) {
+			if (clk_sys.IsFalling()) 
+			{
 				bus.AfterEval();
+				
+				// Ladìní load
+				//if (bus.AfterEval())
+				//{
+				//	Trace = 1;
+				//}
 			}
 
 		}
@@ -261,7 +274,7 @@ int verilate() {
 		}
 */
 		main_time++;
-			
+		if (main_time == 192595000	) Trace = 1;
 		return 1;
 	}
 
@@ -291,6 +304,7 @@ int main(int argc, char** argv, char** env) {
 
 	// Attach bus
 	systemRAM_mem = Rams.AddRAM(
+		1,
 		&systemRAM->address_a,
 		&systemRAM->data_a,
 		&systemRAM->q_a,
@@ -302,6 +316,7 @@ int main(int argc, char** argv, char** env) {
 		1 << systemRAM->addr_width);
 
 	vdp_mem_hi = Rams.AddRAM(
+		2,
 		&VRAMhi->address,
 		&VRAMhi->data,
 		&VRAMhi->q,
@@ -309,12 +324,21 @@ int main(int argc, char** argv, char** env) {
 		1 << VRAMhi->addr_width);
 
 	vdp_mem_lo = Rams.AddRAM(
+		3,
 		&VRAMlo->address,
 		&VRAMlo->data,
 		&VRAMlo->q,
 		&VRAMlo->wren,
 		1 << VRAMlo->addr_width);
 
+	kbd_map = Rams.AddRAM(
+		4,
+		&kbd->address,
+		&kbd->data,
+		&kbd->q,
+		&kbd->wren,
+		1 << kbd->addr_width);
+	
 	DDR.addr = &top->emu->buffer->addr;
 	DDR.dout = &top->emu->buffer->dout;
 	DDR.rd = &top->emu->buffer->rd;
@@ -353,6 +377,11 @@ int main(int argc, char** argv, char** env) {
 	bus.ioctl_dout = &top->emu->hps_io->ioctl_dout;
 	top->emu->hps_io->sdram_sz = SDram.getHPSsize();
 
+	
+	input.ps2_key = &top->emu->hps_io->ps2_key;
+	input.Initialise();
+
+
 	// Setup video output
 	if (video.Initialise(windowTitle) == 1) { return 1; }
 
@@ -366,14 +395,15 @@ int main(int argc, char** argv, char** env) {
 	//40000000 Maximum					
 
 	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
-	bus.QueueDownload("./rom/Mappers/output_data.bin", 6, true, 0x31600000, &DDR);
-	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.MSX", 1, true, 0x30000000, &DDR);
-	bus.QueueDownload("./rom/roms/10th Frame - Access Software [ASCII16] .rom", 3, true, 0x30C00000, &DDR);
+	bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
+	bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
+	//bus.QueueDownload("./rom/roms/R-Type - IREM [R-Type] .rom", 3, true, 0x30C00000, &DDR);
+	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
 	
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, false);
 
-
+	ChangeStatus();	//Nastav status (defaultní hodnotu)
 #ifdef WIN32
 	MSG msg;
 	ZeroMemory(&msg, sizeof(msg));
@@ -398,6 +428,7 @@ int main(int argc, char** argv, char** env) {
 		}
 #endif
 		video.StartFrame();
+		input.Read();
 
 		// Draw GUI
 		// --------
@@ -427,31 +458,36 @@ int main(int argc, char** argv, char** env) {
 		// Debug log window
 		console.Draw(windowTitle_DebugLog, &showDebugLog, ImVec2(500, 700));
 		ImGui::SetWindowPos(windowTitle_DebugLog, ImVec2(0, 160), ImGuiCond_Once);
-/*
+
 		// Memory debug
 		ImGui::Begin("DDRAM");
 		mem_edit.DrawContents(DDR.GetMem(), 256*1024*1024, 0x30000000);
 		ImGui::End();
-		
+	
 		ImGui::Begin("SDRAM");
 		mem_edit.DrawContents(SDram.GetMem(), 0x1000000, 0);
 		ImGui::End();
 
 
 		ImGui::Begin("VRAM Editor HI");
-		mem_edit.DrawContents(vdp_mem_hi, 1 << VRAMhi->addr_width, 0);
+		mem_edit.DrawContents(vdp_mem_hi->GetMem(), 1 << VRAMhi->addr_width, 0);
 		ImGui::End();
 
 		ImGui::Begin("VRAM Editor LO");
-		mem_edit.DrawContents(vdp_mem_lo, 1 << VRAMlo->addr_width, 0);
+		mem_edit.DrawContents(vdp_mem_lo->GetMem(), 1 << VRAMlo->addr_width, 0);
 		ImGui::End();
 
 
+		ImGui::Begin("KEYBOARD");
+		mem_edit.DrawContents(kbd_map->GetMem(), 1 << kbd->addr_width, 0);
+		ImGui::End();
+		
+		
 		ImGui::Begin("RAM Editor");
-		mem_edit.DrawContents(systemRAM_mem, 1 << systemRAM->addr_width, 0);
+		mem_edit.DrawContents(systemRAM_mem->GetMem(), 1 << systemRAM->addr_width, 0);
 		ImGui::End();
 
-*/		
+		
 		//HPS emulace
 		ImGui::Begin(windowTitle_HPS);
 		ImGui::SetWindowPos(windowTitle_Trace, ImVec2(0, 870), ImGuiCond_Once);

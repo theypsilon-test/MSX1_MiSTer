@@ -76,6 +76,10 @@
     <ClCompile Include="obj_dir\Vemu_emu__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_hps_io__Cz1_V6__DepSet_hcd782af7__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_hps_io__Cz1_V6__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_h7a01e6cc__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_hecfdb33c__0.cpp" />
+    <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_hecfdb33c__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_keyboard__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_MSX__DepSet_h8aa69a26__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_MSX__DepSet_h8aa69a26__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_MSX__Slow.cpp" />
@@ -94,6 +98,8 @@
     <ClCompile Include="obj_dir\Vemu_spram__A10_M56524132__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_spram__A10_M56524133__DepSet_he586788a__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_spram__A10_M56524133__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_spram__A9_Mz2_MBz3__DepSet_h6ae187dc__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_spram__A9_Mz2_MBz3__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__DepSet_h368a78f1__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_vdp18_core__DepSet_h947ea413__0.cpp" />
@@ -143,12 +149,14 @@
     <ClInclude Include="obj_dir\Vemu_dpram__A12.h" />
     <ClInclude Include="obj_dir\Vemu_emu.h" />
     <ClInclude Include="obj_dir\Vemu_hps_io__Cz1_V6.h" />
+    <ClInclude Include="obj_dir\Vemu_keyboard.h" />
     <ClInclude Include="obj_dir\Vemu_MSX.h" />
     <ClInclude Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR.h" />
     <ClInclude Include="obj_dir\Vemu_pll.h" />
     <ClInclude Include="obj_dir\Vemu_sdram.h" />
     <ClInclude Include="obj_dir\Vemu_spram__A10_M56524132.h" />
     <ClInclude Include="obj_dir\Vemu_spram__A10_M56524133.h" />
+    <ClInclude Include="obj_dir\Vemu_spram__A9_Mz2_MBz3.h" />
     <ClInclude Include="obj_dir\Vemu_vdp18_col_pack.h" />
     <ClInclude Include="obj_dir\Vemu_vdp18_core.h" />
     <ClInclude Include="obj_dir\Vemu__Dpi.h" />

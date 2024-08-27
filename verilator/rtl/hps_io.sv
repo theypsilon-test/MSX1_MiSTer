@@ -67,10 +67,10 @@ module hps_io #(parameter CONF_STR, CONF_STR_BRAM=1, PS2DIV=0, WIDE=0, VDNUM=1, 
 	// ps2 alternative interface.
 
 	// [8] - extended, [9] - pressed, [10] - toggles with every press/release
-	output reg [10:0] ps2_key = 0,
+	output reg [10:0] ps2_key /* verilator public */ = 0,
 
 	// [24] - toggles with every event
-	output reg [24:0] ps2_mouse = 0,
+	output reg [24:0] ps2_mouse = 0 ,
 	output reg [15:0] ps2_mouse_ext = 0, // 15:8 - reserved(additional buttons), 7:0 - wheel movements
 
 	output      [1:0] buttons,

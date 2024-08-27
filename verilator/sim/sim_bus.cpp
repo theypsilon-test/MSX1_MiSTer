@@ -153,8 +153,10 @@ void SimBus::BeforeEval()
 	}
 }
 
-void SimBus::AfterEval()
+bool SimBus::AfterEval()
 {
+	bool ret = false;
+
 	if (*ioctl_download == 1 && ioctl_file)
 	{
 		if (next_rd && next_wr == false)
@@ -171,9 +173,14 @@ void SimBus::AfterEval()
 				*ioctl_wr = 0;
 				recovery_wait = RECOVERY_WAIT;
 				console.AddLog("ioctl_download complete %d", ioctl_next_addr);
+				if (currentDownload.index == 1) 
+				{
+					ret = true;
+				}
 			}
 		}
 	}
+	return ret;
 }
 
 

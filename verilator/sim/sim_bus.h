@@ -59,7 +59,7 @@ public:
 	CData* ioctl_din;
 
 	void BeforeEval(void);
-	void AfterEval(void);
+	bool AfterEval(void);
 	void QueueDownload(std::string file, int index);
 	void QueueDownload(std::string file, int index, bool restart);
 	void QueueDownload(std::string file, int index, bool restart, int addr, SimDDR *DDR);

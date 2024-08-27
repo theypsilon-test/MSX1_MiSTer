@@ -1,0 +1,46 @@
+Starting download: C:\Project\FPGA\SRC\MiSTerFPGA\MSX1_Mister\verilator\rom\roms\Hydlide 2 - Shine Of Darkness - T&ESOFT [ASCII16SRAM2] .rom 33376 velikost: 131072
+ioctl_download complete 131072
+DO CONFIG_BLOCK 4
+CONF slot: 0 subslot: 0 (expand subslot: 0) mem_dev:01 ram_size:0200 device:ff mapper:03 mode:0-0-2-2 param:0-0-1-0 pattern:03
+  SLOT INTERNAL
+           FILL RAM ID: 0 addr:0000000 size:        32 kB (save:0000000)
+              FINAL mode:0-0-2-2 param:0-0-1-0
+              FINAL mapper:03 mode:0a param:04 mem_dev:1
+              STORE block           0 mapper: 3 mode:2 param:0 mem_device: 1
+              STORE block           1 mapper: 3 mode:2 param:1 mem_device: 1
+DO CONFIG_BLOCK 2
+CONF slot: 1 subslot: 0 (expand subslot: 0) mem_dev:01 ram_size:0000 device:ff mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:03
+  CONFIG CART 0 selected mapper: 2 stored mapper: 6
+           FILL RAM ID: 1 addr:0008000 size:       128 kB (save:0000000)
+FIND CRC32: d8055f5f mapper:05 sram:02 param:00 mode:00
+              FINAL mode:0-0-0-0 param:0-0-0-0
+              FINAL mapper:05 mode:aa param:e4 mem_dev:0
+              STORE block           0 mapper: 5 mode:2 param:0 mem_device: 0
+              STORE block           1 mapper: 5 mode:2 param:1 mem_device: 0
+              STORE block           2 mapper: 5 mode:2 param:2 mem_device: 0
+              STORE block           3 mapper: 5 mode:2 param:3 mem_device: 0
+CONF slot: 1 subslot: 0 (expand subslot: 1) mem_dev:01 ram_size:0000 device:ff mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:03
+CONF slot: 1 subslot: 0 (expand subslot: 2) mem_dev:01 ram_size:0000 device:ff mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:03
+CONF slot: 1 subslot: 0 (expand subslot: 3) mem_dev:01 ram_size:0000 device:ff mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:03
+DO CONFIG_BLOCK 3
+CONF slot: 2 subslot: 0 (expand subslot: 0) mem_dev:01 ram_size:0000 device:ff mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:03
+CONF slot: 2 subslot: 0 (expand subslot: 1) mem_dev:01 ram_size:0000 device:ff mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:03
+CONF slot: 2 subslot: 0 (expand subslot: 2) mem_dev:01 ram_size:0000 device:ff mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:03
+CONF slot: 2 subslot: 0 (expand subslot: 3) mem_dev:01 ram_size:0000 device:ff mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:03
+DO CONFIG_BLOCK 4
+CONF slot: 3 subslot: 0 (expand subslot: 0) mem_dev:02 ram_size:0400 device:ff mapper:03 mode:2-2-2-2 param:3-2-1-0 pattern:03
+  SLOT INTERNAL
+           FILL RAM ID: 2 addr:0028000 size:        64 kB (save:0000000)
+              FINAL mode:2-2-2-2 param:3-2-1-0
+              FINAL mapper:03 mode:aa param:e4 mem_dev:2
+              STORE block           0 mapper: 3 mode:2 param:0 mem_device: 2
+              STORE block           1 mapper: 3 mode:2 param:1 mem_device: 2
+              STORE block           2 mapper: 3 mode:2 param:2 mem_device: 2
+              STORE block           3 mapper: 3 mode:2 param:3 mem_device: 2
+DO CONFIG_BLOCK 5
+CONF slot: 0 subslot: 0 (expand subslot: 0) mem_dev:00 ram_size:0000 device:ff mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:00
+  LOAD KBD LAYOUT
+DO CONFIG_BLOCK 6
+CONF slot: 0 subslot: 0 (expand subslot: 0) mem_dev:00 ram_size:0000 device:00 mapper:00 mode:0-0-0-0 param:0-0-0-0 pattern:00
+  STORE CONFIG  MSX:0 SLOT_EXPANDER:0 (0 0)
+
