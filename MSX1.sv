@@ -300,7 +300,7 @@ assign status_menumask[4] = ROM_B_load_hide;
 assign status_menumask[5] = sram_A_select_hide;
 assign status_menumask[6] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
-
+/*verilator tracing_off*/
 hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 (
    .clk_sys(clk21m),
@@ -338,7 +338,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 /////////////////   CONFIG   /////////////////
 wire [5:0] mapper_A, mapper_B;
 wire       reload, sram_A_select_hide, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
-
+/*verilator tracing_off*/
 msx_config msx_config 
 (
    .clk(clk21m),
@@ -356,7 +356,7 @@ msx_config msx_config
    .fdc_enabled(fdc_enabled),
    .msxConfig(msxConfig)
 );
-
+/*verilator tracing_off*/
 /////////////////   CLOCKS   /////////////////
 wire clk21m, clk_sdram, locked_sdram;
 wire ce_10m7_p, ce_10m7_n, ce_5m39_p, ce_5m39_n, ce_3m58_p, ce_3m58_n, ce_10hz;

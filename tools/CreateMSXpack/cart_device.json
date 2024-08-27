@@ -1,11 +1,8 @@
 {
-  "KonamiSCC": 0,
-  "MEGA_FLASH_ROMs": 1,
-  "FM_PAC": 2,
-  "DEVICE": 3,
-  "MAPPER": 4,
-  "SLOT": 5,
+  "KonamiSCCs": 99,
+  "KonamiSCC+s": 99,
   "RTYPE": 10,
-  "REF_DEV": 7,
-  "KonamiSCC+": 8
+  "FM_PAC": 3,
+  "GM2s": 99,
+  "MEGA_FLASH_ROMs": 99
 }

@@ -79,7 +79,8 @@ wire          [1:0] ref_sram   = slot_layout[layout_id].ref_sram;
 wire          [1:0] offset_ram = slot_layout[layout_id].offset_ram;
 wire                cart_num   = slot_layout[layout_id].cart_num;
 wire                external   = slot_layout[layout_id].external;
-assign              device     = slot_layout[layout_id].device;
+wire          [1:0] device_num = slot_layout[layout_id].device_num;
+//assign              device     = slot_layout[layout_id].device;
 assign              mapper     = selected_mapper[cart_num] == MAPPER_UNUSED & device == DEVICE_ROM & external ? MAPPER_UNUSED : slot_layout[layout_id].mapper;                              
                              
 wire         [26:0] base_ram   = lookup_RAM[ref_ram].addr;
@@ -89,7 +90,7 @@ wire         [17:0] base_sram  = lookup_SRAM[ref_sram].addr;
 wire         [15:0] sram_size  = lookup_SRAM[ref_sram].size;
 
 
-assign data             = mapper_subslot_cs ? subslot_data : ram_dout;
+assign data     = mapper_subslot_cs ? subslot_data : ram_dout & mapper_data;
 assign ram_din  = cpu_data;
 
 assign bram_ce  = (sdram_size == 2'd0 & ram_cs) | sram_cs;
@@ -112,6 +113,7 @@ subslot subsloot
 );
 
 wire sram_cs, ram_cs, mem_rnw;
+wire [7:0] mapper_data;
 wire [26:0] mem_addr;
 mappers mappers
 (
@@ -130,7 +132,8 @@ mappers mappers
    .mem_addr(mem_addr),
    .mem_rnw(mem_rnw),
    .ram_cs(ram_cs),
-   .sram_cs(sram_cs)
+   .sram_cs(sram_cs),
+   .data(mapper_data)
 );
 
 endmodule

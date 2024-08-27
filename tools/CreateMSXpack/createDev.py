@@ -56,8 +56,9 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
 
     if 'device' in block:
         if block['device'] in constants['device']:
-            param1 = block.get('device_param', 0)
-            result.append(create_block_entry(constants, 'DEVICE', address, param1=param1))
+            param_dev = block.get('device_param', 0)
+            device_id = constants['device'][block['device']]
+            result.append(create_block_entry(constants, 'DEVICE', address, param1=device_id, param2 = param_dev))
         else:
             logger.warning(f"Unknown device type: {block['device']}")
 

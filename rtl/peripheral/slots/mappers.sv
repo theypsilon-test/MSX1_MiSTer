@@ -11,17 +11,18 @@ module mappers(
     input         [1:0] offset_ram,     
     input  mapper_typ_t mapper,
     input               mapper_id,
+    output       [7:0]  data,          //Data z mapperu. Pokud není aktivován tak FF
     output      [24:0]  mem_addr,      //Adresa požadované paměti (obecná)
     output              mem_rnw,       //Požadavek RD/WR (obecný)
     output              ram_cs,        //Požadovaná RAM/ROM
     output              sram_cs        //Požadovaná SRAM
 );
 
-assign mem_addr = ascii8_addr  & ascii16_addr & offset_addr;
-assign mem_rnw  = ascii8_rnw & ascii16_rnw & offset_rnw;
-assign ram_cs   = ascii8_ram_cs | ascii16_ram_cs | offset_ram_cs;
-assign sram_cs  = ascii8_sram_cs | ascii16_sram_cs;
-
+assign mem_addr = ascii8_addr & ascii16_addr & offset_addr & fm_pac_addr;
+assign mem_rnw  = ascii8_rnw & ascii16_rnw & offset_rnw & fm_pac_rnw;
+assign ram_cs   = ascii8_ram_cs | ascii16_ram_cs | offset_ram_cs | fm_pac_ram_cs;
+assign sram_cs  = ascii8_sram_cs | ascii16_sram_cs | fm_pac_sram_cs;
+assign data     = fm_pac_data;
 
 wire [24:0] ascii8_addr;
 wire        ascii8_sram_cs, ascii8_ram_cs, ascii8_rnw;
@@ -53,6 +54,19 @@ mapper_offset offset
    .mem_addr(offset_addr),
    .mem_rnw(offset_rnw),
    .ram_cs(offset_ram_cs),
+   .*
+);
+
+wire [26:0] fm_pac_addr;
+wire  [7:0] fm_pac_data;
+wire fm_pac_ram_cs, fm_pac_sram_cs, fm_pac_rnw;
+mapper_fm_pac fm_pac
+(
+   .mem_addr(fm_pac_addr),
+   .mem_rnw(fm_pac_rnw),
+   .ram_cs(fm_pac_ram_cs),
+   .sram_cs(fm_pac_sram_cs),
+   .data(fm_pac_data),
    .*
 );
 

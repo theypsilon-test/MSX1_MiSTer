@@ -1,142 +1,94 @@
-/*verilator tracing_off*/
-module cart_fm_pac
+/*verilator tracing_on*/
+module mapper_fm_pac
 (
    input                clk,
    input                reset,
-   input         [15:0] cpu_addr,
-   input          [7:0] din,
-   output         [7:0] mapper_dout,  
-   input                cs,
-   input                cart_num,
-   input                cpu_wr,
-   input                cpu_rd,
    input                cpu_mreq,
-   output               sram_we,
-   output               sram_cs,
-   output               mem_unmaped,
-   output        [24:0] mem_addr,
-   output         [1:0] opll_wr, 
-   output         [1:0] opll_io_enable
+   input                cpu_rd,
+   input                cpu_wr,
+   input          [7:0] cpu_data,
+   input         [15:0] cpu_addr,
+   input  mapper_typ_t  mapper,
+   input                mapper_id,
+   output         [7:0] data,
+   output        [26:0] mem_addr,
+   output               mem_rnw,
+   output               ram_cs,
+   output               sram_cs
+
+//   output         [7:0] mapper_dout,  
+//   input                cs,
+//   input                cart_num,
+//   output               sram_we,
+//   output               sram_cs,
+//   output               mem_unmaped,
+   
+//   output         [1:0] opll_wr, 
+//   output         [1:0] opll_io_enable
 );
    
-    wire [24:0] mem_addr_A, mem_addr_B;
-    wire  [7:0] d_to_cpu_A, d_to_cpu_B;
-    wire        sram_we_A, sram_we_B;
-    wire        sram_cs_A, sram_cs_B;
-    wire        cart_oe_A, cart_oe_B;
-    wire        mem_unmaped_A, mem_unmaped_B;
-    wire        opll_io_enable_A, opll_io_enable_B;
-
-    assign mem_addr = cart_num ? mem_addr_B : mem_addr_A;
-    assign sram_we  = cart_num ? sram_we_B  : sram_we_A;
-    assign sram_cs  = cart_num ? sram_cs_B  : sram_cs_A;  
-            
-    assign mem_unmaped     =  mem_unmaped_A | mem_unmaped_B;
-    assign mapper_dout     = d_to_cpu_A & d_to_cpu_B;
-    assign opll_io_enable  = {opll_io_enable_B, opll_io_enable_A};
-
-    fm_pac fm_pac_A
-    (
-        .d_to_cpu(d_to_cpu_A),
-		  .cart_oe(cart_oe_A),
-        .mem_addr(mem_addr_A),
-        .sram_we(sram_we_A),
-        .sram_cs(sram_cs_A),
-        .cs(cs & ~cart_num),
-        .opll_io_enable(opll_io_enable_A),
-        .opll_wr(opll_wr[0]),
-        .mem_unmaped(mem_unmaped_A),
-        .*
-    );
-
-    fm_pac fm_pac_B
-    (
-        .d_to_cpu(d_to_cpu_B),
-		  .cart_oe(cart_oe_B),
-        .mem_addr(mem_addr_B),
-        .sram_we(sram_we_B),
-        .sram_cs(sram_cs_B),
-        .cs(cs & cart_num),
-        .opll_io_enable(opll_io_enable_B),
-        .opll_wr(opll_wr[1]),
-        .mem_unmaped(mem_unmaped_B),
-        .*
-    );
-
-endmodule
+// Signály a logika pro mapování paměti
+wire cs, mapped, mapper_en, sramEnable;
 
 
-module fm_pac
-(
-   input                clk,
-   input                reset,
-   input         [15:0] cpu_addr,
-   input          [7:0] din,
-   output         [7:0] d_to_cpu,  
-   input                cs,
-   input                cpu_wr,
-   input                cpu_rd,
-   input                cpu_mreq,
-   output logic         opll_wr,
-   output               opll_io_enable,
-   output               cart_oe,
-   output               sram_we,
-   output               sram_cs,
-   output        [24:0] mem_addr,
-   output               mem_unmaped
-);
-/*verilator tracing_off*/
-initial begin
-   opll_wr        = 0;
-end
+assign mapped       = cpu_addr[15:14] == 2'b01;          // Adresa je platná pouze 0x4000 - 0x7FFF
+assign mapper_en    = (mapper == MAPPER_FMPAC);
+assign cs           = mapper_en & cpu_mreq;
+assign sramEnable = {magicHi[mapper_id],magicLo[mapper_id]} == 16'h694D;
 
-logic [7:0] enable     = 8'h00;
-logic [1:0] bank       = 2'b00;
-logic [7:0] magicLo    = 8'h00;
-logic [7:0] magicHi    = 8'h00;
+assign data = mapper_en & cpu_addr[13:0] == 14'h3FF6              ? enable[mapper_id]            :
+              mapper_en & cpu_addr[13:0] == 14'h3FF7              ? {6'b000000, bank[mapper_id]} :
+              mapper_en & cpu_addr[13:0] == 14'h1FFE & sramEnable ? magicLo[mapper_id]           :
+              mapper_en & cpu_addr[13:0] == 14'h1FFF & sramEnable ? magicHi[mapper_id]           :
+                                                                    8'hFF                        ;
+
+logic [7:0] enable[2];
+logic [1:0] bank[2];
+logic [7:0] magicLo[2];
+logic [7:0] magicHi[2];
 logic       last_mreq;
 
-wire   sramEnable = {magicHi,magicLo} == 16'h694D;
+initial begin
+   opll_wr        = '0;
+   enable         = '{default: '0};
+   bank           = '{default: '0};
+   magicLo        = '{default: '0};
+   magicHi        = '{default: '0};
+end
 
-assign mem_unmaped     = cs & ((cpu_addr < 16'h4000 | cpu_addr >= 16'h8000)) & cart_oe;
+//assign opll_io_enable = enable[0];         // Zápis OPL
+logic         opll_wr;                       // Write to OPL
 
-assign {cart_oe, d_to_cpu} = ~cs                                     ? {cs, 8'hFF}             :
-                             cpu_addr[13:0] == 14'h3FF6              ? {cs, enable}            :
-                             cpu_addr[13:0] == 14'h3FF7              ? {cs, 6'b000000, bank}   :
-                             cpu_addr[13:0] == 14'h1FFE & sramEnable ? {cs, magicLo}           :
-                             cpu_addr[13:0] == 14'h1FFF & sramEnable ? {cs, magicHi}           :
-                                                                       {cs, 8'hFF}             ;
-assign opll_io_enable = enable[0];
 
 always @(posedge clk) begin
    if (reset) begin
-      enable  <= 8'h00;
-      bank    <= 2'b00;
-      magicLo <= 8'h00;
-      magicHi <= 8'h00;
+      enable  <= '{default: '0};
+      bank    <= '{default: '0};
+      magicLo <= '{default: '0};
+      magicHi <= '{default: '0};
    end else begin
       opll_wr <= 1'b0;
-      if (cs & cpu_wr & cpu_mreq) begin
+      if (mapper_en & cpu_wr & cpu_mreq) begin
          case (cpu_addr[13:0]) 
             14'h1FFE:
-               if (~enable[4]) 
-                  magicLo   <= din;
+               if (~enable[mapper_id][4]) 
+                  magicLo[mapper_id]   <= cpu_data;
             14'h1FFF:
-               if (~enable[4]) 
-                  magicHi   <= din;
+               if (~enable[mapper_id][4]) 
+                  magicHi[mapper_id]   <= cpu_data;
             14'h3FF4,
             14'h3FF5: begin
                opll_wr <= 1'b1;
             end
             14'h3FF6: begin
-               enable <= din & 8'h11;
-               if (enable[4]) begin
-                  magicLo <= 0;
-                  magicHi <= 0;
+               enable[mapper_id] <= cpu_data & 8'h11;
+               if (enable[mapper_id][4]) begin
+                  magicLo[mapper_id] <= 0;
+                  magicHi[mapper_id] <= 0;
                end
             end
             14'h3FF7: begin
-               bank <=din[1:0];
+               bank[mapper_id] <=cpu_data[1:0];
             end
             default: ;
          endcase
@@ -145,8 +97,13 @@ always @(posedge clk) begin
    last_mreq <= cpu_mreq & (cpu_rd | cpu_wr);
 end
 
-assign sram_cs    = cs & sramEnable & ~cpu_addr[13] & ((~last_mreq & cpu_wr) | cpu_mreq & cpu_rd);
-assign sram_we    = sram_cs & cpu_wr & cpu_mreq;
-assign mem_addr   = sram_cs ? 25'(cpu_addr[12:0]) : 25'({bank, cpu_addr[13:0]});
+wire        sram_en    = sramEnable & ~cpu_addr[13] & ((~last_mreq & cpu_wr) | cpu_mreq & cpu_rd);
+wire [26:0] sram_addr  = 27'(cpu_addr[12:0]);
+wire [26:0] ram_addr   = 27'({bank[mapper_id], cpu_addr[13:0]});
+
+assign sram_cs    = cs & sram_en;
+assign ram_cs     = cs & ~sram_en & cpu_rd & mapped;
+assign mem_rnw    = ~(sram_cs & cpu_wr);
+assign mem_addr   = cs ? (sram_cs ? sram_addr : ram_addr) : {27{1'b1}};
 
 endmodule
