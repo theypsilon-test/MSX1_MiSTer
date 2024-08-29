@@ -79,8 +79,43 @@ def convert_to_int_or_string(text):
         return int(text)
     except ValueError:
         return text
+    
+def convert_to_int(text):
+    if text is None:
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        return None
 
 def get_int_or_string_value(element):
     if element.text and element.text.strip():
         return convert_to_int_or_string(element.text.strip())
     return None
+
+def convert_to_8bit(num: str) -> int:
+    if not isinstance(num, str):
+        return None
+    try:
+        # Zkusíme nejprve převést jako celé číslo
+        if num.isdigit():
+            value = int(num)
+            if 0 <= value <= 255:
+                return value
+            else:
+                return None
+        
+        # Zkusíme převést jako hexadecimální číslo
+        if num.startswith("0x") or num.startswith("0X"):
+            value = int(num, 16)
+            if 0 <= value <= 0xFF:
+                return value
+            else:
+                return None
+        
+        # Pokud se nejedná o validní číslo ani hexadecimální formát
+        return None
+    
+    except ValueError:
+        # Pokud převod selže, vrátíme None
+        return None

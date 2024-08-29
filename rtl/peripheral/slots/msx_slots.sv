@@ -61,7 +61,12 @@ module msx_slots
    //DEBUG
    output                   debug_FDC_req,
    output                   debug_sd_card,
-   output                   debug_erase
+   output                   debug_erase,
+   //DEVICE
+   output          device_t device,
+   output            [1:0]  device_num,
+   output                   device_we,
+   output                   device_en
 );
 
 
@@ -70,7 +75,6 @@ assign d_to_sd = cpu_data;
 
 
 mapper_typ_t        mapper;
-device_typ_t        device;
 
 wire          [1:0] block      = cpu_addr[15:14];
 wire          [5:0] layout_id  = {active_slot, subslot, block};
@@ -79,9 +83,10 @@ wire          [1:0] ref_sram   = slot_layout[layout_id].ref_sram;
 wire          [1:0] offset_ram = slot_layout[layout_id].offset_ram;
 wire                cart_num   = slot_layout[layout_id].cart_num;
 wire                external   = slot_layout[layout_id].external;
-wire          [1:0] device_num = slot_layout[layout_id].device_num;
+assign              device_num = slot_layout[layout_id].device_num;
 //assign              device     = slot_layout[layout_id].device;
-assign              mapper     = selected_mapper[cart_num] == MAPPER_UNUSED & device == DEVICE_ROM & external ? MAPPER_UNUSED : slot_layout[layout_id].mapper;                              
+//assign              mapper     = selected_mapper[cart_num] == MAPPER_UNUSED & external ? MAPPER_UNUSED : slot_layout[layout_id].mapper;                              
+assign              mapper     = slot_layout[layout_id].mapper;                              
                              
 wire         [26:0] base_ram   = lookup_RAM[ref_ram].addr;
 wire         [15:0] ram_blocks = lookup_RAM[ref_ram].size;
@@ -100,6 +105,7 @@ assign ram_addr = (sram_cs ? 27'(base_sram) : base_ram) + mem_addr ;
 
 
 
+
 wire          [1:0] subslot;
 wire          [7:0] subslot_data;
 wire                mapper_subslot_cs;
@@ -115,6 +121,7 @@ subslot subsloot
 wire sram_cs, ram_cs, mem_rnw;
 wire [7:0] mapper_data;
 wire [26:0] mem_addr;
+
 mappers mappers
 (
    .clk(clk),
@@ -133,7 +140,10 @@ mappers mappers
    .mem_rnw(mem_rnw),
    .ram_cs(ram_cs),
    .sram_cs(sram_cs),
-   .data(mapper_data)
+   .data(mapper_data),
+   .device(device),
+   .device_we(device_we),
+   .device_en(device_en)
 );
 
 endmodule

@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<fwConfig>  
+  <fw name="KonamiSCC">
+    <block>
+      <device>SCC</device>
+      <mapper>KONAMI</mapper>   
+    </block>
+  </fw>
+  <fw name="KonamiSCC+">
+    <block>
+      <device>SCC</device>
+      <device_param>1</device_param>
+      <mapper>KONAMI</mapper>   
+    </block>
+  </fw>
+  <fw name="RTYPE">
+    <block>
+      <mapper>RTYPE</mapper>   
+    </block>
+  </fw>
+  <fw name="FM_PAC">
+    <block>
+      <filename>FM_PAC_EN.ROM</filename>
+      <SHA1>6996489fcec52934b8beed87643cc33d02ecc301</SHA1>
+      <mapper>FMPAC</mapper>
+      <device mask="0xFE" port="0x7C">OPL3</device>
+      <sram>8192</sram>
+    </block>
+  </fw>
+  <fw name="GM2">
+    <filename>GM2.ROM</filename>
+    <SHA1>5c00f9e3a48411e08fac89b1dfdd2a6e95853919</SHA1>
+  </fw>
+  <fw name="MEGA_FLASH_ROM">
+    <secondary slot="1">
+      <block start="2">
+        <filename>mfrsd.ROM</filename>
+        <SHA1>1621f623b834dc57cb2983f30b36bcc3ac56cafd</SHA1>
+      </block>  
+      <block start="3" count="1">
+        <filename>mfrsda.ROM</filename>
+        <SHA1>1621f623b834dc57cb2983f30b36bcc3ac56cafd</SHA1>
+      </block>
+    </secondary>
+    <secondary slot="2">
+      <block start="3">
+        <filename>mfrsd.ROM</filename>
+        <SHA1>1621f623b834dc57cb2983f30b36bcc3ac56cafd</SHA1>
+      </block>  
+    </secondary>
+  </fw>
+</fwConfig>

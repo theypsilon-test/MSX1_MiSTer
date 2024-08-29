@@ -2,7 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 import struct
 import logging
-from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value
+from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_8bit, convert_to_int
 
 # Nastavení logování
 logging.basicConfig(level=logging.INFO)
@@ -34,6 +34,12 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
     for element in root:
         if element.tag in ['SHA1', 'filename', 'device', 'mapper', 'sram', 'pattern', 'ram', 'device_param']:
             block[element.tag] = get_int_or_string_value(element)
+            if element.tag == 'device' :
+                device_port = convert_to_8bit(element.attrib.get('port'))
+                device_mask = convert_to_8bit(element.attrib.get('mask'))
+                if device_port is not None:
+                    if device_mask is None:
+                        device_mask = 0xFF             #Defaultni hodnota
         else:
             logger.info(f"Tag name: {element.tag} SKIP. Not expected here")
 
@@ -59,8 +65,17 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
             param_dev = block.get('device_param', 0)
             device_id = constants['device'][block['device']]
             result.append(create_block_entry(constants, 'DEVICE', address, param1=device_id, param2 = param_dev))
+            if device_port is not None:
+                result.append(create_block_entry(constants, 'IO_DEVICE', address, param1=device_port, param2 = device_mask))
         else:
             logger.warning(f"Unknown device type: {block['device']}")
+    
+    if 'sram' in block:
+        size = convert_to_int(block['sram'])
+        if size :
+            result.append(create_block_entry(constants, 'SRAM', address, param1=size//1024)) # SRAM v 1 kB
+        else :
+            logger.warning("SRAM size not defined correctly")
 
     # Potential extensions for 'sram' and 'ram' blocks could be added here
 

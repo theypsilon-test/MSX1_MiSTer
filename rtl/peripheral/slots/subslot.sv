@@ -29,6 +29,7 @@ always @(posedge clk or posedge reset) begin
     end else if (mapper_wr) begin
         // Zápis do aktuálně aktivního slotu
         mapper_slot[active_slot] <= cpu_data;
+        //$display("EXPANDER CHANGE: SLOT %x value %x", active_slot, cpu_data);
     end
 end
 

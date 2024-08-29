@@ -6,5 +6,6 @@
   "MAPPER": 4,
   "SLOT": 5,
   "REF_MEM": 6,
-  "REF_DEV": 7
+  "REF_DEV": 7,
+  "IO_DEVICE": 8
 }

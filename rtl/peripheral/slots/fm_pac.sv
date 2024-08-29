@@ -14,7 +14,11 @@ module mapper_fm_pac
    output        [26:0] mem_addr,
    output               mem_rnw,
    output               ram_cs,
-   output               sram_cs
+   output               sram_cs,
+   output device_t      device,
+   //output         [1:0] device_num,
+   output               device_we,
+   output               device_en
 
 //   output         [7:0] mapper_dout,  
 //   input                cs,
@@ -68,7 +72,7 @@ always @(posedge clk) begin
       magicHi <= '{default: '0};
    end else begin
       opll_wr <= 1'b0;
-      if (mapper_en & cpu_wr & cpu_mreq) begin
+      if (mapper_en && cpu_wr && cpu_mreq) begin
          case (cpu_addr[13:0]) 
             14'h1FFE:
                if (~enable[mapper_id][4]) 
@@ -82,7 +86,7 @@ always @(posedge clk) begin
             end
             14'h3FF6: begin
                enable[mapper_id] <= cpu_data & 8'h11;
-               if (enable[mapper_id][4]) begin
+               if (cpu_data[4]) begin
                   magicLo[mapper_id] <= 0;
                   magicHi[mapper_id] <= 0;
                end
@@ -94,16 +98,20 @@ always @(posedge clk) begin
          endcase
       end
    end
-   last_mreq <= cpu_mreq & (cpu_rd | cpu_wr);
+   last_mreq <= cpu_mreq && (cpu_rd || cpu_wr);
 end
 
-wire        sram_en    = sramEnable & ~cpu_addr[13] & ((~last_mreq & cpu_wr) | cpu_mreq & cpu_rd);
+wire        sram_en    = sramEnable && ~cpu_addr[13] && ((~last_mreq && cpu_wr) | cpu_mreq && cpu_rd);
 wire [26:0] sram_addr  = 27'(cpu_addr[12:0]);
 wire [26:0] ram_addr   = 27'({bank[mapper_id], cpu_addr[13:0]});
 
-assign sram_cs    = cs & sram_en;
-assign ram_cs     = cs & ~sram_en & cpu_rd & mapped;
-assign mem_rnw    = ~(sram_cs & cpu_wr);
+assign sram_cs    = cs && sram_en;
+assign ram_cs     = cs && ~sram_en && cpu_rd && mapped;
+assign mem_rnw    = ~(sram_cs && cpu_wr);
 assign mem_addr   = cs ? (sram_cs ? sram_addr : ram_addr) : {27{1'b1}};
+
+assign device     = cs ? DEV_OPL3 : DEV_NONE ;
+assign device_we  = cs && opll_wr ;
+assign device_en  = cs && enable[mapper_id] & 8'b1 ;
 
 endmodule

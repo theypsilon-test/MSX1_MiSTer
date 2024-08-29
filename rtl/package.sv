@@ -12,7 +12,7 @@ typedef enum logic {MSX1,MSX2} MSX_typ_t;
 typedef enum logic [3:0] {DEVICE_NONE, DEVICE_ROM} device_typ_t;
 typedef enum logic [3:0] {DEV_NONE, DEV_OPL3, DEV_SCC } device_t;
 typedef enum logic [4:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTYPE, MAPPER_ASCII8, MAPPER_KOEI, MAPPER_WIZARDY, MAPPER_KONAMI, MAPPER_FMPAC, MAPPER_UNUSED} mapper_typ_t;
-typedef enum logic [3:0] {BLOCK_RAM, BLOCK_ROM, BLOCK_SRAM, BLOCK_DEVICE, BLOCK_MAPPER, BLOCK_CART, BLOCK_REF_MEM, BLOCK_REF_DEV} block_t;
+typedef enum logic [3:0] {BLOCK_RAM, BLOCK_ROM, BLOCK_SRAM, BLOCK_DEVICE, BLOCK_MAPPER, BLOCK_CART, BLOCK_REF_MEM, BLOCK_REF_DEV, BLOCK_IO_DEVICE} block_t;
 typedef enum logic [2:0] {CONF_BLOCK, CONF_DEVICE, CONF_LAYOUT, CONF_CARTRIGE, CONF_BLOCK_FW, CONF_UNUSED5, CONF_UNUSED6, CONF_END} conf_t;
 typedef enum logic [2:0] {ERR_NONE, ERR_BAD_MSX_CONF, ERR_NOT_SUPPORTED_CONF, ERR_NOT_SUPPORTED_BLOCK, ERR_BAD_MSX_FW_CONF, ERR_NOT_FW_CONF, ERR_DEVICE_MISSING} error_t;
 
@@ -56,6 +56,7 @@ package MSX;
         logic  [1:0] offset_ram;
         logic  [1:0] device_num;
         mapper_typ_t mapper;
+        device_t     device;
         logic        cart_num;
         logic        external;
     } block_t;    
@@ -67,7 +68,7 @@ package MSX;
     } lookup_RAM_t;
     
     typedef struct {
-        logic [17:0] addr;
+        logic [26:0] addr;
         logic [15:0] size;
     } lookup_SRAM_t;
 
@@ -76,5 +77,12 @@ package MSX;
         mapper_typ_t selected_mapper;
         logic [7:0]  selected_sram_size;
     } config_cart_t;
+
+    typedef struct {
+        logic [7:0] mask;
+        logic [7:0] port;
+        logic [1:0] num;
+        device_t    id;
+    } io_device_t;
         
 endpackage

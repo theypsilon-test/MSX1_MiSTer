@@ -53,6 +53,7 @@ module msx
    input MSX::block_t       slot_layout[64],
    input MSX::lookup_RAM_t  lookup_RAM[16],
    input MSX::lookup_SRAM_t lookup_SRAM[4],
+   input MSX::io_device_t   io_device[16],
    //KBD
    input                    kbd_request,
    input              [8:0] kbd_addr,
@@ -87,7 +88,7 @@ module msx
 wire [15:0] compr[7:0];
 wire  [9:0] audioPSG    = ay_ch_mix + {keybeep,5'b00000} + {(cas_audio_in & ~cas_motor),4'b0000};
 wire [16:0] fm          = {3'b00, audioPSG, 4'b0000};
-wire [16:0] audio_mix   = {cart_sound[15], cart_sound} + fm;
+wire [16:0] audio_mix   = {device_sound[15], device_sound} + fm;
 assign compr            = '{ {1'b1, audio_mix[13:0], 1'b0}, 16'h8000, 16'h8000, 16'h8000, 16'h7FFF, 16'h7FFF, 16'h7FFF,  {1'b0, audio_mix[13:0], 1'b0}};
 assign audio            = compr[audio_mix[16:14]];
 
@@ -468,26 +469,38 @@ spram #(.addr_width(16),.mem_name("VRA3")) vram_hi
    .q(VRAM_di_hi)
 );
 
+/*verilator tracing_on*/
+wire signed [15:0] device_sound;
 devices devices
 (
    .clk(clk21m),
    .clk_en(ce_3m58_p),
    .reset(reset),
    .dev_enable(dev_enable),               //Konfigurace zařízení z load. Povoluje jednotlivé zařízení
-   .device(),
-   .device_num(),
-   .dev_addr(),
-   .dev_din(),
+   .device(device),
+   .device_num(device_num),
+   .io_device(io_device),
+   //.dev_addr(a),
+   //.dev_din(d_from_cpu),
    .dev_dout(),
-   .dev_wr(),
+   .dev_wr(device_we),
+   .dev_en(device_en),
    .dev_rd(),
-   .sound()
+   .sound(device_sound),
+   .cpu_m1(~m1_n),
+   .cpu_iorq(~iorq_n),
+   .cpu_rd(~rd_n),
+   .cpu_wr(~wr_n),
+   .cpu_addr(a),
+   .cpu_data(d_from_cpu)
 );
 
-/*verilator tracing_on*/
 
 wire         [7:0] d_from_slots;
 wire signed [15:0] cart_sound;
+wire         [1:0] device_num;
+device_t           device;
+wire               device_we, device_en;
 msx_slots msx_slots
 (
    .clk(clk21m),
@@ -537,7 +550,11 @@ msx_slots msx_slots
    .sd_tx(sd_tx),
    .sd_rx(sd_rx),
    .d_to_sd(d_to_sd),
-   .d_from_sd(d_from_sd)
+   .d_from_sd(d_from_sd),
+   .device(device),
+   .device_num(device_num),
+   .device_we(device_we),
+   .device_en(device_en)
 );
 
 endmodule
