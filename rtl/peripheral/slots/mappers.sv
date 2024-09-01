@@ -1,84 +1,66 @@
-module mappers(
-    input               clk,
-    input               reset,
-    input               cpu_mreq,
-    input               cpu_wr,
-    input               cpu_rd,
-    input         [7:0] cpu_data,
-    input        [15:0] cpu_addr,  
-    input        [24:0] rom_size,
-    input        [15:0] sram_size,
-    input         [1:0] offset_ram,     
-    input  mapper_typ_t mapper,
-    input               mapper_id,
-    output       [7:0]  data,          //Data z mapperu. Pokud není aktivován tak FF
-    output      [24:0]  mem_addr,      //Adresa požadované paměti (obecná)
-    output              mem_rnw,       //Požadavek RD/WR (obecný)
-    output              ram_cs,        //Požadovaná RAM/ROM
-    output              sram_cs,       //Požadovaná SRAM
-    output device_t     device,
-    output              device_we,
-    output              device_en      //Povolí nebo zakáže device (io_porty) (Platí pro nastavené device)
+module mappers (
+    cpu_bus             cpu_bus,       // Interface for CPU communication
+    mapper              mapper,        // Struct containing mapper configuration and parameters
+    device_bus          device_bus,    // Interface for device control
+    memory_bus          memory_bus,    // Interface for memory control
+    output       [7:0]  data           // Data output from the active mapper; defaults to FF if no mapper is active
 );
 
-assign mem_addr  = ascii8_addr & ascii16_addr & offset_addr & fm_pac_addr;
-assign mem_rnw   = ascii8_rnw & ascii16_rnw & offset_rnw & fm_pac_rnw;
-assign ram_cs    = ascii8_ram_cs | ascii16_ram_cs | offset_ram_cs | fm_pac_ram_cs;
-assign sram_cs   = ascii8_sram_cs | ascii16_sram_cs | fm_pac_sram_cs;
-assign data      = fm_pac_data;
+    // Intermediate signals from each mapper
+    mapper_out ascii8_out();           // Outputs from ASCII8 mapper
+    mapper_out ascii16_out();          // Outputs from ASCII16 mapper
+    mapper_out offset_out();           // Outputs from OFFSET mapper
+    mapper_out fm_pac_out();           // Outputs from FM-PAC mapper
+    device_bus fm_pac_device_out();    // Device bus output for FM-PAC mapper
 
-assign device    = fm_pac_device;
-assign device_we = fm_pac_device_we;
-assign device_en = fm_pac_device_en;
+    // Instantiate the ASCII8 mapper
+    cart_ascii8 ascii8 (
+        .cpu_bus(cpu_bus),
+        .mapper(mapper),
+        .out(ascii8_out)
+    );
 
-wire [24:0] ascii8_addr;
-wire        ascii8_sram_cs, ascii8_ram_cs, ascii8_rnw;
-cart_ascii8 ascii8
-(
-   .mem_addr(ascii8_addr),
-   .mem_rnw(ascii8_rnw),
-   .ram_cs(ascii8_ram_cs),
-   .sram_cs(ascii8_sram_cs),
-   .*
-);
+    // Instantiate the ASCII16 mapper
+    cart_ascii16 ascii16 (
+        .cpu_bus(cpu_bus),
+        .mapper(mapper),
+        .out(ascii16_out)
+    );
 
-wire [24:0] ascii16_addr;
-wire        ascii16_sram_cs, ascii16_ram_cs, ascii16_rnw;
-cart_ascii16 ascii16
-(
-   .mem_addr(ascii16_addr),
-   .mem_rnw(ascii16_rnw),
-   .ram_cs(ascii16_ram_cs),
-   .sram_cs(ascii16_sram_cs),
-   .*
-);
+    // Instantiate the OFFSET mapper
+    mapper_offset offset (
+        .cpu_bus(cpu_bus),
+        .mapper(mapper),
+        .out(offset_out)
+    );
 
-/* verilator lint_off IMPLICIT */
-wire [26:0] offset_addr;
-wire offset_ram_cs, offset_rnw;
-mapper_offset offset
-(
-   .mem_addr(offset_addr),
-   .mem_rnw(offset_rnw),
-   .ram_cs(offset_ram_cs),
-   .*
-);
+    // Instantiate the FM-PAC mapper
+    mapper_fm_pac fm_pac (
+        .cpu_bus(cpu_bus),
+        .mapper(mapper),
+        .out(fm_pac_out),
+        .device_out(fm_pac_device_out)
+    );
 
-wire [26:0] fm_pac_addr;
-wire  [7:0] fm_pac_data;
-wire fm_pac_ram_cs, fm_pac_sram_cs, fm_pac_rnw, fm_pac_device_we, fm_pac_device_en;
-device_t  fm_pac_device;
-mapper_fm_pac fm_pac
-(
-   .mem_addr(fm_pac_addr),
-   .mem_rnw(fm_pac_rnw),
-   .ram_cs(fm_pac_ram_cs),
-   .sram_cs(fm_pac_sram_cs),
-   .data(fm_pac_data),
-   .device(fm_pac_device),
-   .device_we(fm_pac_device_we),
-   .device_en(fm_pac_device_en),    // Povolí nebo zakáže reakci na IO porty
-   .*
-);
+    // Data: Use the FM-PAC mapper's data output, assuming it has priority
+    assign data = fm_pac_out.data;  // FM-PAC mapper has priority for data output
+
+    // Combine outputs from the mappers
+    // Address: Combine addresses from all mappers using a bitwise AND operation
+    assign memory_bus.addr  = ascii8_out.addr & ascii16_out.addr & offset_out.addr & fm_pac_out.addr;
+
+    // Read/Write control: Combine read/write signals from all mappers using a bitwise AND operation
+    assign memory_bus.rnw   = ascii8_out.rnw & ascii16_out.rnw & offset_out.rnw & fm_pac_out.rnw;
+
+    // RAM chip select: Combine RAM chip select signals using a bitwise OR operation
+    assign memory_bus.ram_cs    = ascii8_out.ram_cs | ascii16_out.ram_cs | offset_out.ram_cs | fm_pac_out.ram_cs;
+
+    // SRAM chip select: Combine SRAM chip select signals using a bitwise OR operation
+    assign memory_bus.sram_cs   = ascii8_out.sram_cs | ascii16_out.sram_cs | fm_pac_out.sram_cs;
+
+    // Device control signals: Use the FM-PAC mapper's control signals
+    assign device_bus.typ = fm_pac_device_out.typ;
+    assign device_bus.we  = fm_pac_device_out.we;
+    assign device_bus.en  = fm_pac_device_out.en;
 
 endmodule

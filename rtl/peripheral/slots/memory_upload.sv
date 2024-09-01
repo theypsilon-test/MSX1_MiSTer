@@ -126,7 +126,7 @@ module memory_upload
     error_t error = ERR_NONE;
     pattern_t pattern;
     logic [7:0] conf[6];
-    logic [4:0] ref_ram;
+    logic [3:0] ref_ram;
     logic       crc_en;
 
     always @(posedge clk) begin      

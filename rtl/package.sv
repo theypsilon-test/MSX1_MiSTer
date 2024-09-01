@@ -33,6 +33,49 @@ parameter DEVs_MFRSD2         = dev_typ_t'(1 << 10);
 parameter DEVs_FLASH          = dev_typ_t'(1 << 11);
 parameter DEVs_PSG            = dev_typ_t'(1 << 12);
 
+interface cpu_bus;
+    logic        clk;
+    logic        clk_en;
+    logic        reset;
+    logic        mreq;
+    logic        iorq;
+    logic        rd;
+    logic        wr;
+    logic        m1;
+    logic [15:0] addr;
+    logic  [7:0] data;
+endinterface
+
+interface device_bus;
+    device_t    typ;
+    logic       we;
+    logic       en;
+    logic [1:0] num;
+endinterface
+
+interface memory_bus;
+    logic [26:0] addr;
+    logic        rnw;
+    logic        sram_cs;
+    logic  [1:0] ram_cs;
+endinterface
+
+interface mapper_out;
+    logic [26:0] addr;
+    logic        rnw;
+    logic        ram_cs;
+    logic        sram_cs;
+    logic  [7:0] data;
+endinterface
+
+interface mapper;
+    logic [24:0] rom_size;
+    logic [15:0] sram_size;
+    logic  [1:0] offset_ram;
+    mapper_typ_t typ;
+    logic        id;
+endinterface
+
 package MSX;
     
     typedef struct {

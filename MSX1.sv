@@ -201,6 +201,7 @@ MSX::config_cart_t cart_conf[2];
 MSX::block_t       slot_layout[64];
 MSX::lookup_RAM_t  lookup_RAM[16];
 MSX::lookup_SRAM_t lookup_SRAM[4];
+MSX::io_device_t   io_device[16];
 wire       [2:0] dev_enable[0:(1 << $bits(device_t))-1];
 
 wire             forced_scandoubler;
@@ -424,6 +425,7 @@ msx MSX
    .cart_device(cart_device),
    .msx_device(msx_device),
    .msx_dev_ref_ram(msx_dev_ref_ram),
+   .io_device(io_device),
    .selected_mapper(selected_mapper),
    .flash_addr(flash_addr),
    .flash_din(flash_din),
@@ -637,7 +639,8 @@ memory_upload memory_upload(
     .msx_dev_ref_ram(msx_dev_ref_ram),
     .load_sram(load_sram),
     .dev_enable(dev_enable),
-    .led_out(LED_POWER)
+    .led_out(LED_POWER),
+    .io_device(io_device)
 );
 
 wire [27:0] ddr3_addr, ddr3_addr_download, ddr3_addr_cas;

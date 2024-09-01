@@ -225,11 +225,11 @@ assign d_to_cpu = rd_n   ? 8'hFF           :
                   rtc_en ? d_from_rtc      :
                   ~psg_n ? d_from_psg      :
                   ~ppi_n ? d_from_8255     :
-                           d_from_slots    ;
+                           ram_dout & d_from_slots;
 //  -----------------------------------------------------------------------------
 //  -- Keyboard decoder
 //  -----------------------------------------------------------------------------
-/*verilator tracing_on*/
+/*verilator tracing_off*/
 wire [7:0] d_from_kb;
 keyboard msx_key
 (
@@ -469,51 +469,60 @@ spram #(.addr_width(16),.mem_name("VRA3")) vram_hi
    .q(VRAM_di_hi)
 );
 
-/*verilator tracing_on*/
+/*verilator tracing_off*/
 wire signed [15:0] device_sound;
+device_bus device_bus();
+cpu_bus cpu_bus();
+assign cpu_bus.clk = clk21m;
+assign cpu_bus.clk_en = ce_3m58_p;
+assign cpu_bus.reset = reset;
+assign cpu_bus.mreq = ~mreq_n;
+assign cpu_bus.iorq = ~iorq_n;
+assign cpu_bus.wr = ~wr_n;
+assign cpu_bus.rd = ~rd_n;
+assign cpu_bus.m1 = ~m1_n;
+assign cpu_bus.data = d_from_cpu;
+assign cpu_bus.addr = a;
+
 devices devices
 (
-   .clk(clk21m),
-   .clk_en(ce_3m58_p),
-   .reset(reset),
+   .cpu_bus(cpu_bus),
+   .device_bus(device_bus),
+   //.clk(clk21m),
+   //.clk_en(ce_3m58_p),
+   //.reset(reset),
    .dev_enable(dev_enable),               //Konfigurace zařízení z load. Povoluje jednotlivé zařízení
-   .device(device),
-   .device_num(device_num),
+   //.device(device),
+   //.device_num(device_num),
    .io_device(io_device),
    //.dev_addr(a),
    //.dev_din(d_from_cpu),
    .dev_dout(),
-   .dev_wr(device_we),
-   .dev_en(device_en),
+   //.dev_wr(device_we),
+   //.dev_en(device_en),
    .dev_rd(),
-   .sound(device_sound),
-   .cpu_m1(~m1_n),
-   .cpu_iorq(~iorq_n),
-   .cpu_rd(~rd_n),
-   .cpu_wr(~wr_n),
-   .cpu_addr(a),
-   .cpu_data(d_from_cpu)
+   .sound(device_sound)
+   //.cpu_m1(~m1_n),
+   //.cpu_iorq(~iorq_n),
+   //.cpu_rd(~rd_n),
+   //.cpu_wr(~wr_n),
+   //.cpu_addr(a),
+   //.cpu_data(d_from_cpu)
 );
 
-
+/*verilator tracing_on*/
 wire         [7:0] d_from_slots;
 wire signed [15:0] cart_sound;
-wire         [1:0] device_num;
-device_t           device;
-wire               device_we, device_en;
+//wire         [1:0] device_num;
+//device_t           device;
+//wire               device_we, device_en;
+
 msx_slots msx_slots
 (
-   .clk(clk21m),
-   .clk_en(ce_3m58_p),
-   .reset(reset),
-   .cpu_addr(a),
+   .cpu_bus(cpu_bus),
+   .device_bus(device_bus),
+   //.clk_en(ce_3m58_p),
    .data(d_from_slots),  
-   .cpu_data(d_from_cpu),
-   .cpu_iorq(~iorq_n),
-   .cpu_m1(~m1_n),
-   .cpu_mreq(~mreq_n),
-   .cpu_rd(~rd_n),
-   .cpu_wr(~wr_n),
    .sound(cart_sound),
    .ram_addr(ram_addr),
    .ram_din(ram_din),
@@ -550,11 +559,11 @@ msx_slots msx_slots
    .sd_tx(sd_tx),
    .sd_rx(sd_rx),
    .d_to_sd(d_to_sd),
-   .d_from_sd(d_from_sd),
-   .device(device),
-   .device_num(device_num),
-   .device_we(device_we),
-   .device_en(device_en)
+   .d_from_sd(d_from_sd)
+   //.device(device),
+   //.device_num(device_num)
+   //.device_we(device_we),
+   //.device_en(device_en)
 );
 
 endmodule

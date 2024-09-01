@@ -1,19 +1,19 @@
 module mapper_offset (
-    input               cpu_mreq,
-    input               cpu_rd,
-    input               cpu_wr,
-    input        [15:0] cpu_addr,    
-    input  mapper_typ_t mapper,
-    input         [1:0] offset_ram,
-    output       [26:0] mem_addr,
-    output              mem_rnw,
-    output              ram_cs
+    cpu_bus             cpu_bus,       // Interface for CPU communication
+    mapper              mapper,        // Struct containing mapper configuration and parameters
+    mapper_out          out            // Interface for mapper output
 );
 
-wire cs = (mapper == MAPPER_OFFSET) & cpu_mreq;
+    // Chip select is valid if the mapper type is OFFSET and memory request (mreq) is active
+    wire cs = (mapper.typ == MAPPER_OFFSET) & cpu_bus.mreq;
 
-assign ram_cs   = cs;
-assign mem_addr = cs ? {offset_ram, cpu_addr[13:0]} : {27{1'b1}};
-assign mem_rnw  = ~(cs & cpu_wr);
+    // Output assignments
+    assign out.ram_cs = cs;  // RAM chip select signal
+    
+    // Calculate the address by adding the offset to the base address (only if chip select is active)
+    assign out.addr   = cs ? {11'b0, mapper.offset_ram, cpu_bus.addr[13:0]} : {27{1'b1}};  
+    
+    // Generate the Read/Not Write (rnw) signal based on the chip select and write signal
+    assign out.rnw    = ~(cs & cpu_bus.wr);  
 
 endmodule
