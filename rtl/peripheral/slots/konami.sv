@@ -1,46 +1,59 @@
 /*verilator tracing_off*/
-module cart_konami
-(
-    input            clk,
-    input            reset,
-    input     [24:0] rom_size,
-    input     [15:0] cpu_addr,
-    input      [7:0] din,
-    input            cpu_mreq,
-    input            cpu_wr,
-    input            cs,
-    input            cart_num,
-    output           mem_unmaped,
-    output    [24:0] mem_addr
+module mapper_konami (
+    cpu_bus             cpu_bus,       // Interface for CPU communication
+    mapper_out          out,           // Interface for mapper output
+    mapper              mapper         // Struct containing mapper configuration and parameters  
 );
 
-reg  [7:0] bank1[2], bank2[2], bank3[2];
+    // Control signals for memory mapping
+    wire cs, mapped;
 
-always @(posedge clk) begin
-    if (reset) begin
-        bank1 <= '{'h01,'h01};
-        bank2 <= '{'h02,'h02};
-        bank3 <= '{'h03,'h03};
-    end else begin
-        if (cs & cpu_mreq & cpu_wr) begin
-            case (cpu_addr[15:13])
-                3'b011: // 6000-7fffh
-                    bank1[cart_num] <= din;
-                3'b100: // 8000-9fffh
-                    bank2[cart_num] <= din;
-                3'b101: // a000-bfffh
-                    bank3[cart_num] <= din;
-                default: ;
-            endcase
+    // Mapper is enabled if type is KONAMI and there is a memory request
+    assign cs = (mapper.typ == MAPPER_KONAMI) & cpu_bus.mreq;
+
+    // Address is mapped if it's between 0x4000 and 0xBFFF and within ROM size
+    assign mapped = (cpu_bus.addr >= 16'h4000) && (cpu_bus.addr < 16'hC000) && (ram_addr < mapper.rom_size);
+
+    // Bank registers for memory banking
+    logic [7:0] bank1[2], bank2[2], bank3[2];
+
+    // Bank switching logic
+    always @(posedge cpu_bus.clk) begin
+        if (cpu_bus.reset) begin
+            // Initialize bank values on reset
+            bank1 <= '{'h01, 'h01};  // Default bank 1 values
+            bank2 <= '{'h02, 'h02};  // Default bank 2 values
+            bank3 <= '{'h03, 'h03};  // Default bank 3 values
+        end else begin
+            if (cs & cpu_bus.wr) begin
+                // Bank switching logic based on address
+                case (cpu_bus.addr[15:13])
+                    3'b011: // 6000-7FFFh: Switch bank 1
+                        bank1[mapper.id] <= cpu_bus.data;
+                    3'b100: // 8000-9FFFh: Switch bank 2
+                        bank2[mapper.id] <= cpu_bus.data;
+                    3'b101: // A000-BFFFh: Switch bank 3
+                        bank3[mapper.id] <= cpu_bus.data;
+                    default: ; // No action for other address ranges
+                endcase
+            end
         end
     end
-end
 
-wire [7:0] bank_base = cpu_addr[15:13] == 3'b010 ? 8'h00 :
-                       cpu_addr[15:13] == 3'b011 ? bank1[cart_num] :
-                       cpu_addr[15:13] == 3'b100 ? bank2[cart_num] : bank3[cart_num];
+    // Bank selection logic based on address ranges
+    wire [7:0] bank_base = (cpu_bus.addr[15:13] == 3'b010) ? 8'h00 :  // Fixed bank for 4000-5FFFh
+                           (cpu_bus.addr[15:13] == 3'b011) ? bank1[mapper.id] :  // Bank 1 for 6000-7FFFh
+                           (cpu_bus.addr[15:13] == 3'b100) ? bank2[mapper.id] :  // Bank 2 for 8000-9FFFh
+                           bank3[mapper.id];  // Bank 3 for A000-BFFFh
 
-assign mem_addr    = 25'({bank_base, cpu_addr[12:0]});
-assign mem_unmaped = cs & ((cpu_addr < 16'h4000 | cpu_addr >= 16'hC000) | (mem_addr > rom_size));
+    // Generate RAM address based on bank and lower address bits
+    wire [26:0] ram_addr = {bank_base, cpu_bus.addr[12:0]};
+
+    // Output enable signal (only if mapped and chip select is active)
+    wire oe = cs && mapped;
+
+    // Output assignments to the `out` interface
+    assign out.addr   = oe ? ram_addr : '1;    // Output address, or '1 if not enabled
+    assign out.ram_cs = oe;                    // RAM chip select signal
 
 endmodule

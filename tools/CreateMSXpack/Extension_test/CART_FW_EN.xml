@@ -1,5 +1,10 @@
 <?xml version="1.0" ?>
 <fwConfig>  
+  <fw name="KONAMI">
+    <block>
+      <mapper>KONAMI</mapper>   
+    </block>
+  </fw>
   <fw name="KonamiSCC">
     <block>
       <device>SCC</device>
