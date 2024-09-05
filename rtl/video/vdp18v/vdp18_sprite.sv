@@ -119,7 +119,7 @@ module vdp18_sprite (
           sprite_idx_q <= sprite_idx_q - 1'd1;
         end
         for (int idx = 0; idx < 4; idx++) begin
-          if (num_pix_i[0] == 0 || (sprite_ec_q[idx] == 1 && num_pix_i[3:0] == 4'b1111)) begin
+          if (num_pix_i[8] == 0 || (sprite_ec_q[idx] == 1 && num_pix_i[8:4] == 4'b1111)) begin
             if (sprite_xpos_q[idx] != 0) begin
               sprite_xpos_q[idx] <= sprite_xpos_q[idx] - 1'd1;
             end else begin
@@ -127,7 +127,7 @@ module vdp18_sprite (
             end
           end
           if (sprite_xpos_q[idx] == 0) begin
-            if (num_pix_i[0] == 0 || (sprite_ec_q[idx] == 1 && num_pix_i[3:0] == 4'b1111)) begin
+            if (num_pix_i[8] == 0 || (sprite_ec_q[idx] == 1 && num_pix_i[8:4] == 4'b1111)) begin
               if (!reg_mag1_i || sprite_xtog_q[idx]) begin
                 sprite_pats_q[idx] <= {sprite_pats_q[idx][14:0], 1'b0};
               end
@@ -146,29 +146,29 @@ module vdp18_sprite (
           AC_STST: begin
             sprite_num_q <= sprite_num_q + 1'd1;
             if (sprite_visible_s && sprite_idx_q < 4) begin
-              sprite_numbers_q[sprite_idx_q[2:1]] <= sprite_num_q;
+              sprite_numbers_q[sprite_idx_q[1:0]] <= sprite_num_q; // Adjusting to index properly
               sprite_idx_q <= sprite_idx_q + 1'd1;
             end
           end
           AC_SATY: sprite_line_q <= sprite_line_s;
           AC_SATX: begin
-            sprite_xpos_q[sprite_idx_q[2:1]] <= vram_d_i;
-            sprite_xtog_q[sprite_idx_q[2:1]] <= '0;
+            sprite_xpos_q[sprite_idx_q[1:0]] <= vram_d_i;
+            sprite_xtog_q[sprite_idx_q[1:0]] <= '0;
           end
           AC_SATN: sprite_name_q <= vram_d_i;
           AC_SATC: begin
-            sprite_cols_q[sprite_idx_q[2:1]] <= vram_d_i[7:4];
-            sprite_ec_q[sprite_idx_q[2:1]] <= vram_d_i[0];
+            sprite_cols_q[sprite_idx_q[1:0]] <= vram_d_i[3:0];
+            sprite_ec_q[sprite_idx_q[1:0]] <= vram_d_i[7];
           end
           AC_SPTH: begin
-            sprite_pats_q[sprite_idx_q[2:1]][7:0] <= vram_d_i;
-            sprite_pats_q[sprite_idx_q[2:1]][15:8] <= '0;
+            sprite_pats_q[sprite_idx_q[1:0]][15:8] <= vram_d_i;
+            sprite_pats_q[sprite_idx_q[1:0]][7:0] <= '0;
             if (!reg_size1_i) begin
               sprite_idx_q <= sprite_idx_q - 1'd1;
             end
           end
           AC_SPTL: begin
-            sprite_pats_q[sprite_idx_q[2:1]][15:8] <= vram_d_i;
+            sprite_pats_q[sprite_idx_q[1:0]][7:0] <= vram_d_i;
             sprite_idx_q <= sprite_idx_q - 1'd1;
           end
           default: ;
@@ -237,19 +237,19 @@ module vdp18_sprite (
     spr3_col_o = '0;
     num_spr_pix_v = '0;
 
-    if (sprite_xpos_q[0] == 0 && sprite_pats_q[0][0] == 1) begin
+    if (sprite_xpos_q[0] == 0 && sprite_pats_q[0][15] == 1) begin
       spr0_col_o = sprite_cols_q[0];
       num_spr_pix_v = num_spr_pix_v + 1'd1;
     end
-    if (sprite_xpos_q[1] == 0 && sprite_pats_q[1][0] == 1) begin
+    if (sprite_xpos_q[1] == 0 && sprite_pats_q[1][15] == 1) begin
       spr1_col_o = sprite_cols_q[1];
       num_spr_pix_v = num_spr_pix_v + 1'd1;
     end
-    if (sprite_xpos_q[2] == 0 && sprite_pats_q[2][0] == 1) begin
+    if (sprite_xpos_q[2] == 0 && sprite_pats_q[2][15] == 1) begin
       spr2_col_o = sprite_cols_q[2];
       num_spr_pix_v = num_spr_pix_v + 1'd1;
     end
-    if (sprite_xpos_q[3] == 0 && sprite_pats_q[3][0] == 1) begin
+    if (sprite_xpos_q[3] == 0 && sprite_pats_q[3][15] == 1) begin
       spr3_col_o = sprite_cols_q[3];
       num_spr_pix_v = num_spr_pix_v + 1'd1;
     end
@@ -257,7 +257,7 @@ module vdp18_sprite (
     spr_coll_o = (num_spr_pix_v > 1);
   end
 
-  assign spr_num_o = (access_type_i == AC_STST) ? sprite_num_q : sprite_numbers_q[sprite_idx_q[2:1]];
+  assign spr_num_o = (access_type_i == AC_STST) ? sprite_num_q : sprite_numbers_q[sprite_idx_q[1:0]];
   assign spr_line_o = sprite_line_q;
   assign spr_name_o = sprite_name_q;
 
