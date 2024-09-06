@@ -119,7 +119,7 @@ module vdp18_sprite (
           sprite_idx_q <= sprite_idx_q - 1'd1;
         end
         for (int idx = 0; idx < 4; idx++) begin
-          if (num_pix_i[8] == 0 || (sprite_ec_q[idx] == 1 && num_pix_i[8:4] == 4'b1111)) begin
+          if (num_pix_i[8] == 0 || (sprite_ec_q[idx] == 1 && num_pix_i[8:5] == 4'b1111)) begin
             if (sprite_xpos_q[idx] != 0) begin
               sprite_xpos_q[idx] <= sprite_xpos_q[idx] - 1'd1;
             end else begin
@@ -127,7 +127,7 @@ module vdp18_sprite (
             end
           end
           if (sprite_xpos_q[idx] == 0) begin
-            if (num_pix_i[8] == 0 || (sprite_ec_q[idx] == 1 && num_pix_i[8:4] == 4'b1111)) begin
+            if (num_pix_i[8] == 0 || (sprite_ec_q[idx] == 1 && num_pix_i[8:5] == 4'b1111)) begin
               if (!reg_mag1_i || sprite_xtog_q[idx]) begin
                 sprite_pats_q[idx] <= {sprite_pats_q[idx][14:0], 1'b0};
               end

@@ -12,7 +12,7 @@ module mapper_konami (
     assign cs = (mapper.typ == MAPPER_KONAMI) & cpu_bus.mreq;
 
     // Address is mapped if it's between 0x4000 and 0xBFFF and within ROM size
-    assign mapped = (cpu_bus.addr >= 16'h4000) && (cpu_bus.addr < 16'hC000) && (ram_addr < mapper.rom_size);
+    assign mapped = (cpu_bus.addr >= 16'h4000) && (cpu_bus.addr < 16'hC000) && (ram_addr < {2'b0, mapper.rom_size});
 
     // Bank registers for memory banking
     logic [7:0] bank1[2], bank2[2], bank3[2];
@@ -47,7 +47,7 @@ module mapper_konami (
                            bank3[mapper.id];  // Bank 3 for A000-BFFFh
 
     // Generate RAM address based on bank and lower address bits
-    wire [26:0] ram_addr = {bank_base, cpu_bus.addr[12:0]};
+    wire [26:0] ram_addr = {6'b0, bank_base, cpu_bus.addr[12:0]};
 
     // Output enable signal (only if mapped and chip select is active)
     wire oe = cs && mapped;

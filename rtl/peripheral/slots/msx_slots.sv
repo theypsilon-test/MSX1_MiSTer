@@ -84,7 +84,7 @@ module msx_slots (
 
     // Chip enable signals for BRAM and SDRAM
     assign bram_ce = '0;  // Assuming BRAM is not used in this context, hence inactive
-    assign sdram_ce = (memory_bus.ram_cs | memory_bus.sram_cs) & ~mapper_subslot_cs;
+    assign sdram_ce = (memory_bus.ram_cs || memory_bus.sram_cs) && ~mapper_subslot_cs;
 
     // RAM read/write control signal
     assign ram_rnw = memory_bus.rnw | (memory_bus.ram_cs & ram_ro) | mapper_subslot_cs;

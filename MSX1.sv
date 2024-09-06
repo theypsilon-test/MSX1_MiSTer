@@ -207,10 +207,10 @@ wire       [2:0] dev_enable[0:(1 << $bits(device_t))-1];
 wire             forced_scandoubler;
 wire      [21:0] gamma_bus;
 wire       [1:0] buttons;
-wire      [63:0] status;
+wire     [127:0] status;
 wire      [10:0] ps2_key;
 wire      [24:0] ps2_mouse;
-wire       [5:0] joy0, joy1;
+wire      [31:0] joy0, joy1;
 wire             ioctl_download;
 wire      [15:0] ioctl_index;
 wire             ioctl_wr;
@@ -225,7 +225,7 @@ wire       [7:0] sd_buff_dout;
 wire       [7:0] sd_buff_din[0:VDNUM-1];
 wire             sd_buff_wr;
 wire [VDNUM-1:0] img_mounted;
-wire      [31:0] img_size;
+wire      [63:0] img_size;
 wire             img_readonly;
 wire      [15:0] sdram_sz;
 wire      [64:0] rtc;
@@ -291,7 +291,7 @@ localparam CONF_STR = {
    "V,v",`BUILD_DATE 
 };
 
-wire [7:0] status_menumask;
+wire [15:0] status_menumask;
 wire [1:0] sdram_size;
 assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
 assign status_menumask[1] = fdc_enabled;
@@ -300,6 +300,7 @@ assign status_menumask[3] = ROM_A_load_hide;
 assign status_menumask[4] = ROM_B_load_hide;
 assign status_menumask[5] = sram_A_select_hide;
 assign status_menumask[6] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
+assign status_menumask[15:7] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 /*verilator tracing_off*/
 hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
@@ -345,7 +346,7 @@ msx_config msx_config
    .clk(clk21m),
    .reset(reset),
    .bios_config(bios_config),
-   .HPS_status(status),
+   .HPS_status(status[63:0]),
    .scandoubler(scandoubler),
    .sdram_size(sdram_size),
    .cart_conf(cart_conf),
@@ -407,7 +408,7 @@ msx MSX
    .sram_load(status[39]),
    .ioctl_addr(ioctl_addr[26:0]),
    .img_mounted(img_mounted[5]),
-   .img_size(img_size),
+   .img_size(img_size[31:0]),
    .img_readonly(img_readonly),
    .sd_rd(sd_rd[5]),
    .sd_wr(sd_wr[5]),
@@ -436,6 +437,8 @@ msx MSX
    .d_from_sd(d_from_sd),
    .sd_tx(sd_tx),
    .sd_rx(sd_rx),
+   .joy0(joy0[5:0]),
+   .joy1(joy1[5:0]),
    .*
 );
 /*verilator tracing_off*/
@@ -495,7 +498,7 @@ sd_card sd_card
     .sd_rd(sd_rd[4]),
     .sd_wr(sd_wr[4]),
     .sd_ack(sd_ack[4]),
-    .sd_buff_addr(sd_buff_addr),
+    .sd_buff_addr(sd_buff_addr[8:0]),
     .sd_buff_dout(sd_buff_dout),
     .sd_buff_din(sd_buff_din[4]),
     .sd_buff_wr(sd_buff_wr),
@@ -509,7 +512,7 @@ sd_card sd_card
 );
 
 /////////////////  VIDEO  /////////////////
-logic [9:0] vcrop;
+logic [11:0] vcrop;
 logic wide;
 wire  vcrop_en, vga_de;
 wire  [1:0] ar;
@@ -518,24 +521,24 @@ assign CLK_VIDEO   = clk21m;
 assign VGA_SL      = status[5:3] > 2 ? status[4:3] - 2'd2 : 2'd0;
 assign vcrop_en    = status[40];
 assign ar          = status[2:1];
-wire scandoubler = status[5:3] || forced_scandoubler;
+wire scandoubler = (status[5:3] != 0) || forced_scandoubler;
 
 always @(posedge CLK_VIDEO) begin
 	vcrop <= 0;
 	wide <= 0;
 	if(HDMI_WIDTH >= (HDMI_HEIGHT + HDMI_HEIGHT[11:1]) && !scandoubler) begin
-		if(HDMI_HEIGHT == 480)  vcrop <= 240;
-		if(HDMI_HEIGHT == 600)  begin vcrop <= 200; wide <= vcrop_en; end
-		if(HDMI_HEIGHT == 720)  vcrop <= 240;
-		if(HDMI_HEIGHT == 768)  vcrop <= 256; // NTSC mode has 250 visible lines only!
+		if(HDMI_HEIGHT == 480)  vcrop <= 12'd240;
+		if(HDMI_HEIGHT == 600)  begin vcrop <= 12'd200; wide <= vcrop_en; end
+		if(HDMI_HEIGHT == 720)  vcrop <= 12'd240;
+		if(HDMI_HEIGHT == 768)  vcrop <= 12'd256; // NTSC mode has 250 visible lines only!
 		if(HDMI_HEIGHT == 800)  begin vcrop <= 200; wide <= vcrop_en; end
-		if(HDMI_HEIGHT == 1080) vcrop <= 10'd216;
-		if(HDMI_HEIGHT == 1200) vcrop <= 240;
+		if(HDMI_HEIGHT == 1080) vcrop <= 12'd216;
+		if(HDMI_HEIGHT == 1200) vcrop <= 12'd240;
 	end
 	else if(HDMI_WIDTH >= 1440 && !scandoubler) begin
 		// 1920x1440 and 2048x1536 are 4:3 resolutions and won't fit in the previous if statement ( width > height * 1.5 )
-		if(HDMI_HEIGHT == 1440) vcrop <= 240;
-		if(HDMI_HEIGHT == 1536) vcrop <= 256;
+		if(HDMI_HEIGHT == 1440) vcrop <= 12'd240;
+		if(HDMI_HEIGHT == 1536) vcrop <= 12'd256;
 	end
 end
 
@@ -544,11 +547,11 @@ video_freak video_freak
 	.*,
 	.VGA_DE_IN(vga_de),
    .VGA_VS(vsync),
-	.ARX((!ar) ? (wide ? 12'd340 : 12'd400) : (ar - 1'd1)),
-	.ARY((!ar) ? 12'd300 : 12'd0),
-	.CROP_SIZE(vcrop_en ? vcrop : 10'd0),
+	.ARX((ar != 0) ? (wide ? 12'd340 : 12'd400) : {10'b0, (ar - 1'd1)}),
+	.ARY((ar != 0) ? 12'd300 : 12'd0),
+	.CROP_SIZE(vcrop_en ? vcrop : 12'd0),
 	.CROP_OFF(0),
-	.SCALE(status[6:5])
+	.SCALE({1'b0,status[6:5]})
 );
 
 video_mixer #(.GAMMA(0)) video_mixer
@@ -728,7 +731,7 @@ nvram_backup nvram_backup
    .save_req(status[38]),
    .img_mounted(img_mounted[3:0]),
    .img_readonly(img_readonly),
-   .img_size(img_size),
+   .img_size(img_size[31:0]),
    .sd_lba(sd_lba[0:3]),
    .sd_rd(sd_rd[3:0]),
    .sd_wr(sd_wr[3:0]),

@@ -86,7 +86,7 @@ module msx
 //  -- Audio MIX
 //  -----------------------------------------------------------------------------
 wire [15:0] compr[7:0];
-wire  [9:0] audioPSG    = ay_ch_mix + {keybeep,5'b00000} + {(cas_audio_in & ~cas_motor),4'b0000};
+wire  [9:0] audioPSG    = ay_ch_mix + {4'b0, keybeep,5'b00000} + {5'b0, (cas_audio_in & ~cas_motor),4'b0000};
 wire [16:0] fm          = {3'b00, audioPSG, 4'b0000};
 wire [16:0] audio_mix   = {device_sound[15], device_sound} + fm;
 assign compr            = '{ {1'b1, audio_mix[13:0], 1'b0}, 16'h8000, 16'h8000, 16'h8000, 16'h7FFF, 16'h7FFF, 16'h7FFF,  {1'b0, audio_mix[13:0], 1'b0}};
@@ -308,7 +308,7 @@ rtc rtc
    .req(req & rtc_en),
    .ack(),
    .wrt(~wr_n),
-   .adr(a),
+   .adr(a[0]),
    .dbi(d_from_rtc),
    .dbo(d_from_cpu)
 );

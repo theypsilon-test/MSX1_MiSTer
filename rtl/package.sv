@@ -57,7 +57,7 @@ interface memory_bus;
     logic [26:0] addr;
     logic        rnw;
     logic        sram_cs;
-    logic  [1:0] ram_cs;
+    logic        ram_cs;
 endinterface
 
 interface mapper_out;

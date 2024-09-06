@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module memory_upload
 (
     input                       clk,
@@ -214,7 +215,7 @@ module memory_upload
                     end
                 end
                 STATE_READ_CONF: begin                                  // Přečte požadovaný počet bytů do konfigurace
-                    if (fw_space ? ioctl_size[1] > (ddr3_addr - DDR3_BASE_FW_ADDR) : ioctl_size[0] > (ddr3_addr)) begin  // Kontrola konce dat
+                    if (fw_space ? ioctl_size[1] > 27'(ddr3_addr - DDR3_BASE_FW_ADDR) : ioctl_size[0] > ddr3_addr[26:0]) begin  // Kontrola konce dat
                         conf[head_addr] <= ddr3_dout;
                         ddr3_rd <= '1;
                         if (head_addr == read_cnt) begin
@@ -293,12 +294,12 @@ module memory_upload
                         BLOCK_RAM: begin
                             $display("BLOCK RAM ref_RAM:%x addr:%x size %d ", ref_ram, ram_addr, {conf[3],14'd0});
                             lookup_RAM[ref_ram].addr <= ram_addr;                  // Uložíme adresu RAM
-                            lookup_RAM[ref_ram].size <= {conf[3],14'd0};           // Uložíme velikost RAM
+                            lookup_RAM[ref_ram].size <= {8'd0, conf[3]};           // Uložíme velikost RAM
                             lookup_RAM[ref_ram].ro <= '0;                          // Vypneme ochranu paměti RAM
                             mapper <= MAPPER_OFFSET;
                             offset <= '0;                                          // Offset posunu RAM
                             ref_add <= '1;                                         // Bude potřeba zvednout referenci
-                            data_size <= {conf[3],14'd0};                          // Velikost nahrávaných dat
+                            data_size <= {3'b0, conf[3],14'd0};                    // Velikost nahrávaných dat
                             pattern <= pattern_t'(conf[4]);
                             state <= STATE_FILL_RAM;
                         end
@@ -315,9 +316,9 @@ module memory_upload
                                 if ((ref_sram == 2'd0 && lookup_SRAM[ref_sram].size == '0) || ref_sram != 2'd0) begin  // Jedná se o ROM SRAM?
                                     $display("BLOCK SRAM ref_SRAM:%x addr:%x size %d", ref_sram, ram_addr, {conf[3],10'd0});
                                     lookup_SRAM[ref_sram].addr <= ram_addr;      // Uložíme adresu RAM
-                                    lookup_SRAM[ref_sram].size <= {conf[3],10'd0}; // Uložíme velikost RAM
+                                    lookup_SRAM[ref_sram].size <= {8'd0, conf[3]}; // Uložíme velikost RAM
                                     ref_sram_add <= '1;    // Signalizujeme potřebu přiřadit SRAM
-                                    data_size <= {conf[3],14'd0};  // Velikost nahrávaných dat
+                                    data_size <= {7'b0, conf[3],10'd0};  // Velikost nahrávaných dat
                                     pattern <= PATTERN_FF;
                                     next_state <= STATE_READ_CONF;
                                     state <= STATE_FILL_RAM;
@@ -334,16 +335,16 @@ module memory_upload
                             if (fw_space) begin                                    // Pokud se  bude jednat o ROM z FW musíme dle indexu najít adresu v DDR 
                                 $display("BLOCK FW ROM ID: %x ref_RAM:%x addr:%x size %d ", conf[3], ref_ram, ram_addr, {conf[4],conf[5],14'd0}); 
                                 lookup_RAM[ref_ram].size <= {conf[4],conf[5]};     // Uložíme velikost ROM
-                                data_size <= {conf[4],conf[5],14'd0};
+                                data_size <= {conf[4][2:0],conf[5],14'd0};
                                 save_addr2 <= ddr3_addr - 1'b1;                    // Uložíme adresu pokračování -1 kvůli prefetch
-                                ddr3_addr  <= DDR3_BASE_FW_ADDR + rom_fw_table + {conf[3],2'b00};
+                                ddr3_addr  <= DDR3_BASE_FW_ADDR + {12'b0, rom_fw_table} + {18'b0, conf[3],2'b00};
                                 ddr3_rd    <= '1;
                                 state      <= STATE_READ_CONF;                     // Jdeme přečíst ROM ADDR
                                 next_state <= STATE_READ_ADRFILL_FW_ROM;           // Pokračujeme nastavením ROM
                             end else begin
                                 $display("BLOCK ROM ref_RAM:%x addr:%x size %d ", ref_ram, ram_addr, {conf[3],14'd0});
-                                lookup_RAM[ref_ram].size <= {conf[3],14'd0};           // Uložíme velikost ROM
-                                data_size <= {conf[3],14'd0};                          // Velikost nahrávaných dat
+                                lookup_RAM[ref_ram].size <= {8'd0, conf[3]};         // Uložíme velikost ROM
+                                data_size <= {3'b0, conf[3],14'd0};                  // Velikost nahrávaných dat
                                 state <= STATE_FILL_RAM;
                             end
                         end
@@ -356,7 +357,7 @@ module memory_upload
                                 if (ioctl_size[conf[3][0] ? 3 : 2] > '0) begin
                                     $display("BLOCK CART %d LOAD START ref: %d addr:%x size:%x - %x", conf[3][0], ref_ram, ram_addr, ioctl_size[conf[3][0] ? 3 : 2], ioctl_size[conf[3][0] ? 3 : 2][26:14]);
                                     lookup_RAM[ref_ram].addr <= ram_addr;               // Uložíme adresu ROM
-                                    lookup_RAM[ref_ram].size <= ioctl_size[conf[3][0] ? 3 : 2][26:14];        // Uložíme velikost ROM
+                                    lookup_RAM[ref_ram].size <= {3'b0, ioctl_size[conf[3][0] ? 3 : 2][26:14]};        // Uložíme velikost ROM
                                     lookup_RAM[ref_ram].ro <= '1;                       // Uložíme ochranu paměti ROM
                                     state <= STATE_FILL_RAM;                            // Načítáme ROM
                                     next_state <= STATE_SEARCH_CRC32_INIT;              // Po nahrání budeme hledat CRC
@@ -372,7 +373,7 @@ module memory_upload
                             end else begin                                              // Neni ROM jdeme do FW
                                 if (ioctl_size[1] > '0) begin                           // Máme FW?
                                     save_addr <= ddr3_addr - 1'b1;                          // Uchováme adresu -1 kvůli již načtenému prefetch bajtu
-                                    ddr3_addr <= 'h300010 + {cart_conf[conf[3][0]].typ,2'b00};  // FW Area + ID zařízení
+                                    ddr3_addr <= 28'h300010 + {23'b0, cart_conf[conf[3][0]].typ,2'b00};  // FW Area + ID zařízení
                                     ddr3_rd   <= '1;                                        // Preferch
                                     read_cnt <= 4;
                                     fw_space <= '1;
@@ -429,7 +430,7 @@ module memory_upload
                     endcase
                 end
                 STATE_READ_ADRFILL_FW_ROM:begin
-                    ddr3_addr <= DDR3_BASE_FW_ADDR + {conf[3],conf[2],conf[1],conf[0]};
+                    ddr3_addr <= DDR3_BASE_FW_ADDR + {conf[3][3:0],conf[2],conf[1],conf[0]};
                     ddr3_rd   <= '1;
                     next_state <= STATE_READ_CONF;
                     state <= STATE_FILL_RAM;
@@ -510,7 +511,7 @@ module memory_upload
                     if (ddr3_addr[2:0] == 3'd0 && rom_crc32 == {temp[4], temp[3], temp[2], temp[1]}) begin
                         $display("FIND CRC32: %x mapper:%x sram:%x", rom_crc32, temp[5], temp[6]);       // CRC32 nalezeno
                         if (ioctl_size[1] > '0) begin                                                    // Máme FW?
-                            ddr3_addr <= 'h300010 + {temp[5],2'b00};
+                            ddr3_addr <= 'h300010 + {18'b0, temp[5], 2'b00};
                             ddr3_rd <= '1;
                             read_cnt <= 4;
                             fw_space <= '1;
@@ -533,7 +534,7 @@ module memory_upload
                     end
                 end
                 STATE_GET_FW_ADDR: begin
-                    ddr3_addr <= {4'h3, conf[2][3:0], conf[1], conf[0]};
+                    ddr3_addr <= {4'b0, 4'h3, conf[2][3:0], conf[1], conf[0]};
                     ddr3_rd <= '1;
                     read_cnt <= 5;
                     state <= STATE_READ_CONF;

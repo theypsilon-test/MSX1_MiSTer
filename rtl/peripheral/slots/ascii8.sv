@@ -48,7 +48,7 @@ module cart_ascii8 (
             sramBank   <= '{'{default: '0},'{default: '0}};
             sramEnable <= '{default: '0}; 
         end else if (cs & cpu_bus.wr & (cpu_bus.addr[15:13] == 3'b011)) begin
-            if ((cpu_bus.data & sramEnableBit) & sram_exists) begin
+            if (((cpu_bus.data & sramEnableBit) != 0) && sram_exists) begin
                 // Enable SRAM
                 sramEnable[mapper.id] <= sramEnable[mapper.id] | 
                                         ((8'b00000100 << region) & sramPages);
@@ -70,8 +70,8 @@ module cart_ascii8 (
 
     // Calculate bank base and address mapping
     wire        sram_en   = |((8'b00000001 << cpu_bus.addr[15:13]) & sramEnable[mapper.id]);
-    wire [26:0] sram_addr = {sram_bank_base, cpu_bus.addr[12:0]};
-    wire [26:0] ram_addr  = {bank_base, cpu_bus.addr[12:0]};
+    wire [26:0] sram_addr = {6'b0, sram_bank_base, cpu_bus.addr[12:0]};
+    wire [26:0] ram_addr  = {6'b0, bank_base, cpu_bus.addr[12:0]};
     wire        ram_valid = (out.addr < {2'b00, mapper.rom_size});
 
     // Output signals

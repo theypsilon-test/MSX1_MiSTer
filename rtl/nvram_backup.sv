@@ -22,7 +22,7 @@ module nvram_backup
    input                [7:0] ram_dout
 );
 
-logic [63:0] image_size[4], new_size;
+logic [31:0] image_size[4], new_size;
 logic  [3:0] image_mounted; 
 logic        store_new_size = 1'b0;
 
@@ -31,7 +31,7 @@ always @(posedge clk) begin
    if (img_mounted[1]) begin image_mounted[1] <= ~img_readonly; image_size[1] <= img_size; end //Extension A
    if (img_mounted[2]) begin image_mounted[2] <= ~img_readonly; image_size[2] <= img_size; end //Extension B
    if (img_mounted[3]) begin image_mounted[3] <= ~img_readonly; image_size[3] <= img_size; end //Computer CMOS
-   if (store_new_size) image_size[num] <= (64'(lookup_SRAM[num].size)) << 13;
+   if (store_new_size) image_size[num] <= {3'b0, lookup_SRAM[num].size, 13'b0};
 end
 
 logic [3:0] request_load = 4'b0, request_save = 4'b0;
@@ -70,7 +70,7 @@ logic [31:0] lba_start;
 logic        done = 1'b0;
 
 assign ram_we         = rd & sd_ack[num] & ~sd_buff_addr[9] ;
-assign ram_addr       = lookup_SRAM[num].addr + 18'({sd_lba[num],sd_buff_addr[8:0]});
+assign ram_addr       = lookup_SRAM[num].addr + {sd_lba[num][16:0],sd_buff_addr[8:0]};
 assign sd_buff_din[0] = ram_dout;
 assign sd_buff_din[1] = ram_dout;
 assign sd_buff_din[2] = ram_dout;
