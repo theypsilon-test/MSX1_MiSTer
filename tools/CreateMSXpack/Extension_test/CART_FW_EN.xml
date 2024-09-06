@@ -5,6 +5,27 @@
       <mapper>KONAMI</mapper>   
     </block>
   </fw>
+  <fw name="ASCII8">
+    <block>
+      <mapper>ASCII8</mapper>   
+    </block>
+  </fw>
+  <fw name="ASCII16">
+    <block>
+      <mapper>ASCII16</mapper>   
+    </block>
+  </fw>
+  <fw name="WIZARDRY">
+    <block>
+      <mapper>WIZARDRY</mapper>   
+    </block>
+  </fw>
+  <fw name="KOEI">
+    <block>
+      <mapper>KOEI</mapper>   
+      <sram>32768</sram>
+    </block>
+  </fw>
   <fw name="KonamiSCC">
     <block>
       <device>SCC</device>
@@ -32,9 +53,19 @@
       <sram>8192</sram>
     </block>
   </fw>
-  <fw name="GM2">
-    <filename>GM2.ROM</filename>
-    <SHA1>5c00f9e3a48411e08fac89b1dfdd2a6e95853919</SHA1>
+  <fw name="GM2_ROM">
+    <block>
+      <mapper>GM2</mapper>
+      <sram>8192</sram>
+    </block>
+  </fw>
+    <fw name="GM2">
+    <block>
+      <filename>GM2.ROM</filename>
+      <SHA1>5c00f9e3a48411e08fac89b1dfdd2a6e95853919</SHA1>
+      <mapper>GM2</mapper>
+      <sram>8192</sram>
+    </block>
   </fw>
   <fw name="MEGA_FLASH_ROM">
     <secondary slot="1">

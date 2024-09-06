@@ -1,9 +1,14 @@
 {
-  "KONAMI": 6,
+  "FM_PAC": 3,
+  "GM2": 5,
+  "RTYPE": 10,
+  "ASCII8": 11,
+  "ASCII16": 12,
+  "KONAMI": 13,
+  "WIZARDRY": 14,
+  "KOEI": 15,
+  "GM2_ROM": 16,
   "KonamiSCCs": 99,
   "KonamiSCC+s": 99,
-  "RTYPE": 10,
-  "FM_PAC": 3,
-  "GM2s": 99,
   "MEGA_FLASH_ROMs": 99
 }
