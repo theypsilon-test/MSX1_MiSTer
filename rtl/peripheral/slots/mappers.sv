@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 module mappers (
     cpu_bus             cpu_bus,       // Interface for CPU communication
     mapper              mapper,        // Struct containing mapper configuration and parameters
@@ -50,8 +51,8 @@ module mappers (
         .out(fm_pac_out),
         .device_out(fm_pac_device_out)
     );
-
-    // Instantiate the KONAMI mapper
+    
+    // Instantiate the Konami Gamemaster2 mapper
     mapper_gamemaster2 gm2 (
         .cpu_bus(cpu_bus),
         .mapper(mapper),
