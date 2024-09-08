@@ -198,6 +198,7 @@ module memory_upload
                     io_device[block_num[3:0]].id      <= DEV_NONE;
                     io_device[block_num[3:0]].num     <= '0;
                     block_num <= block_num + 1'd1;
+                    dev_enable[device_t'(block_num)]  <= '0;
                     if (block_num == 63) begin
                         state <= STATE_READ_CONF;
                         next_state <= STATE_CHECK_CONF;
