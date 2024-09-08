@@ -80,6 +80,15 @@
     <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_hecfdb33c__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_hecfdb33c__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_keyboard__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0.cpp" />
+    <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_mapper_out__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_mapper__DepSet_h38db5a4b__0.cpp" />
+    <ClCompile Include="obj_dir\Vemu_mapper__DepSet_h38db5a4b__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_mapper__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0.cpp" />
+    <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_memory_bus__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_MSX__DepSet_h8aa69a26__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_MSX__DepSet_h8aa69a26__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_MSX__Slow.cpp" />
@@ -87,7 +96,6 @@
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h55edc9f1__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h8c31a98a__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h8c31a98a__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_ha89b63dc__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_hc8c990d7__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_pll__DepSet_hc0a77e1e__0__Slow.cpp" />
@@ -100,6 +108,11 @@
     <ClCompile Include="obj_dir\Vemu_spram__A10_M56524133__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_spram__A9_Mz2_MBz3__DepSet_h6ae187dc__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_spram__A9_Mz2_MBz3__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_tv80n__DepSet_h60dfcb09__0.cpp" />
+    <ClCompile Include="obj_dir\Vemu_tv80n__DepSet_h60dfcb09__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_tv80n__DepSet_hede41ebf__0.cpp" />
+    <ClCompile Include="obj_dir\Vemu_tv80n__DepSet_hede41ebf__0__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu_tv80n__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__DepSet_h368a78f1__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_vdp18_core__DepSet_h947ea413__0.cpp" />
@@ -129,6 +142,7 @@
     <ClCompile Include="sim\imgui\implot.cpp" />
     <ClCompile Include="sim\imgui\implot_items.cpp" />
     <ClCompile Include="sim\sim_ddr.cpp" />
+    <ClCompile Include="sim\sim_debug_player.cpp" />
     <ClCompile Include="sim\sim_memory.cpp" />
     <ClCompile Include="sim\sim_sdram.cpp" />
     <ClCompile Include="sim\vinc\verilated.cpp" />
@@ -150,6 +164,9 @@
     <ClInclude Include="obj_dir\Vemu_emu.h" />
     <ClInclude Include="obj_dir\Vemu_hps_io__Cz1_V6.h" />
     <ClInclude Include="obj_dir\Vemu_keyboard.h" />
+    <ClInclude Include="obj_dir\Vemu_mapper.h" />
+    <ClInclude Include="obj_dir\Vemu_mapper_out.h" />
+    <ClInclude Include="obj_dir\Vemu_memory_bus.h" />
     <ClInclude Include="obj_dir\Vemu_MSX.h" />
     <ClInclude Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR.h" />
     <ClInclude Include="obj_dir\Vemu_pll.h" />
@@ -157,6 +174,7 @@
     <ClInclude Include="obj_dir\Vemu_spram__A10_M56524132.h" />
     <ClInclude Include="obj_dir\Vemu_spram__A10_M56524133.h" />
     <ClInclude Include="obj_dir\Vemu_spram__A9_Mz2_MBz3.h" />
+    <ClInclude Include="obj_dir\Vemu_tv80n.h" />
     <ClInclude Include="obj_dir\Vemu_vdp18_col_pack.h" />
     <ClInclude Include="obj_dir\Vemu_vdp18_core.h" />
     <ClInclude Include="obj_dir\Vemu__Dpi.h" />
@@ -173,6 +191,7 @@
     <ClInclude Include="sim\imgui\ImGuiFileDialogConfig.h" />
     <ClInclude Include="sim\imgui\implot.h" />
     <ClInclude Include="sim\sim_ddr.h" />
+    <ClInclude Include="sim\sim_debug_player.h" />
     <ClInclude Include="sim\sim_memory.h" />
     <ClInclude Include="sim\sim_sdram.h" />
     <ClInclude Include="sim\vinc\verilated.h" />

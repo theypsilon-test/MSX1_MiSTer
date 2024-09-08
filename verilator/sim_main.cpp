@@ -21,6 +21,7 @@
 #include "sim_memory.h"
 #include "sim_sdram.h"
 #include "sim_ddr.h"
+#include "sim_debug_player.h"
 
 #include "../imgui/imgui_memory_editor.h"
 #include <verilated_vcd_c.h> //VCD Trace
@@ -73,7 +74,7 @@ const char* slotB[] = { "ROM","SCC","SCC +","FM - PAC","Empty" };
 const char* mapperA[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* mapperB[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* sramA[] = { "auto","1kB","2kB","4kB","8kB","16kB","32kB","none" };
-int currentSlotA = 3;
+int currentSlotA = 5;
 int currentSlotB = 0;
 int currentMapperA = 0;
 int currentMapperB = 0;
@@ -132,6 +133,7 @@ SimMemoryRam* kbd_map;
 SimSDRAM SDram(console);
 SimDDR DDR(console);
 SimMemory Rams(console);
+SimDebugPlayer debuger(console,"trace.log");
 
 // Verilog module
 // --------------
@@ -199,6 +201,7 @@ void resetSim() {
 }
 
 int verilate() {
+	int errors = 0;
 	if (!Verilated::gotFinish()) {
 
 		// Assert reset during startup
@@ -238,7 +241,7 @@ int verilate() {
 				Rams.AfterEval();
 				SDram.AfterEval();
 				DDR.AfterEval();
-
+			//	errors = debuger.AfterEval(main_time);
 				
 				if (top->emu->MSX->vdp_vdp18->ce_pix) {
 					uint32_t colour = 0xFF000000 | top->emu->MSX->vdp_vdp18->rgb_b_o << 16 | top->emu->MSX->vdp_vdp18->rgb_g_o << 8 | top->emu->MSX->vdp_vdp18->rgb_r_o;
@@ -274,8 +277,13 @@ int verilate() {
 		}
 */
 		main_time++;
-		if (main_time == 192595000	) Trace = 1;
-		return 1;
+		//if (main_time == 17976000) Trace = 1; //60000000 cca zobrazení videa
+		int ret = 1;
+		if (errors > 0) {
+			ret = 0;
+		}
+		
+		return ret;
 	}
 
 	// Stop verilating and cleanup
@@ -377,7 +385,15 @@ int main(int argc, char** argv, char** env) {
 	bus.ioctl_dout = &top->emu->hps_io->ioctl_dout;
 	top->emu->hps_io->sdram_sz = SDram.getHPSsize();
 
-	
+	/*
+	debuger.data = &top->emu->MSX->Z80->di;
+	debuger.reset_n = &top->emu->MSX->Z80->reset_n;
+	debuger.rd_n = &top->emu->MSX->Z80->rd_n;
+	debuger.wr_n = &top->emu->MSX->Z80->wr_n;
+	debuger.mreq_n = &top->emu->MSX->Z80->mreq_n;
+	debuger.addr = &top->emu->MSX->Z80->A;
+	debuger.data_out = &top->emu->MSX->Z80->dout;
+	*/
 	input.ps2_key = &top->emu->hps_io->ps2_key;
 	input.Initialise();
 
@@ -398,6 +414,11 @@ int main(int argc, char** argv, char** env) {
 	bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
 	bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
 	//bus.QueueDownload("./rom/roms/R-Type - IREM [R-Type] .rom", 3, true, 0x30C00000, &DDR);
+	//bus.QueueDownload("./rom/roms/1942-Capcom_[ASCII8].rom", 3, true, 0x30C00000, &DDR);
+	//bus.QueueDownload("./rom/roms/Konami's Game Master 2 - Konami [GameMaster2] [RC-755] .rom", 3, true, 0x30C00000, &DDR);
+	//bus.QueueDownload("./rom/roms/Genghis Khan - MSX1 Version - KOEI [KoeiSRAM32] .rom", 3, true, 0x30C00000, &DDR);
+	//bus.QueueDownload("./rom/roms/10th Frame - Access Software [ASCII16].rom", 3, true, 0x30C00000, &DDR);
+	//bus.QueueDownload("./rom/roms/Penguin Adventure - Yumetairiku Adventure - Konami [Konami] [RC-743] .rom", 3, true, 0x30C00000, &DDR);
 	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
 	
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
@@ -626,7 +647,11 @@ int main(int argc, char** argv, char** env) {
 
 		// Run simulation
 		if (run_enable) {
-			for (int step = 0; step < batchSize; step++) { verilate(); }
+			for (int step = 0; step < batchSize; step++) { 
+				run_enable = verilate();
+				if (!run_enable)
+					break;
+			}
 		}
 		else {
 			if (single_step) { verilate(); }
