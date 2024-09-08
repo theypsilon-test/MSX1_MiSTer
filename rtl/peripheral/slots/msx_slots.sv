@@ -16,9 +16,9 @@ module msx_slots (
 //    output                      flash_req,        // Flash request
 //    input                       flash_ready,      // Flash ready signal
 //    input                       flash_done,       // Flash done signal
-    input                       img_mounted,      // Image mounted flag
-    input                [31:0] img_size,         // Image size
-    input                       img_readonly,     // Image read-only flag
+//    input                       img_mounted,      // Image mounted flag
+//    input                [31:0] img_size,         // Image size
+//    input                       img_readonly,     // Image read-only flag
 //    output               [31:0] sd_lba,           // SD card LBA address
 //    output                      sd_rd,            // SD card read control
 //    output                      sd_wr,            // SD card write control
@@ -45,7 +45,7 @@ module msx_slots (
     device_bus               device_bus           // Interface for device control
 );
     // Mapper and memory bus configuration
-    mapper mapper();
+    block_info block_info();
     memory_bus memory_bus();
 
     // Assign data to SD card from CPU bus
@@ -66,8 +66,8 @@ module msx_slots (
     assign device_bus.num = slot_layout[layout_id].device_num;
 
     // Assign mapper type based on the current slot configuration
-    assign mapper.typ = slot_layout[layout_id].mapper;
-
+    assign block_info.typ = slot_layout[layout_id].mapper;
+    assign block_info.device = slot_layout[layout_id].device;
     // Retrieve RAM and SRAM base addresses and sizes
     wire [26:0] base_ram   = lookup_RAM[ref_ram].addr;
     wire [15:0] ram_blocks = lookup_RAM[ref_ram].size;
@@ -92,10 +92,10 @@ module msx_slots (
     assign ram_addr = (memory_bus.sram_cs ? 27'(base_sram) : base_ram) + memory_bus.addr;
 
     // Assign mapper configuration based on the current slot and layout
-    assign mapper.rom_size  = 25'(ram_blocks) << 14;
-    assign mapper.sram_size = sram_size;
-    assign mapper.id        = cart_num;
-    assign mapper.offset_ram = offset_ram;
+    assign block_info.rom_size  = 25'(ram_blocks) << 14;
+    assign block_info.sram_size = sram_size;
+    assign block_info.id        = cart_num;
+    assign block_info.offset_ram = offset_ram;
 
     // Subslot module instantiation for subslot management
     wire [1:0] subslot;
@@ -118,7 +118,7 @@ module msx_slots (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .memory_bus(memory_bus),
-        .mapper(mapper),
+        .block_info(block_info),
         .data(mapper_data)
     );
 /*verilator tracing_off*/

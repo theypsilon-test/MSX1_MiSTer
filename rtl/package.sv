@@ -68,11 +68,12 @@ interface mapper_out;
     logic  [7:0] data;
 endinterface
 
-interface mapper;
+interface block_info;
     logic [24:0] rom_size;
     logic [15:0] sram_size;
     logic  [1:0] offset_ram;
     mapper_typ_t typ;
+    device_t     device;
     logic        id;
 endinterface
 

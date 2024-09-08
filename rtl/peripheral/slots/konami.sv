@@ -2,17 +2,17 @@
 module mapper_konami (
     cpu_bus             cpu_bus,       // Interface for CPU communication
     mapper_out          out,           // Interface for mapper output
-    mapper              mapper         // Struct containing mapper configuration and parameters  
+    block_info          block_info     // Struct containing mapper configuration and parameters  
 );
 
     // Control signals for memory mapping
     wire cs, mapped;
 
     // Mapper is enabled if type is KONAMI and there is a memory request
-    assign cs = (mapper.typ == MAPPER_KONAMI) & cpu_bus.mreq;
+    assign cs = (block_info.typ == MAPPER_KONAMI) & cpu_bus.mreq;
 
     // Address is mapped if it's between 0x4000 and 0xBFFF and within ROM size
-    assign mapped = (cpu_bus.addr >= 16'h4000) && (cpu_bus.addr < 16'hC000) && (ram_addr < {2'b0, mapper.rom_size});
+    assign mapped = (cpu_bus.addr >= 16'h4000) && (cpu_bus.addr < 16'hC000) && (ram_addr < {2'b0, block_info.rom_size});
 
     // Bank registers for memory banking
     logic [7:0] bank1[2], bank2[2], bank3[2];
@@ -29,11 +29,11 @@ module mapper_konami (
                 // Bank switching logic based on address
                 case (cpu_bus.addr[15:13])
                     3'b011: // 6000-7FFFh: Switch bank 1
-                        bank1[mapper.id] <= cpu_bus.data;
+                        bank1[block_info.id] <= cpu_bus.data;
                     3'b100: // 8000-9FFFh: Switch bank 2
-                        bank2[mapper.id] <= cpu_bus.data;
+                        bank2[block_info.id] <= cpu_bus.data;
                     3'b101: // A000-BFFFh: Switch bank 3
-                        bank3[mapper.id] <= cpu_bus.data;
+                        bank3[block_info.id] <= cpu_bus.data;
                     default: ; // No action for other address ranges
                 endcase
             end
@@ -42,9 +42,9 @@ module mapper_konami (
 
     // Bank selection logic based on address ranges
     wire [7:0] bank_base = (cpu_bus.addr[15:13] == 3'b010) ? 8'h00 :  // Fixed bank for 4000-5FFFh
-                           (cpu_bus.addr[15:13] == 3'b011) ? bank1[mapper.id] :  // Bank 1 for 6000-7FFFh
-                           (cpu_bus.addr[15:13] == 3'b100) ? bank2[mapper.id] :  // Bank 2 for 8000-9FFFh
-                           bank3[mapper.id];  // Bank 3 for A000-BFFFh
+                           (cpu_bus.addr[15:13] == 3'b011) ? bank1[block_info.id] :  // Bank 1 for 6000-7FFFh
+                           (cpu_bus.addr[15:13] == 3'b100) ? bank2[block_info.id] :  // Bank 2 for 8000-9FFFh
+                           bank3[block_info.id];  // Bank 3 for A000-BFFFh
 
     // Generate RAM address based on bank and lower address bits
     wire [26:0] ram_addr = {6'b0, bank_base, cpu_bus.addr[12:0]};

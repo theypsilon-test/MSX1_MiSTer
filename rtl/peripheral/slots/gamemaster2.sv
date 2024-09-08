@@ -2,14 +2,14 @@
 module mapper_gamemaster2 (
     cpu_bus     cpu_bus,   // Interface for CPU communication
     mapper_out  out,       // Interface for mapper output
-    mapper      mapper     // Struct containing mapper configuration and parameters
+    block_info  block_info // Struct containing mapper configuration and parameters
 );
 
     // Memory mapping control signals
     wire cs, mapper_en, rom_mapped;
 
     // Enable mapper if the mapper type is GameMaster2
-    assign mapper_en = (mapper.typ == MAPPER_GM2);
+    assign mapper_en = (block_info.typ == MAPPER_GM2);
 
     // Determine if the ROM is mapped (address range 4000h - BFFFh)
     assign rom_mapped = cpu_bus.addr[15] ^ cpu_bus.addr[14];

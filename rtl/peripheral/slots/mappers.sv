@@ -1,7 +1,7 @@
 /*verilator tracing_off*/
 module mappers (
     cpu_bus             cpu_bus,       // Interface for CPU communication
-    mapper              mapper,        // Struct containing mapper configuration and parameters
+    block_info          block_info,    // Struct containing block configuration and parameters
     device_bus          device_bus,    // Interface for device control
     memory_bus          memory_bus,    // Interface for memory control
     output       [7:0]  data           // Data output from the active mapper; defaults to FF if no mapper is active
@@ -15,39 +15,41 @@ module mappers (
     mapper_out konami_out();           // Outputs from KONAMI mapper
     mapper_out gm2_out();              // Outputs from Konami GameMaster mapper
     device_bus fm_pac_device_out();    // Device bus output for FM-PAC mapper
+    device_bus offset_device_out();    // Device bus output for offset mapper (default mapper)
 
     // Instantiate the ASCII8 mapper
     cart_ascii8 ascii8 (
         .cpu_bus(cpu_bus),
-        .mapper(mapper),
+        .block_info(block_info),
         .out(ascii8_out)
     );
 
     // Instantiate the ASCII16 mapper
     cart_ascii16 ascii16 (
         .cpu_bus(cpu_bus),
-        .mapper(mapper),
+        .block_info(block_info),
         .out(ascii16_out)
     );
 
     // Instantiate the OFFSET mapper
     mapper_offset offset (
         .cpu_bus(cpu_bus),
-        .mapper(mapper),
-        .out(offset_out)
+        .block_info(block_info),
+        .out(offset_out),
+        .device_out(offset_device_out)
     );
 
     // Instantiate the KONAMI mapper
     mapper_konami konami (
         .cpu_bus(cpu_bus),
-        .mapper(mapper),
+        .block_info(block_info),
         .out(konami_out)
     );
 
     // Instantiate the FM-PAC mapper
     mapper_fm_pac fm_pac (
         .cpu_bus(cpu_bus),
-        .mapper(mapper),
+        .block_info(block_info),
         .out(fm_pac_out),
         .device_out(fm_pac_device_out)
     );
@@ -55,7 +57,7 @@ module mappers (
     // Instantiate the Konami Gamemaster2 mapper
     mapper_gamemaster2 gm2 (
         .cpu_bus(cpu_bus),
-        .mapper(mapper),
+        .block_info(block_info),
         .out(gm2_out)
     );
 
@@ -76,7 +78,7 @@ module mappers (
     assign memory_bus.sram_cs   = ascii8_out.sram_cs | ascii16_out.sram_cs | fm_pac_out.sram_cs | gm2_out.sram_cs;
 
     // Device control signals: Use the FM-PAC mapper's control signals
-    assign device_bus.typ = fm_pac_device_out.typ;
+    assign device_bus.typ = device_t'(fm_pac_device_out.typ | offset_device_out.typ);
     assign device_bus.we  = fm_pac_device_out.we;
     assign device_bus.en  = fm_pac_device_out.en;
 

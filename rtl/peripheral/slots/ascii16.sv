@@ -1,6 +1,6 @@
 module cart_ascii16 (
     cpu_bus cpu_bus,                   // Interface for CPU communication
-    mapper mapper,                     // Struct containing mapper configuration and parameters
+    block_info block_info,             // Struct containing mapper configuration and parameters
     mapper_out out                     // Interface for mapper output
 );
 
@@ -11,10 +11,10 @@ module cart_ascii16 (
     assign mapped     = ^cpu_bus.addr[15:14];  
     
     // Mapper is enabled if it is ASCII16 or R-TYPE
-    assign mapper_en  = (mapper.typ == MAPPER_ASCII16) | (mapper.typ == MAPPER_RTYPE);
+    assign mapper_en  = (block_info.typ == MAPPER_ASCII16) | (block_info.typ == MAPPER_RTYPE);
     
     // Mode is R-TYPE
-    assign mode_rtype = (mapper.typ == MAPPER_RTYPE);
+    assign mode_rtype = (block_info.typ == MAPPER_RTYPE);
     
     // Chip select is valid if address is mapped and mapper is enabled
     assign cs         = mapped & mapper_en & cpu_bus.mreq;
@@ -25,7 +25,7 @@ module cart_ascii16 (
     logic [1:0] sramEnable[2];       // SRAM enable signals for two different mapper IDs
 
     // SRAM exists if its size is greater than 0
-    wire sram_exists = (mapper.sram_size > 0);
+    wire sram_exists = (block_info.sram_size > 0);
 
     // Initialize or update bank and SRAM enable signals
     always @(posedge cpu_bus.clk) begin
@@ -38,24 +38,24 @@ module cart_ascii16 (
             if (mode_rtype) begin
                 // Write to bank1 in R-TYPE mode (0x7000-0x7FFF)
                 if (cpu_bus.addr[15:12] == 4'b0111) begin
-                    bank1[mapper.id] <= cpu_bus.data & (cpu_bus.data[4] ? 8'h17 : 8'h1F);
+                    bank1[block_info.id] <= cpu_bus.data & (cpu_bus.data[4] ? 8'h17 : 8'h1F);
                 end
             end else begin
                 // Standard mode write operations (0x6000-0x67FF and 0x7000-0x77FF)
                 case (cpu_bus.addr[15:11])
                     5'b01100: // 0x6000-0x67FF
                         if (cpu_bus.data == 8'h10 && sram_exists) 
-                            sramEnable[mapper.id][0] <= 1'b1;
+                            sramEnable[block_info.id][0] <= 1'b1;
                         else begin
-                            sramEnable[mapper.id][0] <= 1'b0;
-                            bank0[mapper.id] <= cpu_bus.data;
+                            sramEnable[block_info.id][0] <= 1'b0;
+                            bank0[block_info.id] <= cpu_bus.data;
                         end
                     5'b01110: // 0x7000-0x77FF
                         if (cpu_bus.data == 8'h10 && sram_exists) 
-                            sramEnable[mapper.id][1] <= 1'b1;
+                            sramEnable[block_info.id][1] <= 1'b1;
                         else begin
-                            sramEnable[mapper.id][1] <= 1'b0;
-                            bank1[mapper.id] <= cpu_bus.data;
+                            sramEnable[block_info.id][1] <= 1'b0;
+                            bank1[block_info.id] <= cpu_bus.data;
                         end
                     default: ;
                 endcase
@@ -64,20 +64,20 @@ module cart_ascii16 (
     end
 
     // Calculate bank base and address mapping
-    wire [7:0] bank_base = cpu_bus.addr[15] ? bank1[mapper.id] : 
-                          (mode_rtype ? 8'h0F : bank0[mapper.id]);
+    wire [7:0] bank_base = cpu_bus.addr[15] ? bank1[block_info.id] : 
+                          (mode_rtype ? 8'h0F : bank0[block_info.id]);
     
-    wire sram_en   = sramEnable[mapper.id][cpu_bus.addr[15]];
+    wire sram_en   = sramEnable[block_info.id][cpu_bus.addr[15]];
 
     // Determine the SRAM and RAM addresses based on the mapper configuration
-    wire [26:0] sram_addr = {mapper.sram_size > 16'd2 ? 
+    wire [26:0] sram_addr = {block_info.sram_size > 16'd2 ? 
                             {14'd0, cpu_bus.addr[12:0]} : 
                             {16'd0, cpu_bus.addr[10:0]}};
                             
     wire [26:0] ram_addr  = {5'b0, bank_base, cpu_bus.addr[13:0]};
     
     // Check if the calculated RAM address is within the valid range of the ROM size
-    wire ram_valid = (ram_addr < {2'b00, mapper.rom_size});
+    wire ram_valid = (ram_addr < {2'b00, block_info.rom_size});
 
     // Output signals based on calculated conditions
     wire sram_cs = cs & sram_en;
