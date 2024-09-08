@@ -225,6 +225,7 @@ assign d_to_cpu = rd_n   ? 8'hFF           :
                   rtc_en ? d_from_rtc      :
                   ~psg_n ? d_from_psg      :
                   ~ppi_n ? d_from_8255     :
+                  device_output_rq ? device_data     :
                            ram_dout & d_from_slots;
 //  -----------------------------------------------------------------------------
 //  -- Keyboard decoder
@@ -484,33 +485,42 @@ assign cpu_bus.m1 = ~m1_n;
 assign cpu_bus.data = d_from_cpu;
 assign cpu_bus.addr = a;
 
+
+sd_bus sd_bus();
+sd_bus_control sd_bus_control();
+
+assign sd_bus.ack = sd_ack;
+assign sd_bus.buff_addr = sd_buff_addr;
+assign sd_bus.buff_data = sd_buff_dout;
+assign sd_bus.buff_wr = sd_buff_wr;
+
+assign sd_rd  = sd_bus_control.rd;
+assign sd_wr  = sd_bus_control.wr;
+assign sd_lba = sd_bus_control.sd_lba;
+assign sd_buff_din = sd_bus_control.buff_data;
+
+image_info image_info();
+
+assign image_info.mounted = img_mounted;
+assign image_info.size = img_size;
+assign image_info.readonly = img_readonly;
+
+wire [7:0] device_data;
+wire device_output_rq;
 devices devices
 (
    .cpu_bus(cpu_bus),
    .device_bus(device_bus),
-   //.clk(clk21m),
-   //.clk_en(ce_3m58_p),
-   //.reset(reset),
+   .sd_bus(sd_bus),
+   .sd_bus_control(sd_bus_control),
+   .image_info(image_info),
    .dev_enable(dev_enable),               //Konfigurace zařízení z load. Povoluje jednotlivé zařízení
-   //.device(device),
-   //.device_num(device_num),
    .io_device(io_device),
-   //.dev_addr(a),
-   //.dev_din(d_from_cpu),
-   .dev_dout(),
-   //.dev_wr(device_we),
-   //.dev_en(device_en),
-   .dev_rd(),
-   .sound(device_sound)
-   //.cpu_m1(~m1_n),
-   //.cpu_iorq(~iorq_n),
-   //.cpu_rd(~rd_n),
-   //.cpu_wr(~wr_n),
-   //.cpu_addr(a),
-   //.cpu_data(d_from_cpu)
+   .sound(device_sound),
+   .data(device_data),
+   .output_rq(device_output_rq)
 );
 
-/*verilator tracing_on*/
 wire         [7:0] d_from_slots;
 wire signed [15:0] cart_sound;
 //wire         [1:0] device_num;
@@ -537,17 +547,9 @@ msx_slots msx_slots
    //.flash_ready(flash_ready),
    //.flash_done(flash_ready),
    .slot_layout(slot_layout),
-   .img_mounted(img_mounted),
-   .img_size(img_size),
-   .img_readonly(img_readonly),
-   //.sd_lba(sd_lba),
-   //.sd_rd(sd_rd),
-   //.sd_wr(sd_wr),
-   //.sd_ack(sd_ack),
-   //.sd_buff_addr(sd_buff_addr),
-   //.sd_buff_dout(sd_buff_dout),
-   //.sd_buff_din(sd_buff_din),
-   //.sd_buff_wr(sd_buff_wr),
+   //.img_mounted(img_mounted),
+   //.img_size(img_size),
+   //.img_readonly(img_readonly),
    .active_slot(slot),
    .lookup_RAM(lookup_RAM),
    .lookup_SRAM(lookup_SRAM),

@@ -2,11 +2,14 @@
 module devices (
     cpu_bus         cpu_bus,            // Interface for CPU communication
     device_bus      device_bus,         // Interface for device control
+    sd_bus          sd_bus,
+    sd_bus_control  sd_bus_control,
+    image_info      image_info,    
     input     [2:0] dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
     input MSX::io_device_t   io_device[16],  // Array of IO devices with port and mask info
-    input     [7:0] dev_dout,           // Data output from device
-    input           dev_rd,             // Read request signal
-    output signed [15:0] sound          // Combined sound output
+    output signed [15:0] sound,          // Combined sound output
+    output [7:0]    data,
+    output          output_rq
 );
     // Combine sound outputs from the devices
     assign sound = opl3_sound;
@@ -24,6 +27,16 @@ module devices (
         .sound(opl3_sound)
     );
 
+/*verilator tracing_on*/
+    vy0010 vy0010
+    (
+        .cpu_bus(cpu_bus),
+        .device_bus(device_bus),
+        .sd_bus(sd_bus),
+        .sd_bus_control(sd_bus_control),
+        .image_info(image_info),
+        .data(data),
+        .output_rq(output_rq)
     );
 
 endmodule

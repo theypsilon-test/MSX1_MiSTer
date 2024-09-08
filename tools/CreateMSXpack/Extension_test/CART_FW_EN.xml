@@ -59,12 +59,19 @@
       <sram>8192</sram>
     </block>
   </fw>
-    <fw name="GM2">
+  <fw name="GM2">
     <block>
       <filename>GM2.ROM</filename>
       <SHA1>5c00f9e3a48411e08fac89b1dfdd2a6e95853919</SHA1>
       <mapper>GM2</mapper>
       <sram>8192</sram>
+    </block>
+  </fw>
+  <fw name="VY0010">
+    <block start="1" count="1">
+      <filename>VY0010.ROM</filename>
+      <SHA1>8924e3e11eb1c8c1edcb7efa63c26d2bdc142473</SHA1>
+      <device>VY0010</device>
     </block>
   </fw>
   <fw name="MEGA_FLASH_ROM">
