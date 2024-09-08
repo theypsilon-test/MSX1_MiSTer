@@ -11,22 +11,22 @@ module msx_slots (
     output                      sdram_ce,         // SDRAM chip enable
     output                      bram_ce,          // BRAM chip enable
     input                 [1:0] sdram_size,       // SDRAM size
-    output               [26:0] flash_addr,       // Flash memory address
-    output                [7:0] flash_din,        // Flash data input
-    output                      flash_req,        // Flash request
-    input                       flash_ready,      // Flash ready signal
-    input                       flash_done,       // Flash done signal
+//    output               [26:0] flash_addr,       // Flash memory address
+//    output                [7:0] flash_din,        // Flash data input
+//    output                      flash_req,        // Flash request
+//    input                       flash_ready,      // Flash ready signal
+//    input                       flash_done,       // Flash done signal
     input                       img_mounted,      // Image mounted flag
     input                [31:0] img_size,         // Image size
     input                       img_readonly,     // Image read-only flag
-    output               [31:0] sd_lba,           // SD card LBA address
-    output                      sd_rd,            // SD card read control
-    output                      sd_wr,            // SD card write control
-    input                       sd_ack,           // SD card acknowledge
-    input                [13:0] sd_buff_addr,     // SD buffer address
-    input                 [7:0] sd_buff_dout,     // SD buffer data output
-    output                [7:0] sd_buff_din,      // SD buffer data input
-    input                       sd_buff_wr,       // SD buffer write control
+//    output               [31:0] sd_lba,           // SD card LBA address
+//    output                      sd_rd,            // SD card read control
+//    output                      sd_wr,            // SD card write control
+//    input                       sd_ack,           // SD card acknowledge
+//    input                [13:0] sd_buff_addr,     // SD buffer address
+//    input                 [7:0] sd_buff_dout,     // SD buffer data output
+//    output                [7:0] sd_buff_din,      // SD buffer data input
+//    input                       sd_buff_wr,       // SD buffer write control
     input  MSX::block_t         slot_layout[64],  // Slot layout configuration
     input  MSX::lookup_RAM_t    lookup_RAM[16],   // RAM lookup table
     input  MSX::lookup_SRAM_t   lookup_SRAM[4],   // SRAM lookup table
@@ -35,22 +35,21 @@ module msx_slots (
     input  dev_typ_t            cart_device[2],   // Cartridge device types
     input  dev_typ_t            msx_device,       // MSX device type
     input                 [3:0] msx_dev_ref_ram[8], // MSX device reference RAM
-    output             [7:0] d_to_sd,             // Data to SD card
-    input              [7:0] d_from_sd,           // Data from SD card
-    output                   sd_tx,               // SD transmit
-    output                   sd_rx,               // SD receive
-    output                   debug_FDC_req,       // Debug FDC request
-    output                   debug_sd_card,       // Debug SD card
-    output                   debug_erase,         // Debug erase
+//    output             [7:0] d_to_sd,             // Data to SD card
+//    input              [7:0] d_from_sd,           // Data from SD card
+//    output                   sd_tx,               // SD transmit
+//    output                   sd_rx,               // SD receive
+//    output                   debug_FDC_req,       // Debug FDC request
+//    output                   debug_sd_card,       // Debug SD card
+//    output                   debug_erase,         // Debug erase
     device_bus               device_bus           // Interface for device control
 );
-
     // Mapper and memory bus configuration
     mapper mapper();
     memory_bus memory_bus();
 
     // Assign data to SD card from CPU bus
-    assign d_to_sd = cpu_bus.data;
+    //assign d_to_sd = cpu_bus.data;
 
     // Calculate block and layout ID based on CPU address and active slot
     wire [1:0] block = cpu_bus.addr[15:14];
@@ -102,7 +101,7 @@ module msx_slots (
     wire [1:0] subslot;
     wire [7:0] subslot_data;
     wire mapper_subslot_cs;
-
+    
     subslot subslot_inst (
         .cpu_bus(cpu_bus),
         .expander_enable(bios_config.slot_expander_en),
@@ -122,5 +121,5 @@ module msx_slots (
         .mapper(mapper),
         .data(mapper_data)
     );
-
+/*verilator tracing_off*/
 endmodule
