@@ -1,67 +1,74 @@
 /*verilator tracing_off*/
-module cart_konami_scc
-(
-   input            clk,
-   input            reset,
-   input     [24:0] mem_size,
-   input     [15:0] cpu_addr,
-   input      [7:0] din,
-   input            cpu_mreq,
-   input            cpu_wr,
-   input            cpu_rd,
-   input            cs,
-   input            cart_num,
-   input            sccDevice,     // 0-SCC 1-SCC+
-   output           mem_unmaped,
-   output    [20:0] mem_addr,
-   output           scc_req,
-   output    [1:0]  scc_mode
+module mapper_konami_scc (
+   cpu_bus             cpu_bus,        // Interface for CPU communication
+   mapper_out          out,            // Interface for mapper output
+   block_info          block_info,     // Struct containing mapper configuration and parameters 
+   device_bus          device_out      // Interface for device output
 );
-   
-   logic [7:0] sccMode[2];
-   logic [7:0] bank[2][4];
-   logic [1:0] sccEnable;
-   always @(posedge clk) begin
-      if (reset) begin
-         bank        <= '{'{'h00, 'h01, 'h02, 'h03},'{'h00, 'h01, 'h02, 'h03}};
-         sccMode     <= '{'h00,'h00};
-         sccEnable   <= 2'b00;
-      end else begin
-         if (cs & cpu_mreq & cpu_wr) begin
 
-            case (cpu_addr[15:11])
-               5'b01010: // 5000-57ffh
-                     bank[cart_num][2'd0] <= din;
-               5'b01110: // 7000-77ffh
-                     bank[cart_num][2'd1] <= din;
-               5'b10010: // 9000-97ffh
-                     bank[cart_num][2'd2] <= din;
-               5'b10110: // b000-b7ffh
-                     bank[cart_num][2'd3] <= din;
-               default: ;
+    // Control signals for memory mapping
+    wire cs, mapped, scc_area;
+
+    // Mapper is enabled if type is KONAMI_SCC and there is a memory request (mreq)
+    assign cs = (block_info.typ == MAPPER_KONAMI_SCC) & cpu_bus.mreq;
+
+    // Address is mapped if it is between 0x4000 and 0xBFFF and within ROM size
+    assign mapped = (cpu_bus.addr >= 16'h4000) && (cpu_bus.addr < 16'hC000) && (ram_addr < {2'b0, block_info.rom_size});
+
+    // SCC area is active if the address is in the range 0x9800 to 0x9FFF and SCC is enabled
+    assign scc_area = (cpu_bus.addr >= 16'h9800) && (cpu_bus.addr < 16'hA000) && sccEnable[block_info.id];
+
+    // Bank registers for switching between memory banks
+    logic [7:0] bank1[2];   // Bank 1 for address range 0x4000-0x5FFF
+    logic [7:0] bank2[2];   // Bank 2 for address range 0x6000-0x7FFF
+    logic [7:0] bank3[2];   // Bank 3 for address range 0x8000-0x9FFF
+    logic [7:0] bank4[2];   // Bank 4 for address range 0xA000-0xBFFF
+    logic [1:0] sccEnable;  // SCC enable flag for each bank
+
+    // Bank switching logic: On reset, set default bank values. On write, update bank values.
+    always @(posedge cpu_bus.clk) begin
+        if (cpu_bus.reset) begin
+            // Reset bank registers and disable SCC
+            bank1 <= '{'h00, 'h00};  // Default bank 1 values
+            bank2 <= '{'h01, 'h01};  // Default bank 2 values
+            bank3 <= '{'h02, 'h02};  // Default bank 3 values
+            bank4 <= '{'h03, 'h03};  // Default bank 4 values
+            sccEnable <= 2'b00;      // Disable SCC initially
+        end else if (cs & cpu_bus.wr) begin
+            // Write to the bank registers based on address ranges
+            case (cpu_bus.addr[15:11])
+                5'b01010: // 5000-57FFh -> Bank 1
+                    bank1[block_info.id] <= cpu_bus.data;
+                5'b01110: // 7000-77FFh -> Bank 2
+                    bank2[block_info.id] <= cpu_bus.data;
+                5'b10010: begin // 9000-97FFh -> Bank 3
+                    bank3[block_info.id] <= cpu_bus.data;
+                    // Enable SCC if the data matches the specific SCC enable value (0x3F)
+                    sccEnable[block_info.id] <= (cpu_bus.data[5:0] == 6'h3F);
+                end
+                5'b10110: // B000-B7FFh -> Bank 4
+                    bank4[block_info.id] <= cpu_bus.data;
+                default: ;
             endcase
-            if ({cpu_addr[15:1],1'b0} == 16'hBFFE & sccDevice)  sccMode[cart_num] <= din;
-            if (cpu_addr[15:11]       == 5'b10010 & ~sccDevice) sccEnable[cart_num] <= din[5:0] == 6'h3F;
-         end
-      end
-   end
+        end
+    end
 
-   assign scc_mode = { sccDevice & sccMode[1][5] & bank[1][3][7], sccDevice & sccMode[0][5] & bank[0][3][7]};
-   assign scc_req  = cpu_mreq & (cpu_rd | cpu_wr) &
-                     ((sccMode[cart_num][5] & bank[cart_num][3][7] & cpu_addr[15:8] == 8'hB8)                    ||   //SCC+
-                     (~sccMode[cart_num][5] & bank[cart_num][2][5:0] == 6'b111111 & cpu_addr[15:11] == 5'b10011) ||   //SCC+ mode SCC
-                     (~sccDevice && sccEnable[cart_num] & cpu_addr[15:11] == 5'b10011));                              //SCC
+    // Bank selection logic based on the current address range
+    wire [7:0] bank_base = (cpu_bus.addr[15:13] == 3'b010) ? bank1[block_info.id] :  // Bank 1 for 4000-5FFFh
+                           (cpu_bus.addr[15:13] == 3'b011) ? bank2[block_info.id] :  // Bank 2 for 6000-7FFFh
+                           (cpu_bus.addr[15:13] == 3'b100) ? bank3[block_info.id] :  // Bank 3 for 8000-9FFFh
+                                                             bank4[block_info.id];    // Bank 4 for A000-BFFFh
 
-   wire maped, en_ram;
-   wire [7:0] bank_base;
-   assign {maped, en_ram, bank_base} = cpu_addr[15:13] == 3'b010 ? {1'b1,(sccMode[cart_num][4] | sccMode[cart_num][0]                         ),bank[cart_num][0]} :   //4000 - 5FFF
-                                       cpu_addr[15:13] == 3'b011 ? {1'b1,(sccMode[cart_num][4] | sccMode[cart_num][1]                         ),bank[cart_num][1]} :   //6000 - 7FFF
-                                       cpu_addr[15:13] == 3'b100 ? {1'b1,(sccMode[cart_num][4] | (sccMode[cart_num][5] & sccMode[cart_num][2])),bank[cart_num][2]} :   //8000 - 9FFF
-                                       cpu_addr[15:13] == 3'b101 ? {1'b1,(sccMode[cart_num][4]                                                ),bank[cart_num][3]} :   //A000 - BFFF
-                                                               10'd0 ;    
+    // Generate RAM address based on bank and lower address bits
+    wire [26:0] ram_addr = {6'b0, bank_base, cpu_bus.addr[12:0]};
 
-   assign mem_unmaped = cs & (scc_req  | ~maped | (cpu_wr & cpu_mreq & ~en_ram));
-   assign mem_addr = {bank_base, cpu_addr[12:0]};
+    // Output enable signal: active only if address is mapped and not in SCC area
+    wire oe = cs && mapped && ~scc_area;
 
+    // Output assignments to the `out` interface
+    assign out.addr   = oe ? ram_addr : {27{1'b1}};   // Output address, or '1 if not enabled
+    assign out.ram_cs = oe;                           // RAM chip select signal
+
+    assign device_out.typ = cs ? DEV_SCC : DEV_NONE;
+    assign device_out.en  = cs && sccEnable[block_info.id];
 endmodule
-       

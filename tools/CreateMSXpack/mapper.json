@@ -5,9 +5,10 @@
   "RTYPE": 3,
   "ASCII8": 4,
   "KOEI": 5,
-  "WIZARDY": 6,
+  "WIZARDRY": 6,
   "KONAMI": 7,
   "FMPAC": 8,
   "GM2" : 9,
-  "VY0010" : 10
+  "VY0010" : 10,
+  "KONAMI_SCC" : 11
 }

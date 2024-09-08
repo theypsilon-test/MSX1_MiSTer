@@ -12,22 +12,38 @@ module devices (
     output          output_rq
 );
     // Combine sound outputs from the devices
-    assign sound = opl3_sound;
+    assign sound = opl3_sound + scc_sound ;
+    assign data = scc_data & vy0010_data;
+    assign output_rq = scc_output_rq | vy0010_output_rq;
 
     wire signed [15:0] opl3_sound;
-    
     opl3 OPL3
     (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
         .io_device(io_device),
-        .dev_dout(dev_dout),
-        .dev_rd(dev_rd),
         .sound(opl3_sound)
     );
 
+    wire [7:0] scc_data;
+    wire       scc_output_rq;
+    wire signed [15:0] scc_sound;
+    scc SCC
+    (
+        .cpu_bus(cpu_bus),
+        .device_bus(device_bus),
+        .dev_enable(dev_enable),
+        .io_device(io_device),
+        .sound(scc_sound),
+        .data(scc_data),
+        .output_rq(scc_output_rq)
+
+    );
+
 /*verilator tracing_on*/
+    wire [7:0] vy0010_data;
+    wire       vy0010_output_rq;
     vy0010 vy0010
     (
         .cpu_bus(cpu_bus),
@@ -35,8 +51,8 @@ module devices (
         .sd_bus(sd_bus),
         .sd_bus_control(sd_bus_control),
         .image_info(image_info),
-        .data(data),
-        .output_rq(output_rq)
+        .data(vy0010_data),
+        .output_rq(vy0010_output_rq)
     );
 
 endmodule

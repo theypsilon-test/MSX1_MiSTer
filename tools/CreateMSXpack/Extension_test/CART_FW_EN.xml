@@ -29,7 +29,7 @@
   <fw name="KonamiSCC">
     <block>
       <device>SCC</device>
-      <mapper>KONAMI</mapper>   
+      <mapper>KONAMI_SCC</mapper>   
     </block>
   </fw>
   <fw name="KonamiSCC+">

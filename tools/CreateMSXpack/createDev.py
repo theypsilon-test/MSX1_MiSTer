@@ -58,7 +58,7 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
         if block['mapper'] in constants['mapper']:
             result.append(create_block_entry(constants, 'MAPPER', address, param1=constants['mapper'][block['mapper']]))
         else:
-            logger.warning(f"Unknown mapper type: {block['mapper']}")
+            logger.warning(f"Unknown mapper type: {block['mapper']} see file mapper.json")
 
     if 'device' in block:
         if block['device'] in constants['device']:
