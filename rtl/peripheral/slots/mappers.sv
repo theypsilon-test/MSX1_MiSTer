@@ -8,15 +8,16 @@ module mappers (
 );
 
     // Intermediate signals from each mapper
-    mapper_out ascii8_out();           // Outputs from ASCII8 mapper
-    mapper_out ascii16_out();          // Outputs from ASCII16 mapper
-    mapper_out offset_out();           // Outputs from OFFSET mapper
-    mapper_out fm_pac_out();           // Outputs from FM-PAC mapper
-    mapper_out konami_out();           // Outputs from KONAMI mapper
-    mapper_out konami_SCC_out();       // Outputs from KONAMI SCC mapper
-    mapper_out gm2_out();              // Outputs from Konami GameMaster mapper
-    device_bus fm_pac_device_out();    // Device bus output for FM-PAC mapper
-    device_bus offset_device_out();    // Device bus output for offset mapper (default mapper)
+    mapper_out ascii8_out();            // Outputs from ASCII8 mapper
+    mapper_out ascii16_out();           // Outputs from ASCII16 mapper
+    mapper_out offset_out();            // Outputs from OFFSET mapper
+    mapper_out fm_pac_out();            // Outputs from FM-PAC mapper
+    mapper_out konami_out();            // Outputs from KONAMI mapper
+    mapper_out konami_SCC_out();        // Outputs from KONAMI SCC mapper
+    mapper_out gm2_out();               // Outputs from Konami GameMaster mapper
+    device_bus fm_pac_device_out();     // Device bus output for FM-PAC mapper
+    device_bus konami_SCC_device_out(); // Device bus output for FM-PAC mapper
+    device_bus offset_device_out();     // Device bus output for offset mapper (default mapper)
 
     // Instantiate the ASCII8 mapper
     cart_ascii8 ascii8 (
@@ -51,7 +52,8 @@ module mappers (
     mapper_konami_scc konami_scc (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
-        .out(konami_SCC_out)
+        .out(konami_SCC_out),
+        .device_out(konami_SCC_device_out)
     );
 
     // Instantiate the FM-PAC mapper
@@ -86,8 +88,8 @@ module mappers (
     assign memory_bus.sram_cs   = ascii8_out.sram_cs | ascii16_out.sram_cs | fm_pac_out.sram_cs | gm2_out.sram_cs;
 
     // Device control signals: Use the FM-PAC mapper's control signals
-    assign device_bus.typ = device_t'(fm_pac_device_out.typ | offset_device_out.typ);
+    assign device_bus.typ = device_t'(fm_pac_device_out.typ | offset_device_out.typ | konami_SCC_device_out.typ);
     assign device_bus.we  = fm_pac_device_out.we;
-    assign device_bus.en  = fm_pac_device_out.en;
+    assign device_bus.en  = fm_pac_device_out.en | konami_SCC_device_out.en;
 
 endmodule
