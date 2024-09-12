@@ -2,7 +2,6 @@ module msx_slots (
     cpu_bus                     cpu_bus,          // Interface for CPU communication
     input                 [1:0] active_slot,      // Currently active slot
     output                [7:0] data,             // Data output
-    input                       clk_sdram,        // SDRAM clock
     output signed        [15:0] sound,            // Sound output
     output               [26:0] ram_addr,         // RAM address
     output                [7:0] ram_din,          // Data input to RAM
@@ -11,60 +10,29 @@ module msx_slots (
     output                      sdram_ce,         // SDRAM chip enable
     output                      bram_ce,          // BRAM chip enable
     input                 [1:0] sdram_size,       // SDRAM size
-//    output               [26:0] flash_addr,       // Flash memory address
-//    output                [7:0] flash_din,        // Flash data input
-//    output                      flash_req,        // Flash request
-//    input                       flash_ready,      // Flash ready signal
-//    input                       flash_done,       // Flash done signal
-//    input                       img_mounted,      // Image mounted flag
-//    input                [31:0] img_size,         // Image size
-//    input                       img_readonly,     // Image read-only flag
-//    output               [31:0] sd_lba,           // SD card LBA address
-//    output                      sd_rd,            // SD card read control
-//    output                      sd_wr,            // SD card write control
-//    input                       sd_ack,           // SD card acknowledge
-//    input                [13:0] sd_buff_addr,     // SD buffer address
-//    input                 [7:0] sd_buff_dout,     // SD buffer data output
-//    output                [7:0] sd_buff_din,      // SD buffer data input
-//    input                       sd_buff_wr,       // SD buffer write control
-    input  MSX::block_t         active_block,      // Slot layout configuration
-    input  MSX::lookup_RAM_t    active_RAM,   // RAM lookup table
-    input  MSX::lookup_SRAM_t   active_SRAM,   // SRAM lookup table
+    input  MSX::block_t         active_block,     // Slot layout configuration
+    input  MSX::lookup_RAM_t    active_RAM,       // RAM lookup table
+    input  MSX::lookup_SRAM_t   active_SRAM,      // SRAM lookup table
     input  MSX::bios_config_t   bios_config,      // BIOS configuration
-    input  mapper_typ_t         selected_mapper[2], // Selected mapper for slots
-    input  dev_typ_t            cart_device[2],   // Cartridge device types
-    input  dev_typ_t            msx_device,       // MSX device type
-    input                 [3:0] msx_dev_ref_ram[8], // MSX device reference RAM
-//    output             [7:0] d_to_sd,             // Data to SD card
-//    input              [7:0] d_from_sd,           // Data from SD card
-//    output                   sd_tx,               // SD transmit
-//    output                   sd_rx,               // SD receive
-//    output                   debug_FDC_req,       // Debug FDC request
-//    output                   debug_sd_card,       // Debug SD card
-//    output                   debug_erase,         // Debug erase
     device_bus               device_bus           // Interface for device control
 );
     // Mapper and memory bus configuration
     block_info block_info();
     memory_bus memory_bus();
 
-    // Calculate block and layout ID based on CPU address and active slot
-    //wire [1:0] block = cpu_bus.addr[15:14];
-    //wire [5:0] layout_id = {active_slot, subslot, block};
-
     // Retrieve configuration for the current slot
     wire [3:0] ref_ram    = active_block.ref_ram;
     wire [1:0] ref_sram   = active_block.ref_sram;
     wire [1:0] offset_ram = active_block.offset_ram;
     wire       cart_num   = active_block.cart_num;
-    //wire       external   = slot_layout[layout_id].external; // Currently not used, commented out
-    
+        
     // Assign device number based on the current layout
     assign device_bus.num = active_block.device_num;
 
     // Assign mapper type based on the current slot configuration
     assign block_info.typ = active_block.mapper;
     assign block_info.device = active_block.device;
+    
     // Retrieve RAM and SRAM base addresses and sizes
     wire [26:0] base_ram   = active_RAM.addr;
     wire [15:0] ram_blocks = active_RAM.size;

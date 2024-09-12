@@ -41,10 +41,10 @@ module mapper_konami (
     end
 
     // Bank selection logic based on address ranges
-    wire [7:0] bank_base = (cpu_bus.addr[15:13] == 3'b010) ? 8'h00 :  // Fixed bank for 4000-5FFFh
+    wire [7:0] bank_base = (cpu_bus.addr[15:13] == 3'b010) ? 8'h00 :                 // Fixed bank for 4000-5FFFh
                            (cpu_bus.addr[15:13] == 3'b011) ? bank1[block_info.id] :  // Bank 1 for 6000-7FFFh
                            (cpu_bus.addr[15:13] == 3'b100) ? bank2[block_info.id] :  // Bank 2 for 8000-9FFFh
-                           bank3[block_info.id];  // Bank 3 for A000-BFFFh
+                                                             bank3[block_info.id];   // Bank 3 for A000-BFFFh
 
     // Generate RAM address based on bank and lower address bits
     wire [26:0] ram_addr = {6'b0, bank_base, cpu_bus.addr[12:0]};

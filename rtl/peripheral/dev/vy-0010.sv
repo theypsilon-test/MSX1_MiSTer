@@ -54,7 +54,7 @@ assign {output_rq, data } = status   ? {cpu_bus.rd, ~drq, ~intrq, 6'b111111}  :
                             ck2      ? {cpu_bus.rd, driveReg & 8'hFB }        :
                             wdcs     ? {cpu_bus.rd, d_from_wd17}              :
                             nu       ? {cpu_bus.rd, 8'hFF}                    :
-                                           9'h0FF;
+                                       9'h0FF;
 wire [7:0] d_from_wd17;
 wire drq, intrq;
 wd1793 #(.RWMODE(1), .EDSK(0)) fdc1

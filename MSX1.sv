@@ -428,15 +428,6 @@ msx MSX
    .msx_dev_ref_ram(msx_dev_ref_ram),
    .io_device(io_device),
    .selected_mapper(selected_mapper),
-   .flash_addr(flash_addr),
-   .flash_din(flash_din),
-   .flash_req(flash_req),
-   .flash_ready(flash_ready),
-   .flash_done(flash_done),
-   .d_to_sd(d_to_sd),
-   .d_from_sd(d_from_sd),
-   .sd_tx(sd_tx),
-   .sd_rx(sd_rx),
    .joy0(joy0[5:0]),
    .joy1(joy1[5:0]),
    .*
@@ -668,7 +659,6 @@ ddram buffer
 );
 
 assign ram_dout = sdram_ce ? sdram_dout :
-                  bram_ce  ? bram_dout  :
                              8'hFF;
 
 wire         sdram_ready, sdram_rnw, dw_sdram_we, dw_sdram_ready, flash_ready, flash_req, flash_done;

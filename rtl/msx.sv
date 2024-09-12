@@ -59,11 +59,6 @@ module msx
    input              [8:0] kbd_addr,
    input              [7:0] kbd_din,
    input                    kbd_we,
-   output            [26:0] flash_addr,
-   output             [7:0] flash_din,
-   output                   flash_req,
-   input                    flash_ready,
-   input                    flash_done,
    //SD FDC
    input                    img_mounted,
    input             [31:0] img_size,
@@ -75,11 +70,7 @@ module msx
    input             [13:0] sd_buff_addr,
    input              [7:0] sd_buff_dout,
    output             [7:0] sd_buff_din,
-   input                    sd_buff_wr,
-   output             [7:0] d_to_sd,
-   input              [7:0] d_from_sd,
-   output                   sd_tx,
-   output                   sd_rx
+   input                    sd_buff_wr
 );
 /*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
@@ -524,9 +515,6 @@ devices devices
 
 wire         [7:0] d_from_slots;
 wire signed [15:0] cart_sound;
-//wire         [1:0] device_num;
-//device_t           device;
-//wire               device_we, device_en;
 
 wire [1:0] active_subslot;
 wire [7:0] mapper_subslot_data;
@@ -553,7 +541,6 @@ msx_slots msx_slots
 (
    .cpu_bus(cpu_bus),
    .device_bus(device_bus),
-   //.clk_en(ce_3m58_p),
    .data(d_from_slots),  
    .sound(cart_sound),
    .ram_addr(ram_addr),
@@ -563,31 +550,11 @@ msx_slots msx_slots
    .sdram_ce(sdram_ce),
    .bram_ce(bram_ce),
    .sdram_size(sdram_size),
-   //.flash_addr(flash_addr),
-   //.flash_din(flash_din),
-   //.flash_req(flash_req),
-   //.flash_ready(flash_ready),
-   //.flash_done(flash_ready),
    .active_block(active_block),
-   //.img_mounted(img_mounted),
-   //.img_size(img_size),
-   //.img_readonly(img_readonly),
    .active_slot(active_slot),
    .active_RAM(active_RAM),
    .active_SRAM(active_SRAM),
-   .bios_config(bios_config),
-   .cart_device(cart_device),
-   .msx_device(msx_device),
-   .msx_dev_ref_ram(msx_dev_ref_ram),
-   .selected_mapper(selected_mapper)
-   //.sd_tx(sd_tx),
-   //.sd_rx(sd_rx),
-   //.d_to_sd(d_to_sd),
-   //.d_from_sd(d_from_sd)
-   //.device(device),
-   //.device_num(device_num)
-   //.device_we(device_we),
-   //.device_en(device_en)
+   .bios_config(bios_config)
 );
-
+/*verilator tracing_off*/
 endmodule
