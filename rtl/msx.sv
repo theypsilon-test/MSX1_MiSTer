@@ -169,7 +169,7 @@ end
 
 logic map_valid = 0;
 wire ppi_en = ~ppi_n;
-wire [1:0] slot;
+wire [1:0] active_slot;
 
 always @(posedge reset, posedge clk21m) begin
     if (reset)
@@ -178,7 +178,7 @@ always @(posedge reset, posedge clk21m) begin
         map_valid = 1;
 end
 
-assign slot =    ~map_valid         ? 2'b00         :
+assign active_slot =    ~map_valid         ? 2'b00         :
                   a[15:14] == 2'b00 ? ppi_out_a[1:0] :
                   a[15:14] == 2'b01 ? ppi_out_a[3:2] :
                   a[15:14] == 2'b10 ? ppi_out_a[5:4] :
@@ -225,6 +225,7 @@ assign d_to_cpu = rd_n   ? 8'hFF           :
                   rtc_en ? d_from_rtc      :
                   ~psg_n ? d_from_psg      :
                   ~ppi_n ? d_from_8255     :
+                  mapper_subslot_rq? mapper_subslot_data :
                   device_output_rq ? device_data     :
                            ram_dout & d_from_slots;
 //  -----------------------------------------------------------------------------
@@ -527,6 +528,27 @@ wire signed [15:0] cart_sound;
 //device_t           device;
 //wire               device_we, device_en;
 
+wire [1:0] active_subslot;
+wire [7:0] mapper_subslot_data;
+wire mapper_subslot_rq;
+subslot subslot_inst 
+(
+   .cpu_bus(cpu_bus),
+   .expander_enable(bios_config.slot_expander_en),
+   .data(mapper_subslot_data),
+   .active_subslot(active_subslot),
+   .output_rq(mapper_subslot_rq),
+   .active_slot(active_slot)
+);
+
+wire [5:0] layout_id = {active_slot, active_subslot, cpu_bus.addr[15:14]};
+MSX::block_t active_block;
+MSX::lookup_RAM_t active_RAM;
+MSX::lookup_SRAM_t active_SRAM;
+
+assign active_block = slot_layout[layout_id];
+assign active_RAM = lookup_RAM[active_block.ref_ram];
+assign active_SRAM = lookup_SRAM[active_block.ref_sram];
 msx_slots msx_slots
 (
    .cpu_bus(cpu_bus),
@@ -546,13 +568,13 @@ msx_slots msx_slots
    //.flash_req(flash_req),
    //.flash_ready(flash_ready),
    //.flash_done(flash_ready),
-   .slot_layout(slot_layout),
+   .active_block(active_block),
    //.img_mounted(img_mounted),
    //.img_size(img_size),
    //.img_readonly(img_readonly),
-   .active_slot(slot),
-   .lookup_RAM(lookup_RAM),
-   .lookup_SRAM(lookup_SRAM),
+   .active_slot(active_slot),
+   .active_RAM(active_RAM),
+   .active_SRAM(active_SRAM),
    .bios_config(bios_config),
    .cart_device(cart_device),
    .msx_device(msx_device),

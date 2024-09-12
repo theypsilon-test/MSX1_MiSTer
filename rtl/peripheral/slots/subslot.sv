@@ -4,7 +4,7 @@ module subslot (
     input         [3:0] expander_enable,// Enable signals for the expander
     output        [7:0] data,           // Data output
     output        [1:0] active_subslot, // Currently active subslot
-    output              cs              // Chip select signal
+    output              output_rq       // Chip select signal
 );
 
     // Array to store mapper slot data for 4 slots
@@ -44,6 +44,6 @@ module subslot (
     assign active_subslot = mapper_slot[active_slot][(3'd2 * block) +: 2];
 
     // Chip select output signal
-    assign cs = mapper_cs;
+    assign output_rq = mapper_rd;
 
 endmodule

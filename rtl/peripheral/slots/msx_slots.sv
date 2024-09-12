@@ -27,9 +27,9 @@ module msx_slots (
 //    input                 [7:0] sd_buff_dout,     // SD buffer data output
 //    output                [7:0] sd_buff_din,      // SD buffer data input
 //    input                       sd_buff_wr,       // SD buffer write control
-    input  MSX::block_t         slot_layout[64],  // Slot layout configuration
-    input  MSX::lookup_RAM_t    lookup_RAM[16],   // RAM lookup table
-    input  MSX::lookup_SRAM_t   lookup_SRAM[4],   // SRAM lookup table
+    input  MSX::block_t         active_block,      // Slot layout configuration
+    input  MSX::lookup_RAM_t    active_RAM,   // RAM lookup table
+    input  MSX::lookup_SRAM_t   active_SRAM,   // SRAM lookup table
     input  MSX::bios_config_t   bios_config,      // BIOS configuration
     input  mapper_typ_t         selected_mapper[2], // Selected mapper for slots
     input  dev_typ_t            cart_device[2],   // Cartridge device types
@@ -48,45 +48,42 @@ module msx_slots (
     block_info block_info();
     memory_bus memory_bus();
 
-    // Assign data to SD card from CPU bus
-    //assign d_to_sd = cpu_bus.data;
-
     // Calculate block and layout ID based on CPU address and active slot
-    wire [1:0] block = cpu_bus.addr[15:14];
-    wire [5:0] layout_id = {active_slot, subslot, block};
+    //wire [1:0] block = cpu_bus.addr[15:14];
+    //wire [5:0] layout_id = {active_slot, subslot, block};
 
     // Retrieve configuration for the current slot
-    wire [3:0] ref_ram    = slot_layout[layout_id].ref_ram;
-    wire [1:0] ref_sram   = slot_layout[layout_id].ref_sram;
-    wire [1:0] offset_ram = slot_layout[layout_id].offset_ram;
-    wire       cart_num   = slot_layout[layout_id].cart_num;
+    wire [3:0] ref_ram    = active_block.ref_ram;
+    wire [1:0] ref_sram   = active_block.ref_sram;
+    wire [1:0] offset_ram = active_block.offset_ram;
+    wire       cart_num   = active_block.cart_num;
     //wire       external   = slot_layout[layout_id].external; // Currently not used, commented out
     
     // Assign device number based on the current layout
-    assign device_bus.num = slot_layout[layout_id].device_num;
+    assign device_bus.num = active_block.device_num;
 
     // Assign mapper type based on the current slot configuration
-    assign block_info.typ = slot_layout[layout_id].mapper;
-    assign block_info.device = slot_layout[layout_id].device;
+    assign block_info.typ = active_block.mapper;
+    assign block_info.device = active_block.device;
     // Retrieve RAM and SRAM base addresses and sizes
-    wire [26:0] base_ram   = lookup_RAM[ref_ram].addr;
-    wire [15:0] ram_blocks = lookup_RAM[ref_ram].size;
-    wire        ram_ro     = lookup_RAM[ref_ram].ro;
-    wire [26:0] base_sram  = lookup_SRAM[ref_sram].addr;
-    wire [15:0] sram_size  = lookup_SRAM[ref_sram].size;
+    wire [26:0] base_ram   = active_RAM.addr;
+    wire [15:0] ram_blocks = active_RAM.size;
+    wire        ram_ro     = active_RAM.ro;
+    wire [26:0] base_sram  = active_SRAM.addr;
+    wire [15:0] sram_size  = active_SRAM.size;
 
     // Data selection between subslot and mapper
-    assign data = mapper_subslot_cs ? subslot_data : mapper_data;
+    assign data = mapper_data;
 
     // RAM data input from CPU bus
     assign ram_din = cpu_bus.data;
 
     // Chip enable signals for BRAM and SDRAM
     assign bram_ce = '0;  // Assuming BRAM is not used in this context, hence inactive
-    assign sdram_ce = (memory_bus.ram_cs || memory_bus.sram_cs) && ~mapper_subslot_cs;
+    assign sdram_ce = memory_bus.ram_cs || memory_bus.sram_cs;
 
     // RAM read/write control signal
-    assign ram_rnw = memory_bus.rnw | (memory_bus.ram_cs & ram_ro) | mapper_subslot_cs;
+    assign ram_rnw = memory_bus.rnw | (memory_bus.ram_cs & ram_ro);
 
     // RAM address calculation
     assign ram_addr = (memory_bus.sram_cs ? 27'(base_sram) : base_ram) + memory_bus.addr;
@@ -96,20 +93,6 @@ module msx_slots (
     assign block_info.sram_size = sram_size;
     assign block_info.id        = cart_num;
     assign block_info.offset_ram = offset_ram;
-
-    // Subslot module instantiation for subslot management
-    wire [1:0] subslot;
-    wire [7:0] subslot_data;
-    wire mapper_subslot_cs;
-    
-    subslot subslot_inst (
-        .cpu_bus(cpu_bus),
-        .expander_enable(bios_config.slot_expander_en),
-        .data(subslot_data),
-        .active_subslot(subslot),
-        .cs(mapper_subslot_cs),
-        .active_slot(active_slot)
-    );
 
     // Mappers module instantiation for handling different mappers
     wire [7:0] mapper_data;
