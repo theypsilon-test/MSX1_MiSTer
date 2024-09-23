@@ -14,7 +14,8 @@ module msx_slots (
     input  MSX::lookup_RAM_t    active_RAM,       // RAM lookup table
     input  MSX::lookup_SRAM_t   active_SRAM,      // SRAM lookup table
     input  MSX::bios_config_t   bios_config,      // BIOS configuration
-    device_bus               device_bus           // Interface for device control
+    device_bus               device_bus,          // Interface for device control
+    input                 [7:0] data_to_mapper
 );
     // Mapper and memory bus configuration
     block_info block_info();
@@ -70,7 +71,8 @@ module msx_slots (
         .device_bus(device_bus),
         .memory_bus(memory_bus),
         .block_info(block_info),
-        .data(mapper_data)
+        .data(mapper_data),
+        .data_to_mapper(data_to_mapper)
     );
 /*verilator tracing_off*/
 endmodule
