@@ -8,6 +8,7 @@ module mappers (
     input        [7:0]  data_to_mapper
 );
 
+/*verilator tracing_off*/
     // Intermediate signals from each mapper
     mapper_out ascii8_out();            // Outputs from ASCII8 mapper
     mapper_out ascii16_out();           // Outputs from ASCII16 mapper
@@ -74,6 +75,7 @@ module mappers (
         .out(gm2_out)
     );
 
+    /*verilator tracing_off*/
     // Instantiate the MSX2 RAM mapper
     mapper_msx2_ram msx2_ram (
         .cpu_bus(cpu_bus),

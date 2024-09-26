@@ -1,3 +1,4 @@
+/*verilator tracing_off*/
 //============================================================================
 //
 //  This program is free software; you can redistribute it and/or modify it
@@ -378,7 +379,6 @@ clock clock
 
 /////////////////    RESET   /////////////////
 wire reset = RESET | status[0] | status[10] | reset_rq;
-/*verilator tracing_on*/
 ///////////////// Computer /////////////////
 wire  [7:0] R, G, B, cpu_din, cpu_dout;
 wire [15:0] cpu_addr, audio;
@@ -396,6 +396,7 @@ wire   [3:0] msx_dev_ref_ram[8];
 mapper_typ_t selected_mapper[2];
 assign selected_mapper[0] = cart_conf[0].selected_mapper;
 assign selected_mapper[1] = cart_conf[1].selected_mapper;
+/*verilator tracing_off*/
 msx MSX
 (
    .HS(hsync),
@@ -587,7 +588,6 @@ ltc2308_tape #(.ADC_RATE(120000), .CLK_RATE(21477272)) tape
 );
 
 /////////////////  LOAD PACK   /////////////////
-/*verilator tracing_on*/
 wire upload_ram_ce, upload_sdram_rq, upload_bram_rq, upload_ram_ready, reset_rq;
 wire  [7:0] upload_ram_din, config_msx;
 wire [26:0] upload_ram_addr;
@@ -596,6 +596,7 @@ wire  [8:0] kbd_addr;
 wire        kbd_request, kbd_we;
 wire        load_sram;
 wire  [1:0] rom_loaded;
+/*verilator tracing_on*/
 memory_upload memory_upload(
     .clk(clk21m),
     .reset_rq(reset_rq),
@@ -636,7 +637,7 @@ memory_upload memory_upload(
     .led_out(LED_POWER),
     .io_device(io_device)
 );
-
+/*verilator tracing_off*/
 wire [27:0] ddr3_addr, ddr3_addr_download, ddr3_addr_cas;
 wire  [7:0] ddr3_dout, ddr3_din_download;
 wire        ddr3_rd, ddr3_rd_download, ddr3_rd_cas, ddr3_wr_download, ddr3_ready, ddr3_request_download;
@@ -711,7 +712,6 @@ dpram #(.addr_width(18)) systemRAM
    .data_b(sd_buff_dout),
    .q_b(sram_dout)
 );
-/*verilator tracing_off*/
 */
 ///////////////// NVRAM BACKUP ////////////////
 nvram_backup nvram_backup

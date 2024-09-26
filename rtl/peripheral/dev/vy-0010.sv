@@ -1,4 +1,4 @@
-/*verilator tracing_on*/
+/*verilator tracing_off*/
 module vy0010
 (
    cpu_bus         cpu_bus,            // Interface for CPU communication

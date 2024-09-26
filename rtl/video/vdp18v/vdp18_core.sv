@@ -95,16 +95,16 @@ module vdp18_core #(
   input logic        border_i,
   input logic        is_pal_i,
   output logic [3:0] col_o,
-  output logic [7:0] rgb_r_o /* verilator public */,
-  output logic [7:0] rgb_g_o /* verilator public */,
-  output logic [7:0] rgb_b_o /* verilator public */,
-  output logic       hsync_n_o /* verilator public */,
-  output logic       vsync_n_o /* verilator public */,
-  output logic       blank_n_o /* verilator public */,
-  output logic       hblank_o /* verilator public */,
-  output logic       vblank_o /* verilator public */,
+  output logic [7:0] rgb_r_o,
+  output logic [7:0] rgb_g_o,
+  output logic [7:0] rgb_b_o,
+  output logic       hsync_n_o,
+  output logic       vsync_n_o,
+  output logic       blank_n_o,
+  output logic       hblank_o,
+  output logic       vblank_o,
   output logic       comp_sync_n_o,
-  output logic       ce_pix /* verilator public */
+  output logic       ce_pix
 );
 
   // Signals

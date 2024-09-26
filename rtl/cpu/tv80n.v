@@ -39,23 +39,23 @@ module tv80n (/*AUTOARG*/
   parameter IOWait  = 1; // 0 => Single cycle I/O, 1 => Std I/O cycle
 
 
-  input         reset_n; 
+  input         reset_n /* verilator public */; 
   input         clk; 
   input         wait_n; 
   input         int_n; 
   input         nmi_n; 
   input         busrq_n; 
-  output        m1_n; 
-  output        mreq_n; 
-  output        iorq_n; 
-  output        rd_n; 
-  output        wr_n; 
+  output        m1_n /* verilator public */; 
+  output        mreq_n /* verilator public */; 
+  output        iorq_n /* verilator public */; 
+  output        rd_n /* verilator public */; 
+  output        wr_n /* verilator public */; 
   output        rfsh_n; 
   output        halt_n; 
   output        busak_n; 
-  output [15:0] A;
-  input [7:0]   di;
-  output [7:0]  dout;
+  output [15:0] A /* verilator public */;
+  input [7:0]   di /* verilator public */;
+  output [7:0]  dout /* verilator public */;
 
   reg           mreq_n; 
   reg           iorq_n; 

@@ -1,4 +1,4 @@
-/*verilator tracing_on*/
+/*verilator tracing_off*/
 module msx2_ram (
     cpu_bus                 cpu_bus,         // Interface for CPU communication
     device_bus              device_bus,      // Interface for device control

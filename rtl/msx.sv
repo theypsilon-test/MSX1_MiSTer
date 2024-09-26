@@ -10,15 +10,15 @@ module msx
    input                    ce_10hz,
    input                    clk_sdram,
    //Video
-   output             [7:0] R,
-   output             [7:0] G,
-   output             [7:0] B,
-   output                   DE,
-   output                   HS,
-   output                   VS,
-   output                   hblank,
-   output                   vblank,
-   output                   ce_pix,
+   output             [7:0] R /* verilator public */,
+   output             [7:0] G /* verilator public */,
+   output             [7:0] B /* verilator public */,
+   output                   DE /* verilator public */,
+   output                   HS /* verilator public */,
+   output                   VS /* verilator public */,
+   output                   hblank /* verilator public */,
+   output                   vblank /* verilator public */,
+   output                   ce_pix /* verilator public */,
    //I/O
    output            [15:0] audio,
    input  [           10:0] ps2_key,
@@ -113,7 +113,7 @@ t80pa #(.Mode(0)) T80
    .DO(d_from_cpu)
 );
 */
-/*verilator tracing_on*/
+/*verilator tracing_off*/
 tv80n Z80
 (
    .reset_n(~reset),
@@ -178,11 +178,13 @@ assign active_slot =    ~map_valid         ? 2'b00         :
 //  -----------------------------------------------------------------------------
 //  -- IO Decoder
 //  -----------------------------------------------------------------------------
+/*verilator tracing_off*/
 wire psg_n  = ~((a[7:3] == 5'b10100)   & ~iorq_n & m1_n);
 wire ppi_n  = ~((a[7:3] == 5'b10101)   & ~iorq_n & m1_n);
 wire vdp_en =   (a[7:3] == 5'b10011)   & ~iorq_n & m1_n ;
 wire rtc_en =   (a[7:1] == 7'b1011010) & ~iorq_n & m1_n & bios_config.MSX_typ == MSX2;
 
+/*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
 //  -- 82C55 PPI
 //  -----------------------------------------------------------------------------
@@ -363,6 +365,7 @@ always @(posedge clk21m) begin
 end
 wire req = ~((iorq_n & mreq_n) | (wr_n & rd_n) | iack);
 
+/*verilator tracing_off*/
 wire        int_n_vdp18;
 wire  [7:0] d_from_vdp18;
 wire  [7:0] R_vdp18, G_vdp18, B_vdp18;
@@ -497,6 +500,7 @@ assign image_info.mounted = img_mounted;
 assign image_info.size = img_size;
 assign image_info.readonly = img_readonly;
 
+/*verilator tracing_off*/
 wire       device_output_rq;
 wire [7:0] device_data;
 wire [7:0] data_to_mapper;
@@ -518,6 +522,7 @@ devices devices
 wire         [7:0] d_from_slots;
 wire signed [15:0] cart_sound;
 
+/*verilator tracing_off*/
 wire [1:0] active_subslot;
 wire [7:0] mapper_subslot_data;
 wire mapper_subslot_rq;
