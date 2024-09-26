@@ -61,7 +61,7 @@
 //      JP: 不要な信号間の相関を除去 by t.hara
 //
 
-module VDP_COLORDEC_v (
+module VDP_COLORDEC (
     input  logic            RESET,
     input  logic            CLK21M,
     input  logic [1:0]      DOTSTATE,

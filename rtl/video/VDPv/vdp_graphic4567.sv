@@ -90,7 +90,7 @@
 // JP: GRAPHICモード4,5,6,7のメイン処理回路です。
 //
 
-module VDP_GRAPHIC4567_v (
+module VDP_GRAPHIC4567 (
     input  logic          CLK21M,                  // VDP CLOCK ... 21.477MHZ
     input  logic          RESET,
 
@@ -153,7 +153,7 @@ module VDP_GRAPHIC4567_v (
     assign FIFOWE = (FIFOIN == 1'b1) ? 1'b1 : 1'b0;
     assign FIFODATA_IN = ((DOTSTATE == 2'b00) || (DOTSTATE == 2'b01)) ? PRAMDAT : PRAMDATPAIR;
 
-    RAM_v U_FIFOMEM (
+    RAM U_FIFOMEM (
         .ADR(FIFOADDR),
         .CLK(CLK21M),
         .WE(FIFOWE),

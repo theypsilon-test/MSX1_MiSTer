@@ -52,7 +52,7 @@
 //    - amount of artifacts in the BREAKER game at 5.37MHz
 //
 
-module VDP_WAIT_CONTROL_v (
+module VDP_WAIT_CONTROL (
     input logic RESET,
     input logic CLK21M,
 

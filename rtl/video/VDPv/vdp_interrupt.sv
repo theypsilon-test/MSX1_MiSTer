@@ -56,7 +56,7 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 
-module VDP_INTERRUPT_v (
+module VDP_INTERRUPT (
     input  logic          RESET,
     input  logic          CLK21M,
 

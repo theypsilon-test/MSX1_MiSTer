@@ -25,7 +25,7 @@ module scc (
 
     // Define sound and data arrays for SCC devices
     wire signed [14:0] sound_SCC[0:1];  // Sound output for SCC channels (2 channels)
-    wire [7:0] data_SCC[2];           // Data output for SCC channels (2 channels)
+    wire [7:0] data_SCC[2];             // Data output for SCC channels (2 channels)
     logic [1:0] scc_enabled;            // Enable flags for SCC channels
 
     // Data output and request signal: output data only if the device is selected and read is requested

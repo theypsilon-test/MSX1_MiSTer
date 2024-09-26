@@ -665,7 +665,7 @@ wire         sdram_ready, sdram_rnw, dw_sdram_we, dw_sdram_ready, flash_ready, f
 wire  [26:0] sdram_addr;
 wire  [24:0] dw_sdram_addr;
 wire  [26:0] flash_addr;
-wire   [7:0] sdram_dout, bram_dout, dw_sdram_din, flash_din;
+wire   [7:0] sdram_dout, dw_sdram_din, flash_din;
 sdram sdram
 (
    .init(~locked_sdram),
@@ -686,16 +686,19 @@ sdram sdram
    .ch2_rnw(ram_rnw),
    .ch2_ready(sdram_ready),
 
-   .ch3_addr(flash_addr),
+   //.ch3_addr(flash_addr),
+	.ch3_addr(0),
    .ch3_dout(),
-   .ch3_din(flash_din),
-   .ch3_req(flash_req),
+   //.ch3_din(flash_din),
+	.ch3_din(0),
+   //.ch3_req(flash_req),
+	.ch3_req(0),
    .ch3_rnw(0),
    .ch3_ready(flash_ready),
    .ch3_done(flash_done),
    .*
 );    
-
+/*
 dpram #(.addr_width(18)) systemRAM
 (
    .clock(clk21m),
@@ -709,10 +712,8 @@ dpram #(.addr_width(18)) systemRAM
    .q_b(sram_dout)
 );
 /*verilator tracing_off*/
+*/
 ///////////////// NVRAM BACKUP ////////////////
-wire [26:0] sram_addr;
-wire  [7:0] sram_dout;
-wire        sram_we;
 nvram_backup nvram_backup
 (
    .clk(clk21m),
@@ -728,9 +729,9 @@ nvram_backup nvram_backup
    .sd_ack(sd_ack[3:0]),
    .sd_buff_addr(sd_buff_addr),
    .sd_buff_din(sd_buff_din[0:3]),
-   .ram_addr(sram_addr),
-   .ram_dout(sram_dout),
-   .ram_we(sram_we)
+   .ram_addr(),
+   .ram_dout(),
+   .ram_we()
 );
 
 ///////////////// CAS EMULATE /////////////////

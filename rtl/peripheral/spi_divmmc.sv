@@ -34,7 +34,7 @@ always @(posedge clk_sys) begin
 	end
 	else if (spi_ce) begin
 		if(spi_clk) io_byte <= { io_byte[6:0], spi_di };
-		counter <= counter + 2'd1;
+		counter <= counter + 1'd1;
 	end
 end
 

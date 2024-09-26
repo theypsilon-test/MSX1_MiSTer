@@ -11,7 +11,7 @@ module opl3 (
                    (dev_enable[DEV_OPL3][2] ? sound_OPL3[2] : '0);
 
     // Enable signals for OPL3
-    wire [2:0] opl3_en; 
+    logic [2:0] opl3_en; 
     io_decoder #(.DEV_NAME(DEV_OPL3)) opl_decoder (
         .cpu_addr(cpu_bus.addr[7:0]),
         .io_device(io_device),
@@ -30,10 +30,12 @@ module opl3 (
     end
     
     // IO operation signal
-    wire io_op = cpu_bus.iorq && ~cpu_bus.m1;
-    
+    logic io_op;
+
+    assign io_op = cpu_bus.iorq && ~cpu_bus.m1;
+       
     // OPL3 instances for sound generation
-    wire signed [15:0] sound_OPL3[0:2];
+    logic signed [15:0] sound_OPL3[0:2];
     logic [2:0] opl3_enabled;
     genvar i;
 

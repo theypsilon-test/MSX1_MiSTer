@@ -79,7 +79,7 @@
 // JP: GRAPHICモード1,2,3および MULTICOLORモードのメイン処理回路です。
 //
 
-module VDP_GRAPHIC123M_v (
+module VDP_GRAPHIC123M (
     input  logic           CLK21M,           // 21.477MHZ
     input  logic           RESET,
 

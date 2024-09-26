@@ -94,7 +94,7 @@
 // JP: 二度描画することでスキャンコンバートを実現しています。
 //
 
-module VDP_VGA_v (
+module VDP_VGA (
     input  logic         CLK21M,
     input  logic         RESET,
     input  logic [5:0]   VIDEORIN,
@@ -138,7 +138,7 @@ module VDP_VGA_v (
     assign VIDEOGOUT = (VIDEOOUTX == 1'b1) ? DATAGOUT : 6'b000000;
     assign VIDEOBOUT = (VIDEOOUTX == 1'b1) ? DATABOUT : 6'b000000;
 
-    VDP_DOUBLEBUF_v DBUF (
+    VDP_DOUBLEBUF DBUF (
         .CLK(CLK21M),
         .XPOSITIONW(XPOSITIONW),
         .XPOSITIONR(XPOSITIONR),
@@ -151,8 +151,9 @@ module VDP_VGA_v (
         .DATAGOUT(DATAGOUT),
         .DATABOUT(DATABOUT)
     );
-
+    /* verilator lint_off WIDTHTRUNC */
     assign XPOSITIONW = HCOUNTERIN[10:1] - toVector(CLOCKS_PER_LINE / 2 - DISP_WIDTH - 10);
+    /* verilator lint_on WIDTHTRUNC */
     assign EVENODD = VCOUNTERIN[1];
 
 

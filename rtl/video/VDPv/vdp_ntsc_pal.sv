@@ -88,7 +88,7 @@
 // JP: います。
 //
 
-module VDP_NTSC_PAL_v (
+module VDP_NTSC_PAL (
     input  logic         CLK21M,
     input  logic         RESET,
     // MODE

@@ -245,9 +245,9 @@
 // JP: います。
 //
 
-import VDP_PACKAGE_v::*;
+import VDP_PACKAGE::*;
 
-module VDP_v (
+module VDP (
     input logic         CLK21M,
     input logic         RESET,
     input logic         REQ,
@@ -524,7 +524,7 @@ assign IVIDEOR = (BWINDOW == 1'b0) ? 6'b000000 : IVIDEOR_VDP;
 assign IVIDEOG = (BWINDOW == 1'b0) ? 6'b000000 : IVIDEOG_VDP;
 assign IVIDEOB = (BWINDOW == 1'b0) ? 6'b000000 : IVIDEOB_VDP;
 
-VDP_NTSC_PAL_v U_VDP_NTSC_PAL (
+VDP_NTSC_PAL U_VDP_NTSC_PAL (
     .CLK21M         (CLK21M),
     .RESET          (RESET),
     .PALMODE        (VDPR9PALMODE),
@@ -542,7 +542,7 @@ VDP_NTSC_PAL_v U_VDP_NTSC_PAL (
     .VIDEOVSOUT_N   (IVIDEOVS_N_NTSC_PAL)
 );
 
-VDP_VGA_v U_VDP_VGA (
+VDP_VGA U_VDP_VGA (
     .CLK21M         (CLK21M),
     .RESET          (RESET),
     .VIDEORIN       (IVIDEOR),
@@ -594,7 +594,7 @@ assign HSYNCINT_N = (REG_R0_HSYNC_INT_EN == 1'b0 || ENAHSYNC == 1'b0) ? 1'b1 : R
 assign INT_N = (VSYNCINT_N == 1'b0 || HSYNCINT_N == 1'b0) ? 1'b0 : 1'b1;
 
 // VDP_INTERRUPT instantiation
-VDP_INTERRUPT_v U_INTERRUPT (
+VDP_INTERRUPT U_INTERRUPT (
     .RESET                  (RESET),
     .CLK21M                 (CLK21M),
     .H_CNT                  (H_CNT),
@@ -618,7 +618,7 @@ end
 
 // Instantiate components
 
-VDP_SSG_v U_SSG (
+VDP_SSG U_SSG (
     .RESET                  (RESET),
     .CLK21M                 (CLK21M),
 
@@ -982,7 +982,7 @@ end
 // COLOR DECODING
 //---------------------------------------------------------------------
 
-VDP_COLORDEC_v U_VDP_COLORDEC (
+VDP_COLORDEC U_VDP_COLORDEC (
     .RESET              (RESET),
     .CLK21M             (CLK21M),
 
@@ -1030,7 +1030,7 @@ VDP_COLORDEC_v U_VDP_COLORDEC (
 // MAKE COLOR CODE
 //---------------------------------------------------------------------------
 
-VDP_TEXT12_v U_VDP_TEXT12 (
+VDP_TEXT12 U_VDP_TEXT12 (
     .CLK21M             (CLK21M),
     .RESET              (RESET),
     .DOTSTATE           (DOTSTATE),
@@ -1053,7 +1053,7 @@ VDP_TEXT12_v U_VDP_TEXT12 (
     .PCOLORCODE         (COLORCODET12)
 );
 
-VDP_GRAPHIC123M_v U_VDP_GRAPHIC123M (
+VDP_GRAPHIC123M U_VDP_GRAPHIC123M (
     .CLK21M             (CLK21M),
     .RESET              (RESET),
     .DOTSTATE           (DOTSTATE),
@@ -1075,7 +1075,7 @@ VDP_GRAPHIC123M_v U_VDP_GRAPHIC123M (
     .PCOLORCODE         (COLORCODEG123M)
 );
 
-VDP_GRAPHIC4567_v U_VDP_GRAPHIC4567 (
+VDP_GRAPHIC4567 U_VDP_GRAPHIC4567 (
     .CLK21M             (CLK21M),
     .RESET              (RESET),
     .DOTSTATE           (DOTSTATE),
@@ -1108,7 +1108,7 @@ VDP_GRAPHIC4567_v U_VDP_GRAPHIC4567 (
 // SPRITE MODULE
 //---------------------------------------------------------------------------
 
-VDP_SPRITE_v U_SPRITE (
+VDP_SPRITE U_SPRITE (
     .CLK21M                     (CLK21M),
     .RESET                      (RESET),
     .DOTSTATE                   (DOTSTATE),
@@ -1147,7 +1147,7 @@ VDP_SPRITE_v U_SPRITE (
 // VDP REGISTER ACCESS
 //---------------------------------------------------------------------------
 
-VDP_REGISTER_v U_VDP_REGISTER (
+VDP_REGISTER U_VDP_REGISTER (
     .RESET                  (RESET),
     .CLK21M                 (CLK21M),
 
@@ -1261,7 +1261,7 @@ VDP_REGISTER_v U_VDP_REGISTER (
 // VDP COMMAND
 //---------------------------------------------------------------------------
 
-VDP_COMMAND_v U_VDP_COMMAND (
+VDP_COMMAND U_VDP_COMMAND (
     .RESET               (RESET),
     .CLK21M              (CLK21M),
     .VDPMODEGRAPHIC4     (VDPMODEGRAPHIC4),
@@ -1293,7 +1293,7 @@ VDP_COMMAND_v U_VDP_COMMAND (
     .REG_R25_CMD         (REG_R25_CMD)
 );
 
-VDP_WAIT_CONTROL_v U_VDP_WAIT_CONTROL (
+VDP_WAIT_CONTROL U_VDP_WAIT_CONTROL (
     .RESET               (RESET),
     .CLK21M              (CLK21M),
 

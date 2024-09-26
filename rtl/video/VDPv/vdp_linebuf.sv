@@ -82,7 +82,7 @@
 // JP: いびつな形になる事があります。
 //
 
-module VDP_LINEBUF_v (
+module VDP_LINEBUF (
     input  logic [9:0]    ADDRESS,
     input  logic          INCLOCK,
     input  logic          WE,

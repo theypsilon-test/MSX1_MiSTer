@@ -58,7 +58,7 @@
 //      JP: VDP.VHD から分離 by t.hara
 //
 
-module VDP_COMMAND_v (
+module VDP_COMMAND (
     input  logic            RESET,
     input  logic            CLK21M,
     input  logic            VDPMODEGRAPHIC4,

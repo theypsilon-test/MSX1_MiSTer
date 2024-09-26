@@ -1,4 +1,4 @@
-module RAM_v (
+module RAM (
   input  logic [7:0] ADR,
   input  logic CLK,
   input  logic WE,

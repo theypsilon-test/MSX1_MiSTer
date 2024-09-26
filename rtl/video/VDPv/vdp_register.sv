@@ -81,7 +81,7 @@
 //      Fixed the write operation to the invalid register.
 //
 
-module VDP_REGISTER_v (
+module VDP_REGISTER (
     input logic RESET,
     input logic CLK21M,
 
@@ -318,7 +318,7 @@ module VDP_REGISTER_v (
         end
     end
 
-    RAM_v U_PALETTEMEMRB (
+    RAM U_PALETTEMEMRB (
         .ADR(PALETTEADDR),
         .CLK(CLK21M),
         .WE(PALETTEWE),
@@ -326,7 +326,7 @@ module VDP_REGISTER_v (
         .DBI(PALETTEDATARB_OUT)
     );
 
-    RAM_v U_PALETTEMEMG (
+    RAM U_PALETTEMEMG (
         .ADR(PALETTEADDR),
         .CLK(CLK21M),
         .WE(PALETTEWE),

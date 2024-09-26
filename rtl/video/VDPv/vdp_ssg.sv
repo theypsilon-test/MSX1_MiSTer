@@ -60,7 +60,7 @@
 //  JP: VDP.VHD から分離 by t.hara
 //
 
-module VDP_SSG_v (
+module VDP_SSG (
     input logic RESET,
     input logic CLK21M,
 
@@ -129,7 +129,7 @@ module VDP_SSG_v (
     logic [8:0] W_V_SYNC_INTR_START_LINE;
 
     // Component instantiation for VDP_HVCOUNTER
-    VDP_HVCOUNTER_v u_hvcounter (
+    VDP_HVCOUNTER u_hvcounter (
         .RESET(RESET),
         .CLK21M(CLK21M),
         .H_CNT(W_H_CNT),

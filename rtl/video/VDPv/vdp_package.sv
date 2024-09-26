@@ -75,7 +75,7 @@
 // JP: 型変換用の関数などが定義されています。
 //
 
-package VDP_PACKAGE_v;
+package VDP_PACKAGE;
 
     // VDP ID
     // localparam logic [4:0] VDP_ID = 5'b00000;  // V9938
@@ -177,5 +177,5 @@ package VDP_PACKAGE_v;
         return {2'b00, adjusted_value[6:0], 2'b10};
 endfunction
 
-endpackage : VDP_PACKAGE_v
+endpackage : VDP_PACKAGE
 

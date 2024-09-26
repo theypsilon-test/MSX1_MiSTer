@@ -81,7 +81,7 @@
 //   ic       (1bit)
 //
 
-module VDP_SPINFORAM_v (
+module VDP_SPINFORAM (
     input  logic [2:0] ADDRESS,
     input  logic INCLOCK,
     input  logic WE,

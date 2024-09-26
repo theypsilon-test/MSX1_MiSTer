@@ -96,7 +96,7 @@
 //-----------------------------------------------------------------------------
 //
 
-module VDP_TEXT12_v (
+module VDP_TEXT12 (
     input logic           CLK21M,
     input logic           RESET,
     input logic [1:0]     DOTSTATE,

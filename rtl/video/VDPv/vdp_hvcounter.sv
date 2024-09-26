@@ -58,7 +58,7 @@
 //-----------------------------------------------------------------------------
 //
 
-module VDP_HVCOUNTER_v (
+module VDP_HVCOUNTER (
     input  logic          RESET,
     input  logic          CLK21M,
 

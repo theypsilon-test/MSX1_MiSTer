@@ -170,10 +170,10 @@ always @(posedge reset, posedge clk21m) begin
 end
 
 assign active_slot =    ~map_valid         ? 2'b00         :
-                  a[15:14] == 2'b00 ? ppi_out_a[1:0] :
-                  a[15:14] == 2'b01 ? ppi_out_a[3:2] :
-                  a[15:14] == 2'b10 ? ppi_out_a[5:4] :
-                                      ppi_out_a[7:6] ;
+                         a[15:14] == 2'b00 ? ppi_out_a[1:0] :
+                         a[15:14] == 2'b01 ? ppi_out_a[3:2] :
+                         a[15:14] == 2'b10 ? ppi_out_a[5:4] :
+                                             ppi_out_a[7:6] ;
 
 //  -----------------------------------------------------------------------------
 //  -- IO Decoder
@@ -211,14 +211,14 @@ jt8255 PPI
 //  -----------------------------------------------------------------------------
 //  -- CPU data multiplex
 //  -----------------------------------------------------------------------------
-assign d_to_cpu = rd_n   ? 8'hFF           :
-                  vdp_en ? d_to_cpu_vdp    :
-                  rtc_en ? d_from_rtc      :
-                  ~psg_n ? d_from_psg      :
-                  ~ppi_n ? d_from_8255     :
+assign d_to_cpu = rd_n             ? 8'hFF           :
+                  vdp_en           ? d_to_cpu_vdp    :
+                  rtc_en           ? d_from_rtc      :
+                  ~psg_n           ? d_from_psg      :
+                  ~ppi_n           ? d_from_8255     :
                   mapper_subslot_rq? mapper_subslot_data :
                   device_output_rq ? device_data     :
-                           ram_dout & d_from_slots;
+                                     ram_dout & d_from_slots;
 //  -----------------------------------------------------------------------------
 //  -- Keyboard decoder
 //  -----------------------------------------------------------------------------
@@ -301,7 +301,7 @@ rtc rtc
    .req(req & rtc_en),
    .ack(),
    .wrt(~wr_n),
-   .adr(a[0]),
+   .adr(a),
    .dbi(d_from_rtc),
    .dbo(d_from_cpu)
 );
@@ -404,7 +404,7 @@ wire        HS_n_vdp, VS_n_vdp, DE_vdp, DLClk_vdp, DHClk_vdp, Blank_vdp, hblank_
 wire [16:0] VRAM_address_vdp;
 wire  [7:0] VRAM_do_vdp;
 wire        VRAM_we_n_vdp;
-vdp vdp_vdp 
+VDP vdp_vdp 
 (
    .CLK21M(clk21m),
    .RESET(reset),
@@ -497,8 +497,9 @@ assign image_info.mounted = img_mounted;
 assign image_info.size = img_size;
 assign image_info.readonly = img_readonly;
 
+wire       device_output_rq;
 wire [7:0] device_data;
-wire device_output_rq;
+wire [7:0] data_to_mapper;
 devices devices
 (
    .cpu_bus(cpu_bus),
@@ -510,7 +511,8 @@ devices devices
    .io_device(io_device),
    .sound(device_sound),
    .data(device_data),
-   .output_rq(device_output_rq)
+   .output_rq(device_output_rq),
+   .data_to_mapper(data_to_mapper)
 );
 
 wire         [7:0] d_from_slots;
@@ -554,7 +556,8 @@ msx_slots msx_slots
    .active_slot(active_slot),
    .active_RAM(active_RAM),
    .active_SRAM(active_SRAM),
-   .bios_config(bios_config)
+   .bios_config(bios_config),
+   .data_to_mapper(data_to_mapper)
 );
 /*verilator tracing_off*/
 endmodule

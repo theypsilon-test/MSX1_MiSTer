@@ -72,7 +72,7 @@
 // JP: evenOdd信号によって，読み込みバッファと書き込みバッファが
 // JP: 切り替わる。
 //
-module VDP_DOUBLEBUF_v (
+module VDP_DOUBLEBUF (
     input  logic          CLK,
     input  logic [9:0]    XPOSITIONW,
     input  logic [9:0]    XPOSITIONR,
@@ -92,7 +92,7 @@ module VDP_DOUBLEBUF_v (
     logic [5:0] OUTR_O, OUTG_O, OUTB_O;
 
     // Component instantiations for even lines
-    VDP_LINEBUF_v U_BUF_RE (
+    VDP_LINEBUF U_BUF_RE (
         .ADDRESS  (ADDR_E),
         .INCLOCK  (CLK),
         .WE       (WE_E),
@@ -100,7 +100,7 @@ module VDP_DOUBLEBUF_v (
         .Q        (OUTR_E)
     );
 
-    VDP_LINEBUF_v U_BUF_GE (
+    VDP_LINEBUF U_BUF_GE (
         .ADDRESS  (ADDR_E),
         .INCLOCK  (CLK),
         .WE       (WE_E),
@@ -108,7 +108,7 @@ module VDP_DOUBLEBUF_v (
         .Q        (OUTG_E)
     );
 
-    VDP_LINEBUF_v U_BUF_BE (
+    VDP_LINEBUF U_BUF_BE (
         .ADDRESS  (ADDR_E),
         .INCLOCK  (CLK),
         .WE       (WE_E),
@@ -117,7 +117,7 @@ module VDP_DOUBLEBUF_v (
     );
 
     // Component instantiations for odd lines
-    VDP_LINEBUF_v U_BUF_RO (
+    VDP_LINEBUF U_BUF_RO (
         .ADDRESS  (ADDR_O),
         .INCLOCK  (CLK),
         .WE       (WE_O),
@@ -125,7 +125,7 @@ module VDP_DOUBLEBUF_v (
         .Q        (OUTR_O)
     );
 
-    VDP_LINEBUF_v U_BUF_GO (
+    VDP_LINEBUF U_BUF_GO (
         .ADDRESS  (ADDR_O),
         .INCLOCK  (CLK),
         .WE       (WE_O),
@@ -133,7 +133,7 @@ module VDP_DOUBLEBUF_v (
         .Q        (OUTG_O)
     );
 
-    VDP_LINEBUF_v U_BUF_BO (
+    VDP_LINEBUF U_BUF_BO (
         .ADDRESS  (ADDR_O),
         .INCLOCK  (CLK),
         .WE       (WE_O),
