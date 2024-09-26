@@ -41,9 +41,9 @@ verilator \
 ../rtl/peripheral/slots/devices.sv         \
 ../rtl/peripheral/mapper/offset.sv         \
 \
-./rtl/video/vdp18v/vdp18_pack-p.sv        \
-./rtl/video/vdp18v/vdp18_col_pack-p.sv    \
-./rtl/video/vdp18v/vdp18_core.sv          \
+../rtl/video/vdp18v/vdp18_pack-p.sv        \
+../rtl/video/vdp18v/vdp18_col_pack-p.sv    \
+../rtl/video/vdp18v/vdp18_core.sv          \
 \
 ../rtl/video/VDPv/vdp_package.sv           \
 ../rtl/video/VDPv/vdp.sv                   \
@@ -65,19 +65,20 @@ verilator \
 ../rtl/video/VDPv/vdp_wait_control.sv      \
 ../rtl/video/VDPv/vdp_ram.sv               \
 \
-./rtl/peripheral/mapper/fm_pac.sv         \
-./rtl/peripheral/mapper/ascii8.sv         \
-./rtl/peripheral/mapper/ascii16.sv        \
-./rtl/peripheral/mapper/konami.sv         \
-./rtl/peripheral/mapper/konami_scc.sv     \
-./rtl/peripheral/mapper/gamemaster2.sv    \
-./rtl/peripheral/mapper/msx2_ram.sv       \
-./rtl/peripheral/dev/opl3.sv              \
-./rtl/peripheral/dev/scc.sv               \
-./rtl/sound/scc_wave.sv                   \
-./rtl/peripheral/dev/vy-0010.sv           \
+../rtl/peripheral/mapper/fm_pac.sv         \
+../rtl/peripheral/mapper/ascii8.sv         \
+../rtl/peripheral/mapper/ascii16.sv        \
+../rtl/peripheral/mapper/konami.sv         \
+../rtl/peripheral/mapper/konami_scc.sv     \
+../rtl/peripheral/mapper/gamemaster2.sv    \
+../rtl/peripheral/mapper/msx2_ram.sv       \
+../rtl/peripheral/dev/msx2_ram.sv          \
+../rtl/peripheral/dev/opl3.sv              \
+../rtl/peripheral/dev/scc.sv               \
+../rtl/sound/scc_wave.sv                   \
+./rtl/peripheral/dev/vy-0010.sv            \
 \
-./rtl/sound/jt49/hdl/jt49_bus.sv          \
+../rtl/sound/jt49/hdl/jt49_bus.sv          \
 ./rtl/peripheral/spi_divmmc.sv            \
 ./rtl/sd_card.sv                          \
 ./rtl/tape.sv                             \
