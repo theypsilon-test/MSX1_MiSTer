@@ -52,3 +52,5 @@ verilator/x64/
 *.ini
 *.vcd
 verilator/rom/
+tools/CreateMSXpack/__pycache__/
+*.log

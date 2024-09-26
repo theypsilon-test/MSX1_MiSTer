@@ -399,6 +399,8 @@ void SimVideo::StartFrame() {
 #endif
 }
 
+int divs = 0;
+
 void SimVideo::Clock(bool hblank, bool vblank, bool hsync, bool vsync, uint32_t colour) {
 
 	bool de = !(hblank || vblank);
@@ -413,7 +415,13 @@ void SimVideo::Clock(bool hblank, bool vblank, bool hsync, bool vsync, uint32_t 
 		else {
 			// Increment pixel counter when not blanked
 			if (de) {
+				//divs++;
 				count_pixel++;
+				/*
+				if (divs == 2) {
+					count_pixel++;
+					divs = 0;
+				}*/
 			}
 		}
 	}

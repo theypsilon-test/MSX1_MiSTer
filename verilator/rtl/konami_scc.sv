@@ -1,26 +1,18 @@
 /*verilator tracing_off*/
-module cart_konami_scc
-(
-   input            clk,
-   input            reset,
-   input     [24:0] mem_size,
-   input     [15:0] cpu_addr,
-   input      [7:0] din,
-   input            cpu_mreq,
-   input            cpu_wr,
-   input            cpu_rd,
-   input            cs,
-   input            cart_num,
-   input            sccDevice,     // 0-SCC 1-SCC+
-   output           mem_unmaped,
-   output    [20:0] mem_addr,
-   output           scc_req,
-   output    [1:0]  scc_mode
+module mapper_konami_scc (
+   cpu_bus             cpu_bus,        // Interface for CPU communication
+   mapper_out          out,            // Interface for mapper output
+   block_info          block_info,     // Struct containing mapper configuration and parameters 
+   device_bus          device_out      // Interface for device output
 );
+
+   assign out.sram_cs = '0;
+   assign out.ram_cs  = '0;
+   assign out.rnw     = '1;
+   assign out.addr    = {27{1'b1}};
    
-   assign scc_req  = '0;
-   assign mem_unmaped = cs;
-   assign mem_addr = '1;
+   assign device_out.en = '0;
+   assign device_out.typ = DEV_NONE;
 
 endmodule
        

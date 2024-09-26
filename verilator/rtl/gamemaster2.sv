@@ -1,20 +1,15 @@
 /*verilator tracing_off*/
-module cart_gamemaster2
+module mapper_gamemaster2
 (
-   input            clk,
-   input            reset,
-   input     [15:0] cpu_addr,
-   input      [7:0] din,
-   input            cpu_mreq,
-   input            cpu_wr,
-   input            cs,
-   output    [24:0] mem_addr,
-   output           sram_we,
-   output           sram_cs
+    cpu_bus     cpu_bus,   // Interface for CPU communication
+    mapper_out  out,       // Interface for mapper output
+    block_info block_info // Struct containing mapper configuration and parameters
 );
 
-assign sram_cs   = '0;
-assign mem_addr  = '1;
-assign sram_we   = '0;
+    assign out.sram_cs = '0;
+    assign out.ram_cs  = '0;
+    assign out.rnw     = '1;
+    assign out.addr    = {27{1'b1}};
+    assign out.data    = '{8{1'b1}};
 
 endmodule

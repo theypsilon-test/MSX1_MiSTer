@@ -42,7 +42,7 @@ int multi_step_amount = 1024;
 
 // Debug GUI 
 // ---------
-const char* windowTitle = "Verilator Sim: Arcade-Centipede";
+const char* windowTitle = "Verilator Sim: MSX";
 const char* windowTitle_Control = "Simulation control";
 const char* windowTitle_DebugLog = "Debug log";
 const char* windowTitle_Video = "VGA output";
@@ -74,7 +74,8 @@ const char* slotB[] = { "ROM","SCC","SCC +","FM - PAC","Empty" };
 const char* mapperA[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* mapperB[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* sramA[] = { "auto","1kB","2kB","4kB","8kB","16kB","32kB","none" };
-int currentSlotA = 5;
+//int currentSlotA = 0;
+int currentSlotA = 3;
 int currentSlotB = 0;
 int currentMapperA = 0;
 int currentMapperB = 0;
@@ -110,8 +111,10 @@ SimBus bus(console);
 
 // Video
 // -----
-#define VGA_WIDTH 256 //320
-#define VGA_HEIGHT 192 //240
+//#define VGA_WIDTH 256 //320
+//#define VGA_HEIGHT 192 //240
+#define VGA_WIDTH 320
+#define VGA_HEIGHT 240
 #define VGA_ROTATE 0
 #define VGA_SCALE_X vga_scale
 #define VGA_SCALE_Y vga_scale
@@ -125,7 +128,7 @@ float vga_scale = 1.5;
 #define VRAMlo top->emu->MSX->vram_lo
 #define kbd top->emu->MSX->msx_key->kbd_ram
 
-SimMemoryRam* systemRAM_mem;
+//SimMemoryRam* systemRAM_mem;
 SimMemoryRam* vdp_mem_hi;
 SimMemoryRam* vdp_mem_lo;
 SimMemoryRam* kbd_map;
@@ -241,13 +244,17 @@ int verilate() {
 				Rams.AfterEval();
 				SDram.AfterEval();
 				DDR.AfterEval();
-			//	errors = debuger.AfterEval(main_time);
-				
+				//	errors = debuger.AfterEval(main_time);
+				if (top->emu->MSX->ce_pix) {
+					uint32_t colour = 0xFF000000 | top->emu->MSX->B << 16 | top->emu->MSX->G << 8 | top->emu->MSX->R;
+					video.Clock(top->emu->MSX->hblank, top->emu->MSX->vblank, top->emu->MSX->HS, top->emu->MSX->VS, colour);
+				}
+/*
 				if (top->emu->MSX->vdp_vdp18->ce_pix) {
 					uint32_t colour = 0xFF000000 | top->emu->MSX->vdp_vdp18->rgb_b_o << 16 | top->emu->MSX->vdp_vdp18->rgb_g_o << 8 | top->emu->MSX->vdp_vdp18->rgb_r_o;
 					video.Clock(top->emu->MSX->vdp_vdp18->hblank_o, top->emu->MSX->vdp_vdp18->vblank_o, top->emu->MSX->vdp_vdp18->hsync_n_o, top->emu->MSX->vdp_vdp18->vsync_n_o, colour);
 				}
-				
+*/
 			}
 			
 			
@@ -270,14 +277,18 @@ int verilate() {
 		}
 
 		// Output pixels on rising edge of pixel clock
-/*
+		/*
 		if (clk_sys.IsRising() && top->ce_pix) {
 			uint32_t colour = 0xFF000000 | top->B << 16 | top->G << 8 | top->R;
 			video.Clock(top->hblank, top->vblank, top->hsync_n, top->vsync_n, colour);
 		}
-*/
+		*/
 		main_time++;
-		//if (main_time == 17976000) Trace = 1; //60000000 cca zobrazení videa
+		if (main_time == 17000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		//if (main_time == 34000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		//if (main_time == 44000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		//if (main_time == 73000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		//if (main_time == 83000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		int ret = 1;
 		if (errors > 0) {
 			ret = 0;
@@ -311,6 +322,7 @@ int main(int argc, char** argv, char** env) {
 #endif
 
 	// Attach bus
+/*
 	systemRAM_mem = Rams.AddRAM(
 		1,
 		&systemRAM->address_a,
@@ -322,7 +334,7 @@ int main(int argc, char** argv, char** env) {
 		&systemRAM->q_b,
 		&systemRAM->wren_b,
 		1 << systemRAM->addr_width);
-
+*/
 	vdp_mem_hi = Rams.AddRAM(
 		2,
 		&VRAMhi->address,
@@ -419,8 +431,9 @@ int main(int argc, char** argv, char** env) {
 	//bus.QueueDownload("./rom/roms/Genghis Khan - MSX1 Version - KOEI [KoeiSRAM32] .rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/10th Frame - Access Software [ASCII16].rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/Penguin Adventure - Yumetairiku Adventure - Konami [Konami] [RC-743] .rom", 3, true, 0x30C00000, &DDR);
+	//bus.QueueDownload("./rom/roms/Gradius_2-Nemesis_2-Konami[KonamiSCC][RC-751].rom", 3, true, 0x30C00000, &DDR);
 	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
-	
+	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, false);
 
@@ -503,11 +516,11 @@ int main(int argc, char** argv, char** env) {
 		mem_edit.DrawContents(kbd_map->GetMem(), 1 << kbd->addr_width, 0);
 		ImGui::End();
 		
-		
+/*
 		ImGui::Begin("RAM Editor");
 		mem_edit.DrawContents(systemRAM_mem->GetMem(), 1 << systemRAM->addr_width, 0);
 		ImGui::End();
-
+*/
 		
 		//HPS emulace
 		ImGui::Begin(windowTitle_HPS);

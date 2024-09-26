@@ -1,7 +1,7 @@
 /*verilator tracing_off*/
 module cart_ascii8 (
     cpu_bus cpu_bus,                   // Interface for CPU communication
-    mapper mapper,                     // Struct containing mapper configuration and parameters
+    block_info block_info,             // Struct containing mapper configuration and parameters
     mapper_out out                     // Interface for mapper output
 );
     assign out.sram_cs = '0;

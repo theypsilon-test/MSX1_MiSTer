@@ -29,8 +29,6 @@ verilator \
 ./rtl/halnote.sv         \
 ./rtl/flash.sv         \
 ./rtl/mfrsd.sv         \
-./rtl/konami_scc.sv         \
-./rtl/scc_sound.sv         \
 ./rtl/opll.sv         \
 ./rtl/kanji.sv         \
 ./rtl/psg.sv         \
@@ -54,7 +52,12 @@ verilator \
 ../rtl/peripheral/slots/devices.sv         \
 ../rtl/peripheral/slots/fm_pac.sv          \
 ../rtl/peripheral/slots/konami.sv          \
+../rtl/peripheral/slots/konami_scc.sv      \
 ../rtl/peripheral/slots/gamemaster2.sv     \
+../rtl/peripheral/dev/io_decoder.sv     \
+../rtl/peripheral/dev/opl3.sv     \
+../rtl/peripheral/dev/scc.sv               \
+../rtl/peripheral/dev/vy-0010.sv     \
 ../rtl/cpu/tv80_alu.v \
 ../rtl/cpu/tv80_core.v \
 ../rtl/cpu/tv80_mcode.v \

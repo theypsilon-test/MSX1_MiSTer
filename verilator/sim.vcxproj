@@ -66,8 +66,6 @@
     <ClCompile Include="obj_dir\Vemu.cpp" />
     <ClCompile Include="obj_dir\Vemu_ddram__DepSet_h16a6b7ce__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_ddram__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_dpram__A12__DepSet_hec510827__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_dpram__A12__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_emu__DepSet_h60dc175e__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_emu__DepSet_h60dc175e__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_emu__DepSet_h97221f7f__0.cpp" />
@@ -83,9 +81,6 @@
     <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_mapper_out__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_mapper__DepSet_h38db5a4b__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_mapper__DepSet_h38db5a4b__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_mapper__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_memory_bus__Slow.cpp" />
@@ -94,9 +89,8 @@
     <ClCompile Include="obj_dir\Vemu_MSX__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h55edc9f1__0.cpp" />
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h55edc9f1__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h8c31a98a__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h8c31a98a__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_hc8c990d7__0.cpp" />
+    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_hc8c990d7__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_pll__DepSet_hc0a77e1e__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_pll__Slow.cpp" />
@@ -115,10 +109,6 @@
     <ClCompile Include="obj_dir\Vemu_tv80n__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__DepSet_h368a78f1__0__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp18_core__DepSet_h947ea413__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp18_core__DepSet_h947ea413__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp18_core__DepSet_ha184f5b5__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp18_core__Slow.cpp" />
     <ClCompile Include="obj_dir\Vemu__ConstPool_0.cpp" />
     <ClCompile Include="obj_dir\Vemu__Dpi.cpp" />
     <ClCompile Include="obj_dir\Vemu__Syms.cpp" />
@@ -160,11 +150,9 @@
   <ItemGroup>
     <ClInclude Include="obj_dir\Vemu.h" />
     <ClInclude Include="obj_dir\Vemu_ddram.h" />
-    <ClInclude Include="obj_dir\Vemu_dpram__A12.h" />
     <ClInclude Include="obj_dir\Vemu_emu.h" />
     <ClInclude Include="obj_dir\Vemu_hps_io__Cz1_V6.h" />
     <ClInclude Include="obj_dir\Vemu_keyboard.h" />
-    <ClInclude Include="obj_dir\Vemu_mapper.h" />
     <ClInclude Include="obj_dir\Vemu_mapper_out.h" />
     <ClInclude Include="obj_dir\Vemu_memory_bus.h" />
     <ClInclude Include="obj_dir\Vemu_MSX.h" />
@@ -176,7 +164,6 @@
     <ClInclude Include="obj_dir\Vemu_spram__A9_Mz2_MBz3.h" />
     <ClInclude Include="obj_dir\Vemu_tv80n.h" />
     <ClInclude Include="obj_dir\Vemu_vdp18_col_pack.h" />
-    <ClInclude Include="obj_dir\Vemu_vdp18_core.h" />
     <ClInclude Include="obj_dir\Vemu__Dpi.h" />
     <ClInclude Include="obj_dir\Vemu__pch.h" />
     <ClInclude Include="obj_dir\Vemu__Syms.h" />

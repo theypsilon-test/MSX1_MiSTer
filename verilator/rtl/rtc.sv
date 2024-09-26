@@ -11,7 +11,7 @@ module rtc
         input req,
         output ack,
         input wrt,
-        input adr,
+        input [15:0] adr,
         output [7:0] dbi,
         input [7:0] dbo
 );

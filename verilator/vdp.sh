@@ -22,8 +22,10 @@ verilator \
 ../rtl/peripheral/slots/offset.sv          \
 ../rtl/peripheral/slots/mappers.sv         \
 ../rtl/peripheral/slots/devices.sv         \
+../rtl/peripheral/dev/io_decoder.sv        \
 ../rtl/peripheral/dev/vy-0010.sv           \
 ../rtl/peripheral/dev/scc.sv               \
+../rtl/peripheral/dev/msx2_mem_mapper.sv   \
 ../rtl/peripheral/slots/konami_scc.sv      \
 ../rtl/cpu/tv80_alu.v \
 ../rtl/cpu/tv80_core.v \
@@ -42,6 +44,25 @@ verilator \
 ../rtl/video/vdp18v/vdp18_pattern.sv    \
 ../rtl/video/vdp18v/vdp18_sprite.sv     \
 ../rtl/sound/scc_wave.sv                \
+../rtl/video/VDPv/vdp_package.sv       \
+../rtl/video/VDPv/vdp.sv     \
+../rtl/video/VDPv/vdp_colordec.sv \
+../rtl/video/VDPv/vdp_command.sv \
+../rtl/video/VDPv/vdp_doublebuf.sv \
+../rtl/video/VDPv/vdp_graphic123m.sv \
+../rtl/video/VDPv/vdp_graphic4567.sv \
+../rtl/video/VDPv/vdp_hvcounter.sv \
+../rtl/video/VDPv/vdp_interrupt.sv \
+../rtl/video/VDPv/vdp_linebuf.sv \
+../rtl/video/VDPv/vdp_ntsc_pal.sv \
+../rtl/video/VDPv/vdp_register.sv \
+../rtl/video/VDPv/vdp_spinforam.sv \
+../rtl/video/VDPv/vdp_sprite.sv \
+../rtl/video/VDPv/vdp_ssg.sv     \
+../rtl/video/VDPv/vdp_text12.sv \
+../rtl/video/VDPv/vdp_vga.sv \
+../rtl/video/VDPv/vdp_wait_control.sv \
+../rtl/video/VDPv/vdp_ram.sv \
 ./rtl/ddram.sv \
 ./rtl/hps_io.sv \
 ./rtl/jt2413.sv \
@@ -70,7 +91,6 @@ verilator \
 ./rtl/konami.sv \
 ./rtl/ascii8.sv \
 ./rtl/gamemaster2.sv \
-./rtl/vdp.sv \
 
 
 #../rtl/sound/jt49/hdl/jt49_bus.v \

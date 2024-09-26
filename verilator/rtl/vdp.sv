@@ -1,5 +1,5 @@
 /*verilator tracing_off*/
-module vdp
+module VDP
 (
 input        CLK21M,
 input        RESET,
