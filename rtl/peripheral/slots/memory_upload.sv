@@ -30,19 +30,21 @@ module memory_upload
     input                 [7:0] ram_dout,
     
     input                       sdram_ready,
-        input                 [1:0] sdram_size,
+    input                 [1:0] sdram_size,
     output logic                load_sram,
     output logic          [1:0] rom_loaded,
     output dev_typ_t            cart_device[2],
     output dev_typ_t            msx_device,
     output logic          [3:0] msx_dev_ref_ram[8],
     output logic          [2:0] dev_enable[0:(1 << $bits(device_t))-1],
-    output logic          [1:0] led_out
+    output logic          [1:0] led_out, 
+    output error_t              error
 );
 
     // Parametry
     localparam DDR3_BASE_FW_ADDR = 28'h300000;
     localparam DDR3_CRC32_TABLE_ADDR = 28'h1600000;
+    localparam logic [2:0] CONF_SIZE = 7;           // Conf block size for computer 8 bytes - 1 byte
 
     // Stavový signál, který indikuje, zda je modul resetován
     assign reset_rq = state != STATE_IDLE;
@@ -124,9 +126,8 @@ module memory_upload
 
     state_t state = STATE_IDLE;
     state_t next_state = STATE_IDLE;
-    error_t error = ERR_NONE;
     pattern_t pattern;
-    logic [7:0] conf[6];
+    logic [7:0] conf[8];
     logic [3:0] ref_ram;
     logic       crc_en;
 
@@ -137,7 +138,7 @@ module memory_upload
         logic [2:0]  head_addr, read_cnt;
         logic [27:0] save_addr, save_addr2;    
         logic [3:0]  ref_device_io;
-        logic        ref_add, ref_sram_add, fw_space;
+        logic        ref_add, ref_sram_add, fw_space, ref_dev_block;
         logic [1:0]  slot, subslot, block, size, offset, ref_sram, device_num;
         logic [15:0] rom_fw_table;
         mapper_typ_t mapper;
@@ -179,9 +180,10 @@ module memory_upload
                     save_addr         <= '0;
                     save_addr2        <= '0;
                     kbd_request       <= '0;
+                    ref_dev_block     <= '0;
                 end
                 STATE_CLEAN: begin
-                    error_t error = ERR_NONE;
+                    error <= ERR_NONE;
                     ddr3_request <= '1;
                     slot_layout[block_num].mapper     <= MAPPER_NONE;
                     slot_layout[block_num].device     <= DEV_NONE;
@@ -197,6 +199,7 @@ module memory_upload
                     io_device[block_num[3:0]].mask    <= '0;
                     io_device[block_num[3:0]].id      <= DEV_NONE;
                     io_device[block_num[3:0]].num     <= '0;
+                    io_device[block_num[3:0]].param   <= '0;
                     block_num <= block_num + 1'd1;
                     dev_enable[device_t'(block_num)]  <= '0;
                     if (block_num == 63) begin
@@ -206,7 +209,7 @@ module memory_upload
                         ddr3_addr <= '0;
                         ddr3_rd   <= '1;
                         head_addr <= '0;
-                        read_cnt <= 5;
+                        read_cnt <= CONF_SIZE;
                         if (ioctl_size[1] > 0) begin
                             state <= STATE_READ_CONF;
                             next_state <= STATE_CHECK_FW_CONF;
@@ -250,6 +253,7 @@ module memory_upload
                         next_state <= STATE_LOAD_CONF;
                         ddr3_request <= '1;
                         bios_config.MSX_typ <= conf[3][0] ? MSX2 : MSX1 ;
+                        $display("MSX CONFIG %x", conf[3][0]);
                     end else begin
                         error <= ERR_BAD_MSX_CONF;
                         state <= STATE_IDLE;
@@ -259,10 +263,11 @@ module memory_upload
                     case(conf_t'(conf[0]))
                         CONF_BLOCK:  begin
                             $display("  BLOCK FW state %d", fw_space);
-                            if (~fw_space) begin                                // Pokud čteme konfiguraci, tak se slot načítá výhradně z konfigurace
-                                slot <= '0;
-                            end
                             state <= STATE_PROCESS_BLOCK;
+                            slot    <= fw_space ? slot | conf[1][7:6] : conf[1][7:6];
+                            subslot <= conf[1][5:4];
+                            block   <= conf[1][3:2];
+                            size    <= conf[1][1:0];
                         end
                         CONF_LAYOUT:  begin
                             $display("  LOAD KBD LAYOUT");
@@ -274,6 +279,7 @@ module memory_upload
                             ddr3_addr <= save_addr;
                             ddr3_rd <= '1;
                             fw_space <= '0;
+                            read_cnt <= CONF_SIZE;
                             state <= STATE_READ_CONF;
                             next_state <= STATE_LOAD_CONF;
                         end
@@ -284,12 +290,9 @@ module memory_upload
                     endcase
                 end
                 STATE_PROCESS_BLOCK: begin
-                    slot <= slot | conf[1][7:6];
-                    subslot <= conf[1][5:4];
-                    block <= conf[1][3:2];
-                    size <= conf[1][1:0];
                     mapper <= MAPPER_NONE;
                     device <= DEV_NONE;
+                    ref_dev_block <= '0;
                     next_state <= STATE_READ_CONF;
                     case(block_t'(conf[2]))
                         BLOCK_RAM: begin
@@ -298,7 +301,7 @@ module memory_upload
                             lookup_RAM[ref_ram].size <= {8'd0, conf[3]};           // Uložíme velikost RAM
                             lookup_RAM[ref_ram].ro <= '0;                          // Vypneme ochranu paměti RAM
                             mapper <= MAPPER_OFFSET;
-                            offset <= '0;                                          // Offset posunu RAM
+                            offset <= '0;                                           // Offset posunu RAM
                             ref_add <= '1;                                         // Bude potřeba zvednout referenci
                             data_size <= {3'b0, conf[3],14'd0};                    // Velikost nahrávaných dat
                             pattern <= pattern_t'(conf[4]);
@@ -330,7 +333,7 @@ module memory_upload
                             lookup_RAM[ref_ram].addr <= ram_addr;                  // Uložíme adresu ROM
                             lookup_RAM[ref_ram].ro <= '1;                          // Uložíme ochranu paměti ROM
                             mapper <= MAPPER_OFFSET;
-                            offset <= '0;                                          // Offset posunu RAM
+                            offset <= '0;                                           // Offset posunu RAM
                             ref_add <= '1;                                         // Bude potřeba zvednout referenci
                             pattern <= PATTERN_DDR;
                             if (fw_space) begin                                    // Pokud se  bude jednat o ROM z FW musíme dle indexu najít adresu v DDR 
@@ -355,16 +358,16 @@ module memory_upload
                             $display("BLOCK CART ID:%d CONF:%x", conf[3][0], cart_conf[conf[3][0]]);
 
                             if (cart_conf[conf[3][0]].typ == CART_TYP_ROM) begin
-                                if (ioctl_size[conf[3][0] ? 3 : 2] > '0) begin
+                                if (ioctl_size[conf[3][0] ? 3'd3 : 3'd2] > '0) begin
                                     $display("BLOCK CART %d LOAD START ref: %d addr:%x size:%x - %x", conf[3][0], ref_ram, ram_addr, ioctl_size[conf[3][0] ? 3 : 2], ioctl_size[conf[3][0] ? 3 : 2][26:14]);
                                     lookup_RAM[ref_ram].addr <= ram_addr;               // Uložíme adresu ROM
-                                    lookup_RAM[ref_ram].size <= {3'b0, ioctl_size[conf[3][0] ? 3 : 2][26:14]};        // Uložíme velikost ROM
+                                    lookup_RAM[ref_ram].size <= {3'b0, ioctl_size[conf[3][0] ? 3'd3 : 3'd2][26:14]};        // Uložíme velikost ROM
                                     lookup_RAM[ref_ram].ro <= '1;                       // Uložíme ochranu paměti ROM
                                     state <= STATE_FILL_RAM;                            // Načítáme ROM
                                     next_state <= STATE_SEARCH_CRC32_INIT;              // Po nahrání budeme hledat CRC
                                     save_addr <= ddr3_addr - 1'b1;                      // Uchováme adresu -1 kvůli již načtenému prefetch bajtu
                                     ddr3_addr <= conf[3][0] ? 28'h1100000 : 28'hC00000; // Adresa ROM v DDR
-                                    data_size <= ioctl_size[conf[3][0] ? 3 : 2][24:0];  // Velikost ROM
+                                    data_size <= ioctl_size[conf[3][0] ? 3'd3 : 3'd2][24:0];  // Velikost ROM
                                     ddr3_rd <= '1;                                      // Prefetch
                                     ref_add <= '1;                                      // Ukládáme referenci
                                     crc_en <= '1;                                       // Počítáme CRC
@@ -415,13 +418,20 @@ module memory_upload
                             end
                         end
                         BLOCK_IO_DEVICE: begin
-                            $display("BLOCK IO_DEVICE ref_IO:%x port:%x mask %d ", ref_device_io, conf[3], conf[4]); 
-                            io_device[ref_device_io].port <= conf[3];
-                            io_device[ref_device_io].mask <= conf[4];
-                            io_device[ref_device_io].id   <= slot_layout[{slot, subslot, block}].device;
-                            io_device[ref_device_io].num  <= slot_layout[{slot, subslot, block}].device_num;
+                            $display("BLOCK IO_DEVICE ref_IO:%x port:%x mask %d (%d/%d/%d) device.id %x", ref_device_io, conf[3], conf[4], slot, subslot, block, slot_layout[{slot, subslot, block}].device); 
+                            io_device[ref_device_io].port  <= conf[3];
+                            io_device[ref_device_io].mask  <= conf[4];
+                            io_device[ref_device_io].id    <= slot_layout[{slot, subslot, block}].device;
+                            io_device[ref_device_io].num   <= slot_layout[{slot, subslot, block}].device_num;
+                            io_device[ref_device_io].param <= conf[5];
+                            ref_device_io <= ref_device_io + 1'd1;          //TODO pohlídej jestli nejsme na konci
                             state <= STATE_READ_CONF;                               
                             next_state <= STATE_LOAD_CONF;
+                        end
+                        BLOCK_REF_DEV: begin
+                            $display("BLOCK_REF_DEV ref to block:%x", conf[3][1:0]); 
+                            state <= STATE_SET_LAYOUT;
+                            ref_dev_block <= 1'b1;
                         end
                         default: begin
                             $display("BLOCK UNKNOWN");
@@ -464,8 +474,8 @@ module memory_upload
 
                     end
                     
-                    block <= block + 2'b01;                 // Další blok
-                    size  <= size - 2'b01;                  // Snížíme počet
+                    block  <= block + 2'b01;                 // Další blok
+                    size   <= size - 2'b01;                  // Snížíme počet
                     offset <= offset + 2'b01;
                     
                     if (ref_add) begin                       
@@ -494,6 +504,12 @@ module memory_upload
                         slot_layout[{slot, subslot, block}].device <= device;
                         $display("BLOCK slot:%x subslot:%x block:%x < device:%x(id:%d) ", slot, subslot, block, device, device_num );
                     end
+
+                    if (ref_dev_block) begin
+                        slot_layout[{slot, subslot, block}].device_num <= slot_layout[{slot, subslot, conf[3][1:0]}].device_num;
+                        slot_layout[{slot, subslot, block}].device     <= slot_layout[{slot, subslot, conf[3][1:0]}].device;
+                        $display("BLOCK slot:%x subslot:%x block:%x < device:%x(id:%d) ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].device, slot_layout[{slot, subslot, conf[3][1:0]}].device_num );
+                    end
                     // slot_layout[{slotSubslot, i[1:0]}].external
                     if (subslot != 2'b00) begin                        
                         bios_config.slot_expander_en[slot] <= 1'b1;
@@ -512,7 +528,7 @@ module memory_upload
                     if (ddr3_addr[2:0] == 3'd0 && rom_crc32 == {temp[4], temp[3], temp[2], temp[1]}) begin
                         $display("FIND CRC32: %x mapper:%x sram:%x", rom_crc32, temp[5], temp[6]);       // CRC32 nalezeno
                         if (ioctl_size[1] > '0) begin                                                    // Máme FW?
-                            ddr3_addr <= 'h300010 + {18'b0, temp[5], 2'b00};
+                            ddr3_addr <= 28'h300010 + {18'b0, temp[5], 2'b00};
                             ddr3_rd <= '1;
                             read_cnt <= 4;
                             fw_space <= '1;
