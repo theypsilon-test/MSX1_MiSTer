@@ -1,9 +1,8 @@
-/*verilator tracing_off*/
 module mapper_fm_pac (
-    cpu_bus             cpu_bus,       // Interface for CPU communication
-    block_info          block_info,    // Struct containing mapper configuration and parameters
-    mapper_out          out,           // Interface for mapper output
-    device_bus          device_out     // Interface for device output
+    cpu_bus          cpu_bus,       // Interface for CPU communication
+    block_info       block_info,    // Struct containing mapper configuration and parameters
+    mapper_out       out,           // Interface for mapper output
+    device_bus       device_out     // Interface for device output
 );
 
     // Internal logic variables
@@ -33,14 +32,14 @@ module mapper_fm_pac (
         end else begin
             opll_wr <= 1'b0;
             if (block_info.typ == MAPPER_FMPAC && cpu_bus.wr && cpu_bus.mreq) begin
-                case (cpu_bus.addr[13:0]) 
-                    14'h1FFE: 
-                        if (~enable[block_info.id][4]) 
+                case (cpu_bus.addr[13:0])
+                    14'h1FFE:
+                        if (~enable[block_info.id][4])
                             magicLo[block_info.id] <= cpu_bus.data;
-                    14'h1FFF: 
-                        if (~enable[block_info.id][4]) 
+                    14'h1FFF:
+                        if (~enable[block_info.id][4])
                             magicHi[block_info.id] <= cpu_bus.data;
-                    14'h3FF4, 14'h3FF5: 
+                    14'h3FF4, 14'h3FF5:
                         opll_wr <= 1'b1;
                     14'h3FF6: begin
                         enable[block_info.id] <= cpu_bus.data & 8'h11;
@@ -49,7 +48,7 @@ module mapper_fm_pac (
                             magicHi[block_info.id] <= 8'b0;
                         end
                     end
-                    14'h3FF7: 
+                    14'h3FF7:
                         bank[block_info.id] <= cpu_bus.data[1:0];
                     default: ; // No action
                 endcase
@@ -70,13 +69,13 @@ module mapper_fm_pac (
     assign out.ram_cs   = cs && ~sram_en && cpu_bus.rd && mapped;
     assign out.rnw      = ~(out.sram_cs && cpu_bus.wr);
     assign out.addr     = cs ? (out.sram_cs ? sram_addr : ram_addr) : {27{1'b1}};
-    
+
     assign device_out.typ = cs ? DEV_OPL3 : DEV_NONE;
     assign device_out.we  = cs && opll_wr;
     assign device_out.en  = cs && enable[block_info.id][0];
 
     // Multiplexing output data
-    assign out.data = (block_info.typ == MAPPER_FMPAC) ? 
+    assign out.data = (block_info.typ == MAPPER_FMPAC) ?
                       (cpu_bus.addr[13:0] == 14'h3FF6) ? enable[block_info.id] :
                       (cpu_bus.addr[13:0] == 14'h3FF7) ? {6'b000000, bank[block_info.id]} :
                       (cpu_bus.addr[13:0] == 14'h1FFE && sramEnable) ? magicLo[block_info.id] :

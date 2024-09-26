@@ -1,8 +1,7 @@
-/*verilator tracing_off*/
 module mapper_konami (
-    cpu_bus             cpu_bus,       // Interface for CPU communication
-    mapper_out          out,           // Interface for mapper output
-    block_info          block_info     // Struct containing mapper configuration and parameters  
+    cpu_bus         cpu_bus,       // Interface for CPU communication
+    mapper_out      out,           // Interface for mapper output
+    block_info      block_info     // Struct containing mapper configuration and parameters
 );
 
     // Control signals for memory mapping

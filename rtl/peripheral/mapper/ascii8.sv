@@ -1,18 +1,18 @@
-module cart_ascii8 (
-    cpu_bus cpu_bus,                   // Interface for CPU communication
-    mapper_out out,                    // Interface for mapper output
-    block_info block_info              // Struct containing mapper configuration and parameters
+module mapper_ascii8 (
+    cpu_bus         cpu_bus,                // Interface for CPU communication
+    mapper_out      out,                    // Interface for mapper output
+    block_info      block_info              // Struct containing mapper configuration and parameters
 );
 
     // Memory mapping control signals
     wire cs, mapped, mode_wizardy, mode_koei, mapper_en;
 
     // Mapped if address is not in the lower or upper 16KB
-    assign mapped       = ^cpu_bus.addr[15:14];  
+    assign mapped       = ^cpu_bus.addr[15:14];
 
     // Mapper is enabled if it is ASCII8, KOEI, or WIZARDY
-    assign mapper_en    = (block_info.typ == MAPPER_ASCII8) | 
-                          (block_info.typ == MAPPER_KOEI) | 
+    assign mapper_en    = (block_info.typ == MAPPER_ASCII8) |
+                          (block_info.typ == MAPPER_KOEI) |
                           (block_info.typ == MAPPER_WIZARDY);
 
     // Mode is WIZARDY
@@ -31,14 +31,14 @@ module cart_ascii8 (
 
     // Define frequently used parameters and masks
     wire        sram_exists   = (block_info.sram_size > 0);
-    wire  [7:0] sram_mask     = (block_info.sram_size[10:3] > 0) ? 
+    wire  [7:0] sram_mask     = (block_info.sram_size[10:3] > 0) ?
                                 (block_info.sram_size[10:3] - 8'd1) : 8'd0;
 
     wire  [7:0] sramEnableBit = mode_wizardy ? 8'h80 : block_info.rom_size[20:13];
     wire  [7:0] sramPages     = mode_koei ? 8'h34 : 8'h30;
     wire  [1:0] region        = cpu_bus.addr[12:11];
-    wire  [7:0] bank_base     = bank[block_info.id][{cpu_bus.addr[15], cpu_bus.addr[13]}]; 
-    wire  [7:0] sram_bank_base = sramBank[block_info.id][{cpu_bus.addr[15], cpu_bus.addr[13]}];                 
+    wire  [7:0] bank_base     = bank[block_info.id][{cpu_bus.addr[15], cpu_bus.addr[13]}];
+    wire  [7:0] sram_bank_base = sramBank[block_info.id][{cpu_bus.addr[15], cpu_bus.addr[13]}];
 
     // Initialize or update bank and SRAM enable signals
     always @(posedge cpu_bus.clk) begin
@@ -46,24 +46,24 @@ module cart_ascii8 (
             // Initialize banks and SRAM enable on reset
             bank       <= '{'{default: '0},'{default: '0}};
             sramBank   <= '{'{default: '0},'{default: '0}};
-            sramEnable <= '{default: '0}; 
+            sramEnable <= '{default: '0};
         end else if (cs & cpu_bus.wr & (cpu_bus.addr[15:13] == 3'b011)) begin
             if (((cpu_bus.data & sramEnableBit) != 0) && sram_exists) begin
                 // Enable SRAM
-                sramEnable[block_info.id] <= sramEnable[block_info.id] | 
+                sramEnable[block_info.id] <= sramEnable[block_info.id] |
                                         ((8'b00000100 << region) & sramPages);
-                $display("Enable SRAM %x sram pages mask %x", 
+                $display("Enable SRAM %x sram pages mask %x",
                           ((8'b00000100 << region) & sramPages), sramPages);
                 sramBank[block_info.id][region] <= cpu_bus.data & sram_mask;
-                $display("Write SRAM bank region %d bank %x", 
+                $display("Write SRAM bank region %d bank %x",
                           region, cpu_bus.data & sram_mask);
             end else begin
                 // Disable SRAM
-                sramEnable[block_info.id] <= sramEnable[block_info.id] & 
+                sramEnable[block_info.id] <= sramEnable[block_info.id] &
                                         ~(8'b00000100 << region);
-                $display("Disable SRAM %x sram pages mask %x", 
+                $display("Disable SRAM %x sram pages mask %x",
                           ((8'b00000100 << region) & sramPages), sramPages);
-                bank[block_info.id][region] <= cpu_bus.data;     
+                bank[block_info.id][region] <= cpu_bus.data;
             end
         end
     end

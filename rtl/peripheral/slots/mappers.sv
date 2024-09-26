@@ -24,14 +24,14 @@ module mappers (
     device_bus msx2_ram_device_out();   // Device bus output for MSX2_RAM mapper
 
     // Instantiate the ASCII8 mapper
-    cart_ascii8 ascii8 (
+    mapper_ascii8 ascii8 (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(ascii8_out)
     );
 
     // Instantiate the ASCII16 mapper
-    cart_ascii16 ascii16 (
+    mapper_ascii16 ascii16 (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(ascii16_out)

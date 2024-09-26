@@ -46,15 +46,15 @@ verilator \
 ../rtl/peripheral/slots/crc32.sv           \
 ../rtl/peripheral/slots/msx_slots.sv       \
 ../rtl/peripheral/slots/subslot.sv         \
-../rtl/peripheral/slots/offset.sv          \
 ../rtl/peripheral/slots/mappers.sv         \
 ../rtl/peripheral/slots/devices.sv         \
+../rtl/peripheral/mapper/offset.sv         \
+../rtl/peripheral/mapper/fm_pac.sv         \
 ./rtl/ascii8.sv \
 ./rtl/ascii16.sv \
 ./rtl/konami.sv \
 ./rtl/konami_scc.sv \
 ./rtl/gamemaster2.sv \
-../rtl/peripheral/slots/fm_pac.sv          \
 ./rtl/msx2_ram.sv \
 ./rtl/opl3.sv \
 ./rtl/scc.sv \

@@ -1,9 +1,8 @@
-/*verilator tracing_off*/
 module mapper_konami_scc (
-   cpu_bus             cpu_bus,        // Interface for CPU communication
-   mapper_out          out,            // Interface for mapper output
-   block_info          block_info,     // Struct containing mapper configuration and parameters 
-   device_bus          device_out      // Interface for device output
+   cpu_bus          cpu_bus,        // Interface for CPU communication
+   mapper_out       out,            // Interface for mapper output
+   block_info       block_info,     // Struct containing mapper configuration and parameters 
+   device_bus       device_out      // Interface for device output
 );
 
     // Control signals for memory mapping
@@ -71,4 +70,5 @@ module mapper_konami_scc (
 
     assign device_out.typ = cs ? DEV_SCC : DEV_NONE;
     assign device_out.en  = cs && sccEnable[block_info.id];
+
 endmodule

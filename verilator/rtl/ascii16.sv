@@ -1,5 +1,5 @@
 /*verilator tracing_off*/
-module cart_ascii16 (
+module mapper_ascii16 (
     cpu_bus cpu_bus,                   // Interface for CPU communication
     block_info block_info,             // Struct containing mapper configuration and parameters
     mapper_out out                     // Interface for mapper output
