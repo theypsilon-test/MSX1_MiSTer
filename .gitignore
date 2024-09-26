@@ -54,3 +54,5 @@ verilator/x64/
 verilator/rom/
 tools/CreateMSXpack/__pycache__/
 *.log
+*.msx
+*.ROM

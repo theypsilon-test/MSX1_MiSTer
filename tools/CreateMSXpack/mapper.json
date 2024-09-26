@@ -10,5 +10,6 @@
   "FMPAC": 8,
   "GM2" : 9,
   "VY0010" : 10,
-  "KONAMI_SCC" : 11
+  "KONAMI_SCC" : 11,
+  "MSX2_RAM" : 12
 }
