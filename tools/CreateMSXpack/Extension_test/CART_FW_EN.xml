@@ -64,6 +64,11 @@
       <mapper>16kb</mapper>   
     </block>
   </fw>
+  <fw name="Mirrored4000">
+    <block start="1" count="3" offset="0">
+      <mapper>OFFSET</mapper>   
+    </block>
+  </fw>
   <fw name="FM_PAC">
     <block>
       <filename>FM_PAC_EN.ROM</filename>
