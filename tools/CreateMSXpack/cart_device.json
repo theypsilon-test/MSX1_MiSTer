@@ -10,6 +10,9 @@
   "KOEI": 15,
   "GM2_ROM": 16,
   "KonamiSCC": 17,
+  "0x0000": 20,
+  "0x4000": 21,
+  "0x8000": 22,
   "KonamiSCC+s": 99,
   "MEGA_FLASH_ROMs": 99
 }

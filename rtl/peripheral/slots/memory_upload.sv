@@ -138,7 +138,7 @@ module memory_upload
         logic [2:0]  head_addr, read_cnt;
         logic [27:0] save_addr, save_addr2;    
         logic [3:0]  ref_device_io;
-        logic        ref_add, ref_sram_add, fw_space, ref_dev_block;
+        logic        ref_add, ref_sram_add, fw_space, ref_dev_block, set_offset;
         logic [1:0]  slot, subslot, block, size, offset, ref_sram, device_num;
         logic [15:0] rom_fw_table;
         mapper_typ_t mapper;
@@ -181,6 +181,7 @@ module memory_upload
                     save_addr2        <= '0;
                     kbd_request       <= '0;
                     ref_dev_block     <= '0;
+                    set_offset        <= '0;
                 end
                 STATE_CLEAN: begin
                     error <= ERR_NONE;
@@ -301,7 +302,8 @@ module memory_upload
                             lookup_RAM[ref_ram].size <= {8'd0, conf[3]};           // Uložíme velikost RAM
                             lookup_RAM[ref_ram].ro <= '0;                          // Vypneme ochranu paměti RAM
                             mapper <= MAPPER_OFFSET;
-                            offset <= '0;                                           // Offset posunu RAM
+                            offset <= '0;                                          // Offset posunu RAM
+                            set_offset <= '1;                                      // Nastav offset
                             ref_add <= '1;                                         // Bude potřeba zvednout referenci
                             data_size <= {3'b0, conf[3],14'd0};                    // Velikost nahrávaných dat
                             pattern <= pattern_t'(conf[4]);
@@ -333,7 +335,8 @@ module memory_upload
                             lookup_RAM[ref_ram].addr <= ram_addr;                  // Uložíme adresu ROM
                             lookup_RAM[ref_ram].ro <= '1;                          // Uložíme ochranu paměti ROM
                             mapper <= MAPPER_OFFSET;
-                            offset <= '0;                                           // Offset posunu RAM
+                            offset <= '0;                                          // Offset posunu RAM
+                            set_offset <= '1;                                      // Nastav offset
                             ref_add <= '1;                                         // Bude potřeba zvednout referenci
                             pattern <= PATTERN_DDR;
                             if (fw_space) begin                                    // Pokud se  bude jednat o ROM z FW musíme dle indexu najít adresu v DDR 
@@ -391,8 +394,10 @@ module memory_upload
                             end
                         end
                         BLOCK_MAPPER: begin
-                            $display("BLOCK MAPPER %d", conf[3]);
+                            $display("BLOCK MAPPER %d offset enable %d offset %d", conf[3], conf[4][7], conf[4][1:0]);
                             mapper <= mapper_typ_t'(conf[3]);
+                            offset <= conf[4][1:0];
+                            set_offset <= conf[4][7];
                             state <= STATE_SET_LAYOUT;
                         end
                         BLOCK_DEVICE: begin
@@ -468,6 +473,7 @@ module memory_upload
                         end
                         ref_add <= '0;
                         ref_sram_add <= '0;
+                        set_offset <= '0;                         
                         state <= next_state;
                         next_state <= STATE_LOAD_CONF;
 
@@ -479,9 +485,13 @@ module memory_upload
                     offset <= offset + 2'b01;
                     
                     if (ref_add) begin                       
-                        slot_layout[{slot, subslot, block}].ref_ram <= ref_ram;
+                        slot_layout[{slot, subslot, block}].ref_ram <= ref_ram;  
+                        $display("BLOCK slot:%x subslot:%x block:%x < reference:%x ", slot, subslot, block, ref_ram );
+                    end
+
+                    if (set_offset) begin
                         slot_layout[{slot, subslot, block}].offset_ram <= offset;
-                        $display("BLOCK slot:%x subslot:%x block:%x < reference:%x offset:%x ", slot, subslot, block, ref_ram, offset );
+                        $display("BLOCK slot:%x subslot:%x block:%x < offset:%x ", slot, subslot, block, offset );
                     end
 
                     if (mapper != MAPPER_NONE) begin

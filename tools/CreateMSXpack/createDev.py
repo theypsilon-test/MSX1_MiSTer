@@ -30,7 +30,7 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
     result = []
     start = int(root.attrib.get("start", 0))
     count = int(root.attrib.get("count", 4))
-
+    offset = int(root.attrib.get("offset", -1))
     for element in root:
         if element.tag in ['SHA1', 'filename', 'device', 'mapper', 'sram', 'pattern', 'ram', 'device_param']:
             block[element.tag] = get_int_or_string_value(element)
@@ -56,7 +56,10 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
 
     if 'mapper' in block:
         if block['mapper'] in constants['mapper']:
-            result.append(create_block_entry(constants, 'MAPPER', address, param1=constants['mapper'][block['mapper']]))
+            param2 = 0
+            if offset > -1 and offset < 4 :
+                param2 = 0x80 + offset
+            result.append(create_block_entry(constants, 'MAPPER', address, param1=constants['mapper'][block['mapper']], param2=param2))
         else:
             logger.warning(f"Unknown mapper type: {block['mapper']} see file mapper.json")
 
