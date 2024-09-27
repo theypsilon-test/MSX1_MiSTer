@@ -59,6 +59,11 @@
       <mapper>OFFSET</mapper>   
     </block>
   </fw>
+  <fw name="16kb">
+    <block start="0" count="4">
+      <mapper>16kb</mapper>   
+    </block>
+  </fw>
   <fw name="FM_PAC">
     <block>
       <filename>FM_PAC_EN.ROM</filename>
