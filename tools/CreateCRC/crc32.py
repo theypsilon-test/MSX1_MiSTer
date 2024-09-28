@@ -152,6 +152,9 @@ def redefine_mapper(mapper_name, file_path):
     
     if mapper_name == "basic":
         return "0x8000"
+
+    if mapper_name == "Mirrored4000":
+        return "0x4000"
     
     return mapper_name
 
