@@ -14,5 +14,6 @@
   "MSX2_RAM" : 12,
   "GENRIC_16KB" : 13,
   "CROSS_BLAIM" : 14,
-  "GENRIC_8KB" : 15
+  "GENRIC_8KB" : 15,
+  "HARRY_FOX" : 16
 }

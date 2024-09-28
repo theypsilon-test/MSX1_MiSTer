@@ -74,6 +74,11 @@
       <mapper>GENRIC_8KB</mapper>   
     </block>
   </fw>
+  <fw name="HarryFox">
+    <block>
+      <mapper>HARRY_FOX</mapper>   
+    </block>
+  </fw>
   <fw name="FM_PAC">
     <block>
       <filename>FM_PAC_EN.ROM</filename>

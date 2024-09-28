@@ -14,8 +14,9 @@
   "0x4000": 21,
   "0x8000": 22,
   "16kb":23,
-  "CrossBlaim":29,
   "Generic8kB": 25,
+  "CrossBlaim":29,
+  "HarryFox": 30,
   "KonamiSCC+s": 99,
   "MEGA_FLASH_ROMs": 99
 }

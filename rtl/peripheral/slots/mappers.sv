@@ -20,6 +20,7 @@ module mappers (
     mapper_out msx2_ram_out();          // Outputs from MSX2_RAM mapper
     mapper_out crossBlaim_out();        // Outputs from crossBlaim mapper
     mapper_out generic_out();           // Outputs from generic mapper
+    mapper_out harryFox_out();          // Outputs from Harry Fox mapper
     device_bus fm_pac_device_out();     // Device bus output for FM-PAC mapper
     device_bus konami_SCC_device_out(); // Device bus output for SCC mapper
     device_bus offset_device_out();     // Device bus output for offset mapper (default mapper)
@@ -94,10 +95,17 @@ module mappers (
         .out(crossBlaim_out)
     );
 
+    // Instantiate the Generic mapper
     mapper_generic mapper_generic (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(generic_out)
+    );
+    // Instantiate the Harry Fox mapper
+    mapper_harryFox mapper_harryFox (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(harryFox_out)
     );
 
     // Data: Use the FM-PAC mapper's data output, assuming it has priority
@@ -105,13 +113,13 @@ module mappers (
 
     // Combine outputs from the mappers
     // Address: Combine addresses from all mappers using a bitwise AND operation
-    assign memory_bus.addr  = ascii8_out.addr & ascii16_out.addr & offset_out.addr & fm_pac_out.addr & konami_out.addr & gm2_out.addr & konami_SCC_out.addr & msx2_ram_out.addr & crossBlaim_out.addr & generic_out.addr;
+    assign memory_bus.addr  = ascii8_out.addr & ascii16_out.addr & offset_out.addr & fm_pac_out.addr & konami_out.addr & gm2_out.addr & konami_SCC_out.addr & msx2_ram_out.addr & crossBlaim_out.addr & generic_out.addr & harryFox_out.addr;
 
     // Read/Write control: Combine read/write signals from all mappers using a bitwise AND operation
     assign memory_bus.rnw   = ascii8_out.rnw & ascii16_out.rnw & offset_out.rnw & fm_pac_out.rnw & gm2_out.rnw & msx2_ram_out.rnw;
 
     // RAM chip select: Combine RAM chip select signals using a bitwise OR operation
-    assign memory_bus.ram_cs    = ascii8_out.ram_cs | ascii16_out.ram_cs | offset_out.ram_cs | fm_pac_out.ram_cs | konami_out.ram_cs | gm2_out.ram_cs | konami_SCC_out.ram_cs | msx2_ram_out.ram_cs | crossBlaim_out.ram_cs | generic_out.ram_cs;
+    assign memory_bus.ram_cs    = ascii8_out.ram_cs | ascii16_out.ram_cs | offset_out.ram_cs | fm_pac_out.ram_cs | konami_out.ram_cs | gm2_out.ram_cs | konami_SCC_out.ram_cs | msx2_ram_out.ram_cs | crossBlaim_out.ram_cs | generic_out.ram_cs | harryFox_out.ram_cs;
 
     // SRAM chip select: Combine SRAM chip select signals using a bitwise OR operation
     assign memory_bus.sram_cs   = ascii8_out.sram_cs | ascii16_out.sram_cs | fm_pac_out.sram_cs | gm2_out.sram_cs;
