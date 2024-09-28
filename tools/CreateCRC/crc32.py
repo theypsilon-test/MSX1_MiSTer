@@ -135,7 +135,7 @@ def redefine_mapper(mapper_name, file_path):
     blocks = file_size // 16384
     if file_size % 16384 :
         blocks = blocks + 1 
-    if mapper_name == "auto":
+    if mapper_name == "auto" or mapper_name == "Normal":
         if file_size > 0x10000 :
             raise InvalidFileSizeException(f"Velikost souboru {file_size} je příliš velká pro mapper {mapper_name}")
         
