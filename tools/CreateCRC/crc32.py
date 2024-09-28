@@ -150,6 +150,9 @@ def redefine_mapper(mapper_name, file_path):
         
         raise InvalidFileSizeException(f"Mapper Auto se dostal do nedefinované hodnoty. Velikost souboru {file_size} je příliš velká pro mapper {mapper_name}")
     
+    if mapper_name == "basic":
+        return "0x8000"
+    
     return mapper_name
 
 def process_files(root_dir, existing_mappers):
