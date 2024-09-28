@@ -73,55 +73,84 @@ def find_files(root_dir, extensions):
             if any(file.endswith(ext) for ext in extensions):
                 yield os.path.join(dirpath, file)
 
-def calculate_values(mapper_name, sram, mode, param, file_size):
+def analyze_rom(rom, offset, pages):
+    """Analýza souboru"""
+   
+    # Kontrola podmínek s podobnou logikou
+    if offset + 1 < len(rom) and (rom[offset] == ord('A') and rom[offset + 1] == ord('B')):
+        offset += 2  # Postup s offsetem podobně jako v C++ kódu
+        
+        for i in range(4):  # xrange není dostupný, proto range
+            if offset + 2 * i + 1 < len(rom):
+                addr = rom[offset + 2 * i] + rom[offset + 2 * i + 1] * 256
+                if addr:
+                    page = (addr >> 14) - (offset >> 14)
+                    if 0 <= page <= 2:
+                        pages[page] += 1
+    
+
+def is_inside(address, window_base, window_size):
+    # Kontrola, zda adresa leží uvnitř daného okna paměti.
+    return window_base <= address < window_base + window_size
+
+def process_rom(file_name):
+    # Načítání obsahu souboru
+    with open(file_name, 'rb') as f:
+        rom = bytearray(f.read())
+
+    # Inicializace pole pages
+    pages = [0, 0, 0]
+
+    # Počet možných ukazatelů rutin
+    if len(rom) >= 0x0010:
+        analyze_rom(rom, 0x0000, pages)
+    if len(rom) >= 0x4010:
+        analyze_rom(rom, 0x4000, pages)
+
+    window_base = 0x0000
+    window_size = 0x10000
+    # Kontrola, zda startovací adresa je uvnitř paměťového okna
+    if not is_inside(0x0000, window_base, window_size):
+        pages[0] = 0
+    if not is_inside(0x4000, window_base, window_size):
+        pages[1] = 0
+    if not is_inside(0x8000, window_base, window_size):
+        pages[2] = 0
+
+    # Preferujeme adresu 0x4000, pak 0x0000 a nakonec 0x8000
+    if pages[1] and (pages[1] >= pages[0]) and (pages[1] >= pages[2]):
+        return 0x4000
+    elif pages[0] and pages[0] >= pages[2]:
+        return 0x0000
+    elif pages[2]:
+        return 0x8000
+
+    # Heuristika nefungovala, vrátíme začátek okna
+    return window_base
+
+def redefine_mapper(mapper_name, file_path):
     """Vypočítá dvě hodnoty na základě názvu mapperu a velikosti souboru."""
-    # Tuto logiku si implementujete sami podle vašich požadavků.
+    file_size = os.path.getsize(file_path)
+    
     blocks = file_size // 16384
     if file_size % 16384 :
         blocks = blocks + 1 
-
-    if mapper_name == "0x0000":
-        if blocks > 4 :
-            raise InvalidFileSizeException(f"Velikost souboru {file_size} je příliš velká pro  mapper {mapper_name}")
+    if mapper_name == "auto":
+        if file_size > 0x10000 :
+            raise InvalidFileSizeException(f"Velikost souboru {file_size} je příliš velká pro mapper {mapper_name}")
         
-        mode = 0
-        param = 0
-        for i in range(blocks):
-            mode |= 2 << (2*i)
-            param |= i << (2*i)
+        start = process_rom(file_path)
 
-        #print (f"Mapper {mapper_name} Velikost {file_size} mode: {mode:#x} param: {param:#x}")
-    elif mapper_name == "0x4000":
-        if blocks > 4 :
-            raise InvalidFileSizeException(f"Velikost souboru {file_size} je příliš velká pro  mapper {mapper_name}")
+        if start == 0x0000:
+            return "0x0000"
+        if start == 0x4000:
+            return "0x4000"
+        if start == 0x8000:
+            return "0x8000"
         
-        mode = 0
-        param = 0
-        count = blocks
-
-        if blocks == 1 : 
-            count = 4           
-        if blocks == 2 : 
-            count = 4
-        
-        for i in range(count):
-            offset = i & (blocks - 1)
-            mode |= 2 << (2 * ((i + 1) & 3))
-            param |= offset << (2 * ((i + 1) & 3))
-        #print (f"Mapper {mapper_name} Velikost {file_size} mode: {mode:#x} param: {param:#x}")
-
-    elif mapper_name == "0x8000":
-        if blocks > 2 :
-            raise InvalidFileSizeException(f"Velikost souboru {file_size} je příliš velká pro  mapper {mapper_name}")
-        
-        mode = 0
-        param = 0
-        for i in range(blocks):
-            mode |= 2 << (2 * (i + 2))
-            param |= i << ( 2 * (i + 2))
-        #print (f"Mapper {mapper_name} Velikost {file_size} mode: {mode:#x} param: {param:#x}")
-
-    return sram, mode, param
+        raise InvalidFileSizeException(f"Mapper Auto se dostal do nedefinované hodnoty. Velikost souboru {file_size} je příliš velká pro mapper {mapper_name}")
+    
+    return mapper_name
 
 def process_files(root_dir, existing_mappers):
     """Zpracovává soubory, vypočítává CRC32 a připravuje binární výstup."""
@@ -146,13 +175,12 @@ def process_files(root_dir, existing_mappers):
     # Připraví binární data
     binary_data = bytearray()
     for file_path, file_name, crc32_checksum, mapper_name in file_data:
-        mapper_values = updated_mappers[mapper_name]
-        file_size = os.path.getsize(file_path)
         try:
-            sram, mode, param = calculate_values(mapper_name, mapper_values[1], mapper_values[2], mapper_values[3], file_size)
+            mapper_name = redefine_mapper(mapper_name, file_path )
+            mapper_values = updated_mappers[mapper_name]
             binary_data.extend(struct.pack('<I', crc32_checksum))
             binary_data.extend(struct.pack('B', mapper_values[0]))  # Pouze první hodnota jako ID mapperu
-            binary_data.extend(struct.pack('BBB', sram, param, mode))  
+            binary_data.extend(struct.pack('BBB',  mapper_values[1], 0, 0))  
         except InvalidFileSizeException as e:
                 print(f"Chyba při zpracování souboru {file_name}: {e}")
 
