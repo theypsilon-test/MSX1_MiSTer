@@ -60,8 +60,18 @@
     </block>
   </fw>
   <fw name="16kb">
-    <block start="0" count="4">
-      <mapper>16kb</mapper>   
+    <block>
+      <mapper>GENRIC_16KB</mapper>   
+    </block>
+  </fw>
+  <fw name="CrossBlaim">
+    <block>
+      <mapper>CROSS_BLAIM</mapper>   
+    </block>
+  </fw>
+  <fw name="Generic8kB">
+    <block>
+      <mapper>GENRIC_8KB</mapper>   
     </block>
   </fw>
   <fw name="FM_PAC">

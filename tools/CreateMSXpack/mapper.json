@@ -12,6 +12,7 @@
   "VY0010" : 10,
   "KONAMI_SCC" : 11,
   "MSX2_RAM" : 12,
-  "16kb" : 13,
-  "CROSS_BLAIM" : 14
+  "GENRIC_16KB" : 13,
+  "CROSS_BLAIM" : 14,
+  "GENRIC_8KB" : 15
 }
