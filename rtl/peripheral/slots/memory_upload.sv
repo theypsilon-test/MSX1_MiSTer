@@ -137,7 +137,7 @@ module memory_upload
         logic [2:0]  head_addr, read_cnt;
         logic [27:0] save_addr, save_addr2;    
         logic [3:0]  ref_device_io;
-        logic        ref_add, ref_sram_add, fw_space, ref_dev_block, set_offset;
+        logic        ref_add, ref_sram_add, fw_space, ref_dev_block, ref_dev_mem, set_offset;
         logic [1:0]  slot, subslot, block, size, offset, ref_sram, device_num;
         logic [15:0] rom_fw_table;
         mapper_typ_t mapper;
@@ -180,6 +180,7 @@ module memory_upload
                     save_addr2        <= '0;
                     kbd_request       <= '0;
                     ref_dev_block     <= '0;
+                    ref_dev_mem       <= '0;
                     set_offset        <= '0;
                 end
                 STATE_CLEAN: begin
@@ -293,6 +294,7 @@ module memory_upload
                     mapper <= MAPPER_NONE;
                     device <= DEV_NONE;
                     ref_dev_block <= '0;
+                    ref_dev_mem   <= '0;
                     next_state <= STATE_READ_CONF;
                     case(block_t'(conf[2]))
                         BLOCK_RAM: begin
@@ -437,6 +439,11 @@ module memory_upload
                             state <= STATE_SET_LAYOUT;
                             ref_dev_block <= 1'b1;
                         end
+                        BLOCK_REF_MEM: begin
+                            $display("BLOCK_REF_MEM ref to block:%x", conf[3][1:0]); 
+                            state <= STATE_SET_LAYOUT;
+                            ref_dev_mem <= 1'b1;
+                        end
                         default: begin
                             $display("BLOCK UNKNOWN");
                             error <= ERR_NOT_SUPPORTED_BLOCK;
@@ -518,6 +525,14 @@ module memory_upload
                         slot_layout[{slot, subslot, block}].device_num <= slot_layout[{slot, subslot, conf[3][1:0]}].device_num;
                         slot_layout[{slot, subslot, block}].device     <= slot_layout[{slot, subslot, conf[3][1:0]}].device;
                         $display("BLOCK slot:%x subslot:%x block:%x < device:%x(id:%d) ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].device, slot_layout[{slot, subslot, conf[3][1:0]}].device_num );
+                    end
+                    if (ref_dev_mem) begin
+                        slot_layout[{slot, subslot, block}].ref_ram <= slot_layout[{slot, subslot, conf[3][1:0]}].ref_ram;
+                        slot_layout[{slot, subslot, block}].mapper <= slot_layout[{slot, subslot, conf[3][1:0]}].mapper;
+                        slot_layout[{slot, subslot, block}].offset_ram <= slot_layout[{slot, subslot, conf[3][1:0]}].offset_ram;
+                        $display("BLOCK slot:%x subslot:%x block:%x < reference:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].ref_ram);
+                        $display("BLOCK slot:%x subslot:%x block:%x < offset:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].offset_ram);
+                        $display("BLOCK slot:%x subslot:%x block:%x < mapper:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].mapper);
                     end
                     // slot_layout[{slotSubslot, i[1:0]}].external
                     if (subslot != 2'b00) begin                        

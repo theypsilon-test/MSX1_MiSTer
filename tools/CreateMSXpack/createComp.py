@@ -232,6 +232,17 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
                         print(f"Error: reference type '{typ}' value to_block is not integger in slot {slot}/{subslot}") 
                 else :
                     print(f"Error: reference type '{typ}' missing value to_block in slot {slot}/{subslot}") 
+            elif typ == "MEMORY" :
+                if "to_block" in attributes :
+                    value = convert_to_int(attributes["to_block"])
+                    if value is not None:
+                        params[0] = value & 3
+                        add_block_type_to_file(address, "REF_MEM", params, outfile, constants)
+                    else :
+                        print(f"Error: reference type '{typ}' value to_block is not integger in slot {slot}/{subslot}") 
+                else :
+                    print(f"Error: reference type '{typ}' missing value to_block in slot {slot}/{subslot}") 
+
             else :
                 print(f"Error: unknown reference type '{typ}' in slot {slot}/{subslot}") 
         
