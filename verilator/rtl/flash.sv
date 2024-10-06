@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module flash (
 	input             clk,
 	input             clk_sdram,

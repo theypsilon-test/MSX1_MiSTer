@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module tv80n (/*AUTOARG*/
   // Outputs
   m1_n, mreq_n, iorq_n, rd_n, wr_n, rfsh_n, halt_n, busak_n, A, dout,

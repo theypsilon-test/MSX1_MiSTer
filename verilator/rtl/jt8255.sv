@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module jt8255(
     input               rst,
     input               clk,

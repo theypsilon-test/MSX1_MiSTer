@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module vdp18_core #(
   parameter integer compat_rgb_g = 0
 )(

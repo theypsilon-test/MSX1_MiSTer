@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module VDP
 (
 input        CLK21M,

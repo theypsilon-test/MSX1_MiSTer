@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module spram (
   input                   clock,
   input                   wren /* verilator public */,

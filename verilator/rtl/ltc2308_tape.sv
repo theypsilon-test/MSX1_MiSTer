@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module ltc2308_tape #(parameter HIST_LOW = 16, HIST_HIGH = 64, ADC_RATE = 48000, CLK_RATE = 50000000)
 (
 	input        reset,

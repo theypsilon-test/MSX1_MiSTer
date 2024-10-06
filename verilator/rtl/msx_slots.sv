@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module msx_slots
 (
    input                       clk,

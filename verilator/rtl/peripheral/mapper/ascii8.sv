@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module mapper_ascii8 (
     cpu_bus cpu_bus,                   // Interface for CPU communication
     block_info block_info,             // Struct containing mapper configuration and parameters

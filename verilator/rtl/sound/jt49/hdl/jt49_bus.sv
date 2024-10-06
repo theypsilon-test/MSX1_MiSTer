@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module jt49_bus ( // note that input ports are not multiplexed
     input            rst_n,
     input            clk,    // signal on positive edge

@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module video_mixer
 #(
 	parameter LINE_LENGTH  = 768,

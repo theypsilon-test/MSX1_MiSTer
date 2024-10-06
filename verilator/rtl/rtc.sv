@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module rtc
 (
         input clk21m,

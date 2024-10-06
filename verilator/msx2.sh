@@ -65,6 +65,11 @@ verilator \
 ../rtl/video/VDPv/vdp_wait_control.sv      \
 ../rtl/video/VDPv/vdp_ram.sv               \
 \
+./rtl/peripheral/mapper/crossBlaim.sv     \
+./rtl/peripheral/mapper/generic.sv        \
+./rtl/peripheral/mapper/harryFox.sv       \
+./rtl/peripheral/mapper/zemina80.sv       \
+./rtl/peripheral/mapper/zemina90.sv       \
 ./rtl/peripheral/mapper/fm_pac.sv         \
 ./rtl/peripheral/mapper/ascii8.sv         \
 ./rtl/peripheral/mapper/ascii16.sv        \
@@ -72,6 +77,7 @@ verilator \
 ./rtl/peripheral/mapper/konami_scc.sv     \
 ./rtl/peripheral/mapper/gamemaster2.sv    \
 ./rtl/peripheral/mapper/msx2_ram.sv       \
+./rtl/peripheral/dev/zemina90.sv          \
 ./rtl/peripheral/dev/opl3.sv              \
 ./rtl/peripheral/dev/scc.sv               \
 ./rtl/sound/scc_wave.sv                   \

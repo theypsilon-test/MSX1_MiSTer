@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module mapper_konami
 (
     cpu_bus cpu_bus,                   // Interface for CPU communication

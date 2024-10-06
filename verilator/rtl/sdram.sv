@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module sdram
 (
     input             init,        // reset to initialize RAM

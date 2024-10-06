@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module mapper_fm_pac
 (
     cpu_bus cpu_bus,                   // Interface for CPU communication

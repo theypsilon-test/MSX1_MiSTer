@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module mapper_gamemaster2
 (
     cpu_bus     cpu_bus,   // Interface for CPU communication

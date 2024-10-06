@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module scc_wave
 (
    input                clk,
