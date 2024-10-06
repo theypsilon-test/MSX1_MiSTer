@@ -43,10 +43,10 @@ module mapper_crossBlaim (
     wire [26:0] ram_addr  = {11'b0, bank_base, cpu_bus.addr[13:0]};
 
     // Check if the calculated RAM address is within the valid range of the ROM size
-    wire ram_valid = (ram_addr < {2'b00, block_info.rom_size}) && ~bank_unmaped;
+    wire ram_valid = (ram_addr < {2'b00, block_info.rom_size}) && ~bank_unmaped && cs && cpu_bus.rd;
 
     // Assign the final outputs for the mapper
-    assign out.ram_cs  = cs && ram_valid && cpu_bus.rd;
-    assign out.addr    = cs && ram_valid && cpu_bus.rd ? ram_addr : {27{1'b1}};
+    assign out.ram_cs  = ram_valid;
+    assign out.addr    = ram_valid ? ram_addr : {27{1'b1}};
 
 endmodule
