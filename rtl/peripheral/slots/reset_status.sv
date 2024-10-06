@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module dev_reset_status
 (
    input                   clk,

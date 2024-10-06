@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module devices (
     cpu_bus         cpu_bus,            // Interface for CPU communication
     device_bus      device_bus,         // Interface for device control
@@ -18,7 +17,6 @@ module devices (
     assign output_rq = scc_output_rq | vy0010_output_rq | msx2_ram_output_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper;
 
-    /*verilator tracing_off*/
     wire signed [15:0] opl3_sound;
     opl3 OPL3
     (
@@ -42,7 +40,7 @@ module devices (
         .data(scc_data),
         .output_rq(scc_output_rq)
     );
-    /*verilator tracing_off*/
+
     wire [7:0] msx2_ram_data_to_mapper;
     wire [7:0] msx2_ram_data;
     wire       msx2_ram_output_rq;
@@ -57,7 +55,6 @@ module devices (
         .data_to_mapper(msx2_ram_data_to_mapper)
     );
 
-/*verilator tracing_off*/
     wire [7:0] vy0010_data;
     wire       vy0010_output_rq;
     vy0010 vy0010

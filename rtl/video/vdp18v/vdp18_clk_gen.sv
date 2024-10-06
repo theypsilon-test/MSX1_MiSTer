@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module vdp18_clk_gen (
     input  logic clk_i,
     input  logic reset_i,

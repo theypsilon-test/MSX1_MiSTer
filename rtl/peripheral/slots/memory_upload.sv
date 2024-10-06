@@ -1,4 +1,3 @@
-/*verilator tracing_on*/
 module memory_upload
 (
     input                       clk,

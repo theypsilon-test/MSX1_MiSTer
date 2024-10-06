@@ -33,7 +33,6 @@
 //  2007/01/31  modified by t.hara
 //  2023/05/24  rewriting from VHDL to SystemVerilog, added scc+ mode by Molekula
 
-/*verilator tracing_off*/
 module scc_wave
 (
    input                clk,

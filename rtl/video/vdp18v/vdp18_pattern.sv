@@ -43,7 +43,6 @@
 // you have the latest version of this file.
 //
 //-------------------------------------------------------------------------------
-/*verilator tracing_off*/
 module vdp18_pattern (
   input  logic        clk_i,
   input  logic        clk_en_5m37_i,

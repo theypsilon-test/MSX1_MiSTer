@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 //============================================================================
 //
 //  This program is free software; you can redistribute it and/or modify it
@@ -172,7 +171,6 @@ module emu
    input         OSD_STATUS
 );
 
-/*verilator tracing_off*/
 
 ///////// Default values for ports not used in this core /////////
 assign ADC_BUS  = 'Z;
@@ -303,7 +301,6 @@ assign status_menumask[5] = sram_A_select_hide;
 assign status_menumask[6] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
 assign status_menumask[15:7] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
-/*verilator tracing_off*/
 hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 (
    .clk_sys(clk21m),
@@ -341,7 +338,6 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 /////////////////   CONFIG   /////////////////
 wire [5:0] mapper_A, mapper_B;
 wire       reload, sram_A_select_hide, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
-/*verilator tracing_off*/
 msx_config msx_config 
 (
    .clk(clk21m),
@@ -359,7 +355,6 @@ msx_config msx_config
    .fdc_enabled(fdc_enabled),
    .msxConfig(msxConfig)
 );
-/*verilator tracing_off*/
 /////////////////   CLOCKS   /////////////////
 wire clk21m, clk_sdram, locked_sdram;
 wire ce_10m7_p, ce_10m7_n, ce_5m39_p, ce_5m39_n, ce_3m58_p, ce_3m58_n, ce_10hz;
@@ -396,7 +391,6 @@ wire   [3:0] msx_dev_ref_ram[8];
 mapper_typ_t selected_mapper[2];
 assign selected_mapper[0] = cart_conf[0].selected_mapper;
 assign selected_mapper[1] = cart_conf[1].selected_mapper;
-/*verilator tracing_off*/
 msx MSX
 (
    .HS(hsync),
@@ -433,7 +427,6 @@ msx MSX
    .joy1(joy1[5:0]),
    .*
 );
-/*verilator tracing_off*/
 //////////////////   SD   ///////////////////
 wire sdclk;
 wire sdmosi;
@@ -596,7 +589,6 @@ wire  [8:0] kbd_addr;
 wire        kbd_request, kbd_we;
 wire        load_sram;
 wire  [1:0] rom_loaded;
-/*verilator tracing_on*/
 memory_upload memory_upload(
     .clk(clk21m),
     .reset_rq(reset_rq),
@@ -637,7 +629,6 @@ memory_upload memory_upload(
     .led_out(LED_POWER),
     .io_device(io_device)
 );
-/*verilator tracing_off*/
 wire [27:0] ddr3_addr, ddr3_addr_download, ddr3_addr_cas;
 wire  [7:0] ddr3_dout, ddr3_din_download;
 wire        ddr3_rd, ddr3_rd_download, ddr3_rd_cas, ddr3_wr_download, ddr3_ready, ddr3_request_download;

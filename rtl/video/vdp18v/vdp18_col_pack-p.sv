@@ -7,7 +7,6 @@
 // All rights reserved
 //
 //-------------------------------------------------------------------------------
-/*verilator tracing_off*/
 package vdp18_col_pack;
 
   // Define constants for RGB indices

@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 module mapper_mfrsd0
 (
    input               clk,

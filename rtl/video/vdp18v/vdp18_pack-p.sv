@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 package vdp18_pack;
 
   typedef enum logic [1:0] {

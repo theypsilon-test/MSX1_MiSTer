@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 parameter CONF_STR_SLOT_A = {
     "H2O[19:17],SLOT A,ROM,SCC,SCC+,FM-PAC,MegaFlashROM SCC+ SD,GameMaster2,FDC,Empty;",
     "h2O[19:17],SLOT A,ROM,SCC,SCC+,FM-PAC,MegaFlashROM SCC+ SD,GameMaster2,Empty;"
@@ -33,7 +32,6 @@ module msx_config
     output MSX::user_config_t msxConfig,
     output                    reload
 );
-/*verilator tracing_off*/
 wire [2:0] slot_A_select   = HPS_status[19:17];
 wire [2:0] slot_B_select   = HPS_status[31:29];
 wire [2:0] sram_A_select   = HPS_status[28:26];

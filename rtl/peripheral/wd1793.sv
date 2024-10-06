@@ -21,7 +21,6 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 //============================================================================
-/*verilator tracing_off*/
 module wd1793 #(parameter RWMODE=0, EDSK=1)
 (
 	input        clk_sys,     // sys clock

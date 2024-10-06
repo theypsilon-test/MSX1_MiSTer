@@ -1,4 +1,3 @@
-/*verilator tracing_off*/
 //
 //  vdp.vhd
 //   Top VHDL Source of ESE-VDP.

@@ -43,7 +43,6 @@
 // you have the latest version of this file.
 //
 //-------------------------------------------------------------------------------
-/*verilator tracing_off*/ 
 import vdp18_pack::*;
 
 module vdp18_ctrl (

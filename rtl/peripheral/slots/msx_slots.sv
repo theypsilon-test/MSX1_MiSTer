@@ -74,5 +74,5 @@ module msx_slots (
         .data(mapper_data),
         .data_to_mapper(data_to_mapper)
     );
-/*verilator tracing_off*/
+
 endmodule

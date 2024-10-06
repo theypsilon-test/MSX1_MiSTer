@@ -72,7 +72,6 @@ module msx
    output             [7:0] sd_buff_din,
    input                    sd_buff_wr
 );
-/*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
 //  -- Audio MIX
 //  -----------------------------------------------------------------------------
@@ -113,7 +112,6 @@ t80pa #(.Mode(0)) T80
    .DO(d_from_cpu)
 );
 */
-/*verilator tracing_off*/
 tv80n Z80
 (
    .reset_n(~reset),
@@ -134,7 +132,6 @@ tv80n Z80
    .di(d_to_cpu),
    .dout(d_from_cpu)
 );
-/*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
 //  -- WAIT CPU
 //  -----------------------------------------------------------------------------
@@ -178,13 +175,11 @@ assign active_slot =    ~map_valid         ? 2'b00         :
 //  -----------------------------------------------------------------------------
 //  -- IO Decoder
 //  -----------------------------------------------------------------------------
-/*verilator tracing_off*/
 wire psg_n  = ~((a[7:3] == 5'b10100)   & ~iorq_n & m1_n);
 wire ppi_n  = ~((a[7:3] == 5'b10101)   & ~iorq_n & m1_n);
 wire vdp_en =   (a[7:3] == 5'b10011)   & ~iorq_n & m1_n ;
 wire rtc_en =   (a[7:1] == 7'b1011010) & ~iorq_n & m1_n & bios_config.MSX_typ == MSX2;
 
-/*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
 //  -- 82C55 PPI
 //  -----------------------------------------------------------------------------
@@ -224,7 +219,6 @@ assign d_to_cpu = rd_n             ? 8'hFF           :
 //  -----------------------------------------------------------------------------
 //  -- Keyboard decoder
 //  -----------------------------------------------------------------------------
-/*verilator tracing_off*/
 wire [7:0] d_from_kb;
 keyboard msx_key
 (
@@ -238,7 +232,6 @@ keyboard msx_key
    .kbd_we(kbd_we),
    .kbd_request(kbd_request)
 );
-/*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
 //  -- Sound AY-3-8910
 //  -----------------------------------------------------------------------------
@@ -307,7 +300,6 @@ rtc rtc
    .dbi(d_from_rtc),
    .dbo(d_from_cpu)
 );
-/*verilator tracing_off*/
 //  -----------------------------------------------------------------------------
 //  -- Video
 //  -----------------------------------------------------------------------------
@@ -365,7 +357,6 @@ always @(posedge clk21m) begin
 end
 wire req = ~((iorq_n & mreq_n) | (wr_n & rd_n) | iack);
 
-/*verilator tracing_off*/
 wire        int_n_vdp18;
 wire  [7:0] d_from_vdp18;
 wire  [7:0] R_vdp18, G_vdp18, B_vdp18;
@@ -399,7 +390,6 @@ vdp18_core #(.compat_rgb_g(0)) vdp_vdp18
    .blank_n_o(DE_vdp18),
    .is_pal_i(msxConfig.video_mode == PAL)
 );
-/*verilator tracing_off*/
 wire        int_n_vdp;
 wire  [7:0] d_from_vdp;
 wire  [5:0] R_vdp, G_vdp, B_vdp;
@@ -465,7 +455,6 @@ spram #(.addr_width(16),.mem_name("VRA3")) vram_hi
    .q(VRAM_di_hi)
 );
 
-/*verilator tracing_off*/
 wire signed [15:0] device_sound;
 device_bus device_bus();
 cpu_bus cpu_bus();
@@ -500,7 +489,6 @@ assign image_info.mounted = img_mounted;
 assign image_info.size = img_size;
 assign image_info.readonly = img_readonly;
 
-/*verilator tracing_off*/
 wire       device_output_rq;
 wire [7:0] device_data;
 wire [7:0] data_to_mapper;
@@ -522,7 +510,6 @@ devices devices
 wire         [7:0] d_from_slots;
 wire signed [15:0] cart_sound;
 
-/*verilator tracing_off*/
 wire [1:0] active_subslot;
 wire [7:0] mapper_subslot_data;
 wire mapper_subslot_rq;
@@ -564,5 +551,4 @@ msx_slots msx_slots
    .bios_config(bios_config),
    .data_to_mapper(data_to_mapper)
 );
-/*verilator tracing_off*/
 endmodule

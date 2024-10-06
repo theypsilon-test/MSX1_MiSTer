@@ -1,5 +1,4 @@
 // SPI module
-/*verilator tracing_off*/
 module spi_divmmc
 (
 	input        clk_sys,
