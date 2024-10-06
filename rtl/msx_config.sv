@@ -60,7 +60,7 @@ assign msxConfig.border = HPS_status[41];
 assign ROM_A_load_hide    = cart_conf[0].typ != CART_TYP_ROM;
 assign ROM_B_load_hide    = cart_conf[1].typ != CART_TYP_ROM;
 assign sram_A_select_hide = cart_conf[0].typ != CART_TYP_ROM | mapper_A_select == 4'd0; 
-assign fdc_enabled = bios_config.use_FDC | cart_conf[0].typ == CART_TYP_FDC;
+assign fdc_enabled = bios_config.MSX_typ != MSX1 || cart_conf[0].typ == CART_TYP_FDC;
 
 
 logic  [18:0] lastConfig;
