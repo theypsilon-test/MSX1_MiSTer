@@ -19,6 +19,10 @@
   "HarryFox": 30,
   "Zemina80": 31,
   "Zemina90": 32,
+  "ASCII16SRAM2": 33,
+  "ASCII16SRAM8": 34,
+  "ASCII8SRAM2": 35,
+  "ASCII8SRAM8": 36,
   "KonamiSCC+s": 99,
   "MEGA_FLASH_ROMs": 99
 }

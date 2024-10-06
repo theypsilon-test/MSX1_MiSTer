@@ -10,9 +10,33 @@
       <mapper>ASCII8</mapper>   
     </block>
   </fw>
+  <fw name="ASCII8SRAM2">
+    <block>
+      <mapper>ASCII8</mapper>   
+      <sram>2048</sram>
+    </block>
+  </fw>
+  <fw name="ASCII8SRAM8">
+    <block>
+      <mapper>ASCII8</mapper>   
+      <sram>8192</sram>
+    </block>
+  </fw>
   <fw name="ASCII16">
     <block>
       <mapper>ASCII16</mapper>   
+    </block>
+  </fw>
+  <fw name="ASCII16SRAM2">
+    <block>
+      <mapper>ASCII16</mapper>
+      <sram>2048</sram>
+    </block>
+  </fw>
+  <fw name="ASCII16SRAM8">
+    <block>
+      <mapper>ASCII16</mapper>   
+      <sram>8192</sram>
     </block>
   </fw>
   <fw name="WIZARDRY">
