@@ -31,7 +31,7 @@ wire nu       = cs & cpu_bus.addr[13:0] == 14'h3ffe;
 wire status   = cs & cpu_bus.addr[13:0] == 14'h3fff; 
 
 always @(posedge cpu_bus.reset, posedge cpu_bus.clk) begin
-   if (cpu_bus.clk)
+   if (cpu_bus.reset)
       sideReg <= 8'd0;
    else 
       if (ck1 & cpu_bus.wr)
