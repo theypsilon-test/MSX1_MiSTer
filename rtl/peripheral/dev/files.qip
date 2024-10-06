@@ -3,3 +3,4 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) o
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) scc.sv                             ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) vy-0010.sv                         ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) msx2_ram.sv                        ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) zemina90.sv                        ]

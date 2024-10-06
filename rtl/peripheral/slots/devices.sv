@@ -15,7 +15,7 @@ module devices (
     assign sound = opl3_sound + scc_sound ;
     assign data = scc_data & vy0010_data & msx2_ram_data;
     assign output_rq = scc_output_rq | vy0010_output_rq | msx2_ram_output_rq;
-    assign data_to_mapper = msx2_ram_data_to_mapper;
+    assign data_to_mapper = msx2_ram_data_to_mapper & zemina_data_to_mapper;
 
     wire signed [15:0] opl3_sound;
     opl3 OPL3
@@ -53,6 +53,16 @@ module devices (
         .data(msx2_ram_data),
         .output_rq(msx2_ram_output_rq),
         .data_to_mapper(msx2_ram_data_to_mapper)
+    );
+
+    wire [7:0] zemina_data_to_mapper;
+    zemina90 zemina90
+    (
+        .cpu_bus(cpu_bus),
+        .device_bus(device_bus),
+        .dev_enable(dev_enable),
+        .io_device(io_device),
+        .data_to_mapper(zemina_data_to_mapper)
     );
 
     wire [7:0] vy0010_data;

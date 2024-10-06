@@ -9,3 +9,5 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) o
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) crossBlaim.sv                      ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) generic.sv                         ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) harryFox.sv                        ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) zemina80.sv                        ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) zemina90.sv                        ]

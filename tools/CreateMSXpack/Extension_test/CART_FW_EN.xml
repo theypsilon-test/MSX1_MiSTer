@@ -79,6 +79,17 @@
       <mapper>HARRY_FOX</mapper>   
     </block>
   </fw>
+  <fw name="Zemina80">
+    <block>
+      <mapper>ZEMINA80</mapper>   
+    </block>
+  </fw>
+  <fw name="Zemina90">
+    <block>
+      <mapper>ZEMINA90</mapper>
+      <device mask="0xFF" port="0x77">ZEMINA90</device>
+    </block>
+  </fw>
   <fw name="FM_PAC">
     <block>
       <filename>FM_PAC_EN.ROM</filename>

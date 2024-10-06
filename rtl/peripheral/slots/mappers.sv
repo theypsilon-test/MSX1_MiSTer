@@ -19,10 +19,13 @@ module mappers (
     mapper_out crossBlaim_out();        // Outputs from crossBlaim mapper
     mapper_out generic_out();           // Outputs from generic mapper
     mapper_out harryFox_out();          // Outputs from Harry Fox mapper
+    mapper_out zeimna80_out();          // Outputs from Zemina 80 in 1 mapper
+    mapper_out zemina90_out();          // Outputs from Zemina 90 in 1 mapper
     device_bus fm_pac_device_out();     // Device bus output for FM-PAC mapper
     device_bus konami_SCC_device_out(); // Device bus output for SCC mapper
     device_bus offset_device_out();     // Device bus output for offset mapper (default mapper)
     device_bus msx2_ram_device_out();   // Device bus output for MSX2_RAM mapper
+    device_bus zemina90_device_out();   // Device bus output for Zemina 90 in 1 mapper
 
     // Instantiate the ASCII8 mapper
     mapper_ascii8 ascii8 (
@@ -105,18 +108,34 @@ module mappers (
         .out(harryFox_out)
     );
 
+    // Instantiate the Zemina80in1 mapper
+    mapper_zemina80 mapper_zemina80 (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(zeimna80_out)
+    );
+
+    // Instantiate the MSX2 RAM mapper
+    mapper_zemina90 mapper_zemina90 (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(zemina90_out),
+        .device_out(zemina90_device_out),
+        .data_to_mapper(data_to_mapper)
+    );
+    
     // Data: Use the FM-PAC mapper's data output, assuming it has priority
     assign data = fm_pac_out.data;  // FM-PAC mapper has priority for data output
 
     // Combine outputs from the mappers
     // Address: Combine addresses from all mappers using a bitwise AND operation
-    assign memory_bus.addr  = ascii8_out.addr & ascii16_out.addr & offset_out.addr & fm_pac_out.addr & konami_out.addr & gm2_out.addr & konami_SCC_out.addr & msx2_ram_out.addr & crossBlaim_out.addr & generic_out.addr & harryFox_out.addr;
+    assign memory_bus.addr  = ascii8_out.addr & ascii16_out.addr & offset_out.addr & fm_pac_out.addr & konami_out.addr & gm2_out.addr & konami_SCC_out.addr & msx2_ram_out.addr & crossBlaim_out.addr & generic_out.addr & harryFox_out.addr & zeimna80_out.addr & zemina90_out.addr;
 
     // Read/Write control: Combine read/write signals from all mappers using a bitwise AND operation
     assign memory_bus.rnw   = ascii8_out.rnw & ascii16_out.rnw & offset_out.rnw & fm_pac_out.rnw & gm2_out.rnw & msx2_ram_out.rnw;
 
     // RAM chip select: Combine RAM chip select signals using a bitwise OR operation
-    assign memory_bus.ram_cs    = ascii8_out.ram_cs | ascii16_out.ram_cs | offset_out.ram_cs | fm_pac_out.ram_cs | konami_out.ram_cs | gm2_out.ram_cs | konami_SCC_out.ram_cs | msx2_ram_out.ram_cs | crossBlaim_out.ram_cs | generic_out.ram_cs | harryFox_out.ram_cs;
+    assign memory_bus.ram_cs    = ascii8_out.ram_cs | ascii16_out.ram_cs | offset_out.ram_cs | fm_pac_out.ram_cs | konami_out.ram_cs | gm2_out.ram_cs | konami_SCC_out.ram_cs | msx2_ram_out.ram_cs | crossBlaim_out.ram_cs | generic_out.ram_cs | harryFox_out.ram_cs | zeimna80_out.ram_cs | zemina90_out.ram_cs;
 
     // SRAM chip select: Combine SRAM chip select signals using a bitwise OR operation
     assign memory_bus.sram_cs   = ascii8_out.sram_cs | ascii16_out.sram_cs | fm_pac_out.sram_cs | gm2_out.sram_cs;
