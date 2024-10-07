@@ -9,8 +9,7 @@ module vy0010
    output          output_rq
 );
 
-wire cs = device_bus.typ == DEV_VY0010 && device_bus.num == 0;      //Only first instance
-
+wire cs = (device_bus.typ == DEV_VY0010) && (device_bus.num == 0); // Only first instance
 
 logic image_mounted = 1'b0;
 logic layout = 1'b0;
@@ -18,42 +17,46 @@ logic [7:0] sideReg, driveReg;
 
 always @(posedge cpu_bus.clk) begin
    if (image_info.mounted) begin
-      image_mounted <= image_info.size != 0;
-      layout <= image_info.size > 'h5A000 ? 1'b0 : 1'b1;
+      image_mounted <= (image_info.size != 0);
+      layout <= (image_info.size > 'h5A000) ? 1'b0 : 1'b1;
    end
 end
 
-wire wdcs     = cs & cpu_bus.addr[13:2] == 12'b111111111110; 
-wire ck1      = cs & cpu_bus.addr[13:0] == 14'h3ffc; 
-wire ck2      = cs & cpu_bus.addr[13:0] == 14'h3ffd; 
-wire nu       = cs & cpu_bus.addr[13:0] == 14'h3ffe;
-wire status   = cs & cpu_bus.addr[13:0] == 14'h3fff; 
+wire wdcs     = cs & (cpu_bus.addr[13:2] == 12'b111111111110);
+wire ck1      = cs & (cpu_bus.addr[13:0] == 14'h3ffc);
+wire ck2      = cs & (cpu_bus.addr[13:0] == 14'h3ffd);
+wire nu       = cs & (cpu_bus.addr[13:0] == 14'h3ffe);
+wire status   = cs & (cpu_bus.addr[13:0] == 14'h3fff);
 
-always @(posedge cpu_bus.reset, posedge cpu_bus.clk) begin
+always @(posedge cpu_bus.clk) begin
    if (cpu_bus.reset)
       sideReg <= 8'd0;
-   else 
-      if (ck1 & cpu_bus.wr)
-         sideReg     <= cpu_bus.data;
+   else if (ck1 & cpu_bus.wr)
+      sideReg <= cpu_bus.data;
 end
 
-always @(posedge cpu_bus.reset, posedge cpu_bus.clk) begin
-   if (cpu_bus.reset) begin
-      driveReg    <= 8'd0;
-   end else 
-      if (ck2 & cpu_bus.wr) begin
-         driveReg <= cpu_bus.data;
-      end
+always @(posedge cpu_bus.clk) begin
+   if (cpu_bus.reset)
+      driveReg <= 8'd0;
+   else if (ck2 & cpu_bus.wr)
+      driveReg <= cpu_bus.data;
 end
 
 wire fdd_ready = image_mounted & driveReg[7] & ~driveReg[0];
 
-assign {output_rq, data } = status   ? {cpu_bus.rd, ~drq, ~intrq, 6'b111111}  :
-                            ck1      ? {cpu_bus.rd, sideReg}                  :
-                            ck2      ? {cpu_bus.rd, driveReg & 8'hFB }        :
-                            wdcs     ? {cpu_bus.rd, d_from_wd17}              :
-                            nu       ? {cpu_bus.rd, 8'hFF}                    :
-                                       9'h0FF;
+always_comb begin
+   output_rq = 1'b0; // výchozí hodnota pro output_rq
+   data = 8'hFF;     // výchozí hodnota pro data
+   case (1)
+      status:  {output_rq, data} = {cpu_bus.rd, ~drq, ~intrq, 6'b111111};
+      ck1:     {output_rq, data} = {cpu_bus.rd, sideReg};
+      ck2:     {output_rq, data} = {cpu_bus.rd, driveReg & 8'hFB};
+      wdcs:    {output_rq, data} = {cpu_bus.rd, d_from_wd17};
+      nu:      {output_rq, data} = {cpu_bus.rd, 8'hFF};
+      default: {output_rq, data} = 9'h0FF;
+   endcase
+end
+
 wire [7:0] d_from_wd17;
 wire drq, intrq;
 wd1793 #(.RWMODE(1), .EDSK(0)) fdc1
