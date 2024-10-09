@@ -677,17 +677,13 @@ sdram sdram
    .ch2_req(sdram_ce),
    .ch2_rnw(ram_rnw),
    .ch2_ready(sdram_ready),
-
-   //.ch3_addr(flash_addr),
-	.ch3_addr(0),
-   .ch3_dout(),
-   //.ch3_din(flash_din),
-	.ch3_din(0),
-   //.ch3_req(flash_req),
-	.ch3_req(0),
-   .ch3_rnw(0),
-   .ch3_ready(flash_ready),
-   .ch3_done(flash_done),
+   .ch3_addr(backup_ram_addr),
+   .ch3_dout(backup_ram_dout),
+   .ch3_din(backup_ram_din),
+   .ch3_req(backup_ram_req),
+   .ch3_rnw(backup_ram_rnw),
+   .ch3_ready(backup_ram_ready),
+   .ch3_done(),
    .*
 );    
 /*
@@ -705,6 +701,9 @@ dpram #(.addr_width(18)) systemRAM
 );
 */
 ///////////////// NVRAM BACKUP ////////////////
+wire [26:0]  backup_ram_addr;
+wire [7:0]   backup_ram_din, backup_ram_dout;
+wire         backup_ram_req, backup_ram_rnw, backup_ram_ready;
 nvram_backup nvram_backup
 (
    .clk(clk21m),
@@ -718,11 +717,16 @@ nvram_backup nvram_backup
    .sd_rd(sd_rd[3:0]),
    .sd_wr(sd_wr[3:0]),
    .sd_ack(sd_ack[3:0]),
+   .sd_buff_wr(sd_buff_wr),
    .sd_buff_addr(sd_buff_addr),
    .sd_buff_din(sd_buff_din[0:3]),
-   .ram_addr(),
-   .ram_dout(),
-   .ram_we()
+   .sd_buff_dout(sd_buff_dout),
+   .ram_addr(backup_ram_addr),
+   .ram_dout(backup_ram_dout),
+   .ram_din(backup_ram_din),
+   .ram_req(backup_ram_req),
+   .ram_rnw(backup_ram_rnw),
+   .ram_ready(backup_ram_ready)
 );
 
 ///////////////// CAS EMULATE /////////////////

@@ -182,6 +182,7 @@ module memory_upload
                     ref_dev_block     <= '0;
                     ref_dev_mem       <= '0;
                     set_offset        <= '0;
+                    load_sram         <= '0;
                 end
                 STATE_CLEAN: begin
                     error <= ERR_NONE;
@@ -232,6 +233,7 @@ module memory_upload
                     end else begin
                         $display("FINISH: EXPANDER SLOTS:%x", bios_config.slot_expander_en);
                         state <= STATE_IDLE;
+                        load_sram <= '1;
                     end
                     kbd_request <= '0;
                 end
