@@ -187,7 +187,7 @@ assign AUDIO_L = audio;
 assign AUDIO_R = audio;
 assign AUDIO_MIX = 0;
 
-//assign LED_POWER = 0;
+assign LED_POWER = 0;
 assign LED_USER  = vsd_sel & sd_act;
 assign LED_DISK  = {1'b1, ~vsd_sel & sd_act};
 assign BUTTONS = 0;
@@ -348,7 +348,7 @@ msx_config msx_config
    .sdram_size(sdram_size),
    .cart_conf(cart_conf),
    .reload(reload),
-   .rom_loaded(rom_loaded),
+   .rom_loaded(),
    .sram_A_select_hide(sram_A_select_hide),
    .ROM_A_load_hide(ROM_A_load_hide),
    .ROM_B_load_hide(ROM_B_load_hide),
@@ -385,9 +385,6 @@ wire        ram_rnw, sdram_ce, bram_ce;
 wire        sd_tx, sd_rx;
 wire  [7:0] d_to_sd, d_from_sd;
 
-dev_typ_t    cart_device[2];
-dev_typ_t    msx_device;
-wire   [3:0] msx_dev_ref_ram[8];
 mapper_typ_t selected_mapper[2];
 assign selected_mapper[0] = cart_conf[0].selected_mapper;
 assign selected_mapper[1] = cart_conf[1].selected_mapper;
@@ -418,9 +415,6 @@ msx MSX
    .lookup_RAM(lookup_RAM),
    .lookup_SRAM(lookup_SRAM),
    .bios_config(bios_config),
-   .cart_device(cart_device),
-   .msx_device(msx_device),
-   .msx_dev_ref_ram(msx_dev_ref_ram),
    .io_device(io_device),
    .selected_mapper(selected_mapper),
    .joy0(joy0[5:0]),
@@ -588,7 +582,6 @@ wire  [7:0] kbd_din;
 wire  [8:0] kbd_addr;
 wire        kbd_request, kbd_we;
 wire        load_sram;
-wire  [1:0] rom_loaded;
 memory_upload memory_upload(
     .clk(clk21m),
     .reset_rq(reset_rq),
@@ -599,13 +592,11 @@ memory_upload memory_upload(
     .reload(reload),
     .ddr3_addr(ddr3_addr_download),
     .ddr3_rd(ddr3_rd_download),
-    .ddr3_wr(),
     .ddr3_dout(ddr3_dout),
     .ddr3_ready(ddr3_ready),
     .ddr3_request(ddr3_request_download),
     .ram_addr(upload_ram_addr),
     .ram_din(upload_ram_din),
-    .ram_dout(),
     .ram_ce(upload_ram_ce),
     .sdram_ready(upload_ram_ready),
     //.sdram_rq(upload_sdram_rq),
@@ -614,19 +605,13 @@ memory_upload memory_upload(
     .kbd_addr(kbd_addr),
     .kbd_din(kbd_din),
     .kbd_we(kbd_we),
-    .sdram_size(sdram_size),
     .slot_layout(slot_layout),
     .lookup_RAM(lookup_RAM),
     .lookup_SRAM(lookup_SRAM),
     .bios_config(bios_config),
     .cart_conf(cart_conf),
-    .rom_loaded(rom_loaded),
-    .cart_device(cart_device),
-    .msx_device(msx_device),
-    .msx_dev_ref_ram(msx_dev_ref_ram),
     .load_sram(load_sram),
     .dev_enable(dev_enable),
-    .led_out(LED_POWER),
     .io_device(io_device)
 );
 wire [27:0] ddr3_addr, ddr3_addr_download, ddr3_addr_cas;

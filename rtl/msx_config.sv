@@ -23,7 +23,7 @@ module msx_config
     input              [63:0] HPS_status,
     input                     scandoubler,
     input               [1:0] sdram_size,
-    input               [1:0] rom_loaded,
+    input               [1:0] rom_loaded, //TODO not exists
     output MSX::config_cart_t cart_conf[2],
     output                    sram_A_select_hide,
     output                    ROM_A_load_hide, //3 

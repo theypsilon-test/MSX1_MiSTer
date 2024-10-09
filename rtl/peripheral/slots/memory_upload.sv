@@ -9,7 +9,6 @@ module memory_upload
     input                       reload,
     output logic         [27:0] ddr3_addr,
     output logic                ddr3_rd,
-    output logic                ddr3_wr,
     input                 [7:0] ddr3_dout,
     input                       ddr3_ready,
     output                      ddr3_request,
@@ -25,18 +24,10 @@ module memory_upload
     output MSX::lookup_SRAM_t   lookup_SRAM[4],
     output MSX::bios_config_t   bios_config,
     input  MSX::config_cart_t   cart_conf[2],
-    output MSX::io_device_t     io_device[16],
-    input                 [7:0] ram_dout,
-    
+    output MSX::io_device_t     io_device[16],   
     input                       sdram_ready,
-    input                 [1:0] sdram_size,
     output logic                load_sram,
-    output logic          [1:0] rom_loaded,
-    output dev_typ_t            cart_device[2],
-    output dev_typ_t            msx_device,
-    output logic          [3:0] msx_dev_ref_ram[8],
     output logic          [2:0] dev_enable[0:(1 << $bits(device_t))-1],
-    output logic          [1:0] led_out, 
     output error_t              error
 );
 
