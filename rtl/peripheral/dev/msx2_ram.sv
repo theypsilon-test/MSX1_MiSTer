@@ -1,6 +1,7 @@
 /*verilator tracing_off*/
 module msx2_ram (
-    cpu_bus                 cpu_bus,         // Interface for CPU communication
+    clock_bus_if            clock_bus,       // Interface for clock
+    cpu_bus_if              cpu_bus,         // Interface for CPU communication
     device_bus              device_bus,      // Interface for device control
     input  [2:0]            dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
     input  MSX::io_device_t io_device[16],   // Array of IO devices with port and mask info
@@ -33,8 +34,8 @@ module msx2_ram (
     generate
         for (i = 0; i < 3; i++) begin : msx2_ram_dev_INSTANCES
             msx2_ram_dev msx2_ram_dev_i (
-                .clk(cpu_bus.clk),
-                .reset(cpu_bus.reset),
+                .clk(clock_bus.clk_sys),
+                .reset(clock_bus.reset),
                 .data(cpu_bus.data),
                 .addr(cpu_bus.addr),
                 .oe(mapper_io[i] && io_en && cpu_bus.rd),  // IO read

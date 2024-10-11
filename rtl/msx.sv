@@ -1,6 +1,5 @@
    module msx
 (
-   input                    reset,
    //Clock
    clock_bus_if             clock_bus,
    //Video
@@ -54,6 +53,12 @@
    output             [7:0] sd_buff_din,
    input                    sd_buff_wr
 );
+
+device_bus device_bus();
+cpu_bus_if cpu_bus();
+sd_bus sd_bus();
+sd_bus_control sd_bus_control();
+
 //  -----------------------------------------------------------------------------
 //  -- Audio MIX
 //  -----------------------------------------------------------------------------
@@ -67,28 +72,17 @@ assign audio            = compr[audio_mix[16:14]];
 //  -----------------------------------------------------------------------------
 //  -- T80 CPU
 //  -----------------------------------------------------------------------------
-wire [15:0] a;
-wire [7:0] d_to_cpu, d_from_cpu;
-wire mreq_n, wr_n, m1_n, iorq_n, rd_n, rfrsh_n;
+wire [7:0] d_to_cpu;
 tv80n Z80
 (
-   .reset_n(~reset),
-   .clk(clock_bus.ce_3m58_n),
+   .clock_bus(clock_bus),
+   .cpu_bus(cpu_bus),
    .wait_n(wait_n),
    .int_n(vdp_int_n),
    .nmi_n(1'b1),
    .busrq_n(1'b1),
-   .m1_n(m1_n),
-   .mreq_n(mreq_n),
-   .iorq_n(iorq_n),
-   .rd_n(rd_n),
-   .wr_n(wr_n),
-   .rfsh_n(rfrsh_n),
-   .halt_n(),
    .busak_n(),
-   .A(a),
-   .di(d_to_cpu),
-   .dout(d_from_cpu)
+   .di(d_to_cpu)
 );
 //  -----------------------------------------------------------------------------
 //  -- WAIT CPU
@@ -102,7 +96,7 @@ always @(posedge clock_bus.clk_sys, negedge exwait_n, negedge u1_2_q) begin
    else if (~u1_2_q)
       wait_n <= 1'b1;
    else if (clock_bus.ce_3m58_p)
-      wait_n <= m1_n;
+      wait_n <= ~cpu_bus.m1;
 end
 
 logic u1_2_q = 1'b0;
@@ -117,26 +111,26 @@ logic map_valid = 0;
 wire ppi_en = ~ppi_n;
 wire [1:0] active_slot;
 
-always @(posedge reset, posedge clock_bus.clk_sys) begin
-    if (reset)
+always @(posedge clock_bus.reset, posedge clock_bus.clk_sys) begin
+    if (clock_bus.reset)
         map_valid = 0;
     else if (ppi_en)
         map_valid = 1;
 end
 
-assign active_slot =    ~map_valid         ? 2'b00         :
-                         a[15:14] == 2'b00 ? ppi_out_a[1:0] :
-                         a[15:14] == 2'b01 ? ppi_out_a[3:2] :
-                         a[15:14] == 2'b10 ? ppi_out_a[5:4] :
-                                             ppi_out_a[7:6] ;
+assign active_slot =    ~map_valid                   ? 2'b00         :
+                        cpu_bus.addr[15:14] == 2'b00 ? ppi_out_a[1:0] :
+                        cpu_bus.addr[15:14] == 2'b01 ? ppi_out_a[3:2] :
+                        cpu_bus.addr[15:14] == 2'b10 ? ppi_out_a[5:4] :
+                                                       ppi_out_a[7:6] ;
 
 //  -----------------------------------------------------------------------------
 //  -- IO Decoder
 //  -----------------------------------------------------------------------------
-wire psg_n  = ~((a[7:3] == 5'b10100)   & ~iorq_n & m1_n);
-wire ppi_n  = ~((a[7:3] == 5'b10101)   & ~iorq_n & m1_n);
-wire vdp_en =   (a[7:3] == 5'b10011)   & ~iorq_n & m1_n ;
-wire rtc_en =   (a[7:1] == 7'b1011010) & ~iorq_n & m1_n & bios_config.MSX_typ == MSX2;
+wire psg_n  = ~((cpu_bus.addr[7:3] == 5'b10100)   & cpu_bus.iorq & ~cpu_bus.m1);
+wire ppi_n  = ~((cpu_bus.addr[7:3] == 5'b10101)   & cpu_bus.iorq & ~cpu_bus.m1);
+wire vdp_en =   (cpu_bus.addr[7:3] == 5'b10011)   & cpu_bus.iorq & ~cpu_bus.m1 ;
+wire rtc_en =   (cpu_bus.addr[7:1] == 7'b1011010) & cpu_bus.iorq & ~cpu_bus.m1 & bios_config.MSX_typ == MSX2;
 
 //  -----------------------------------------------------------------------------
 //  -- 82C55 PPI
@@ -147,13 +141,13 @@ wire keybeep = ppi_out_c[7];
 assign cas_motor =  ppi_out_c[4];
 jt8255 PPI
 (
-   .rst(reset),
+   .rst(clock_bus.reset),
    .clk(clock_bus.clk_sys),
-   .addr(a[1:0]),
-   .din(d_from_cpu),
+   .addr(cpu_bus.addr[1:0]),
+   .din(cpu_bus.data),
    .dout(d_from_8255),
-   .rdn(rd_n),
-   .wrn(wr_n),
+   .rdn(~cpu_bus.rd),
+   .wrn(~cpu_bus.wr),
    .csn(ppi_n),
    .porta_din(8'h0),
    .portb_din(d_from_kb),
@@ -166,21 +160,21 @@ jt8255 PPI
 //  -----------------------------------------------------------------------------
 //  -- CPU data multiplex
 //  -----------------------------------------------------------------------------
-assign d_to_cpu = rd_n             ? 8'hFF           :
-                  vdp_en           ? d_to_cpu_vdp    :
-                  rtc_en           ? d_from_rtc      :
-                  ~psg_n           ? d_from_psg      :
-                  ~ppi_n           ? d_from_8255     :
-                  mapper_subslot_rq? mapper_subslot_data :
-                  device_output_rq ? device_data     :
-                                     ram_dout & d_from_slots;
+assign d_to_cpu = ~cpu_bus.rd             ? 8'hFF           :
+                  vdp_en                  ? d_to_cpu_vdp    :
+                  rtc_en                  ? d_from_rtc      :
+                  ~psg_n                  ? d_from_psg      :
+                  ~ppi_n                  ? d_from_8255     :
+                  mapper_subslot_rq       ? mapper_subslot_data :
+                  device_output_rq        ? device_data     :
+                                            ram_dout & d_from_slots;
 //  -----------------------------------------------------------------------------
 //  -- Keyboard decoder
 //  -----------------------------------------------------------------------------
 wire [7:0] d_from_kb;
 keyboard msx_key
 (
-   .reset(reset),
+   .reset(clock_bus.reset),
    .clk(clock_bus.clk_sys),
    .ps2_key(ps2_key),
    .kb_row(ppi_out_c[3:0]),
@@ -218,16 +212,16 @@ always @(posedge clock_bus.clk_sys, posedge psg_n) begin
 end
 
 wire psg_e = !(!u21_2_q | clock_bus.ce_3m58_p) | psg_n;
-wire psg_bc   = !(a[0] | psg_e);
-wire psg_bdir = !(a[1] | psg_e);
+wire psg_bc   = !(cpu_bus.addr[0] | psg_e);
+wire psg_bdir = !(cpu_bus.addr[1] | psg_e);
 jt49_bus PSG
 (
-   .rst_n(~reset),
+   .rst_n(~clock_bus.reset),
    .clk(clock_bus.clk_sys),
    .clk_en(clock_bus.ce_3m58_p),
    .bdir(psg_bdir),
    .bc1(psg_bc),
-   .din(d_from_cpu),
+   .din(cpu_bus.data),
    .sel(0),
    .dout(d_from_psg),
    .sound(ay_ch_mix),
@@ -242,16 +236,16 @@ jt49_bus PSG
 
 logic iack;
 always @(posedge clock_bus.clk_sys) begin
-   if (reset) iack <= 0;
+   if (clock_bus.reset) iack <= 0;
    else begin
-      if (iorq_n  & mreq_n)
+      if (~cpu_bus.iorq  & ~cpu_bus.mreq)
          iack <= 0;
       else
          if (req)
             iack <= 1;
    end
 end
-wire req = ~((iorq_n & mreq_n) | (wr_n & rd_n) | iack);
+wire req = ~((~cpu_bus.iorq & ~cpu_bus.mreq) | (~cpu_bus.wr & ~cpu_bus.rd) | iack);
 assign req_dbg = req;
 //  -----------------------------------------------------------------------------
 //  -- RTC
@@ -260,16 +254,16 @@ wire [7:0] d_from_rtc;
 rtc rtc
 (
    .clk21m(clock_bus.clk_sys),
-   .reset(reset),
-   .setup(reset),
+   .reset(clock_bus.reset),
+   .setup(clock_bus.reset),
    .rt(rtc_time),
    .clkena(clock_bus.ce_10hz),
    .req(req & rtc_en),
    .ack(),
-   .wrt(~wr_n),
-   .adr(a),
+   .wrt(cpu_bus.wr),
+   .adr(cpu_bus.addr),
    .dbi(d_from_rtc),
-   .dbo(d_from_cpu)
+   .dbo(cpu_bus.data)
 );
 //  -----------------------------------------------------------------------------
 //  -- Video
@@ -278,6 +272,7 @@ wire [7:0] d_to_cpu_vdp;
 wire       vdp_int_n;   
 vdp_mux vdp
 (
+   .clock_bus(clock_bus),
    .cpu_bus(cpu_bus),
    .video_bus(video_bus),
    .ce(vdp_en),
@@ -289,24 +284,6 @@ vdp_mux vdp
 );
 
 wire signed [15:0] device_sound;
-device_bus device_bus();
-cpu_bus cpu_bus();
-assign cpu_bus.clk = clock_bus.clk_sys;
-assign cpu_bus.clk_en = clock_bus.ce_3m58_p;
-assign cpu_bus.clk_en_10_p = clock_bus.ce_10m7_p;
-assign cpu_bus.clk_en_5_n = clock_bus.ce_5m39_n;
-assign cpu_bus.reset = reset;
-assign cpu_bus.mreq = ~mreq_n;
-assign cpu_bus.iorq = ~iorq_n;
-assign cpu_bus.wr = ~wr_n;
-assign cpu_bus.rd = ~rd_n;
-assign cpu_bus.m1 = ~m1_n;
-assign cpu_bus.data = d_from_cpu;
-assign cpu_bus.addr = a;
-
-
-sd_bus sd_bus();
-sd_bus_control sd_bus_control();
 
 assign sd_bus.ack = sd_ack;
 assign sd_bus.buff_addr = sd_buff_addr;
@@ -329,6 +306,7 @@ wire [7:0] device_data;
 wire [7:0] data_to_mapper;
 devices devices
 (
+   .clock_bus(clock_bus),
    .cpu_bus(cpu_bus),
    .device_bus(device_bus),
    .sd_bus(sd_bus),
@@ -350,6 +328,7 @@ wire [7:0] mapper_subslot_data;
 wire mapper_subslot_rq;
 subslot subslot_inst 
 (
+   .clock_bus(clock_bus),
    .cpu_bus(cpu_bus),
    .expander_enable(bios_config.slot_expander_en),
    .data(mapper_subslot_data),
@@ -368,6 +347,7 @@ assign active_RAM = lookup_RAM[active_block.ref_ram];
 assign active_SRAM = lookup_SRAM[active_block.ref_sram];
 msx_slots msx_slots
 (
+   .clock_bus(clock_bus),
    .cpu_bus(cpu_bus),
    .device_bus(device_bus),
    .data(d_from_slots),  

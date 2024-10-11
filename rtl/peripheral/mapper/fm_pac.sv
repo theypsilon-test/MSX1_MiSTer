@@ -1,5 +1,6 @@
 module mapper_fm_pac (
-    cpu_bus          cpu_bus,       // Interface for CPU communication
+    clock_bus_if     clock_bus,     // Interface for clock
+    cpu_bus_if       cpu_bus,       // Interface for CPU communication
     block_info       block_info,    // Struct containing mapper configuration and parameters
     mapper_out       out,           // Interface for mapper output
     device_bus       device_out     // Interface for device output
@@ -22,8 +23,8 @@ module mapper_fm_pac (
     end
 
     // Main control logic
-    always @(posedge cpu_bus.clk) begin
-        if (cpu_bus.reset) begin
+    always @(posedge clock_bus.clk_sys) begin
+        if (clock_bus.reset) begin
             // Reset states
             enable  <= '{default: 8'b0};
             bank    <= '{default: 2'b0};

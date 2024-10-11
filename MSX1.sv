@@ -340,7 +340,7 @@ wire       reload, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
 msx_config msx_config 
 (
    .clk(clock_bus.clk_sys),
-   .reset(reset),
+   .reset(clock_bus.reset),
    .bios_config(bios_config),
    .HPS_status(status[63:0]),
    .scandoubler(scandoubler),
@@ -367,12 +367,10 @@ pll pll
 clock clock
 (
 	.clk(clk_core),
-   .reset(reset),
+   .reset(RESET | status[0] | status[10] | reset_rq),
    .clock_bus(clock_bus)
 );
 
-/////////////////    RESET   /////////////////
-wire reset = RESET | status[0] | status[10] | reset_rq;
 ///////////////// Computer /////////////////
 wire  [7:0] R, G, B, cpu_din, cpu_dout;
 wire [15:0] cpu_addr, audio;
@@ -463,6 +461,7 @@ spi_divmmc spi
 sd_card sd_card
 (
     .*,
+    .reset(clock_bus.reset),
     .clk_sys(clock_bus.clk_sys),
     .img_mounted(img_mounted[4]),
     .img_size(img_size),
@@ -622,7 +621,7 @@ ddram buffer
    .we(),
    .rd(ddr3_rd),
    .ready(ddr3_ready),
-   .reset(reset),
+   .reset(clock_bus.reset),
    .*
 );
 
@@ -718,7 +717,7 @@ end
 
 assign play         = ~motor & cas_load;
 assign ioctl_isCAS  = ioctl_download & (ioctl_index[5:0] == 6'd5);
-assign rewind       = status[9] | ioctl_isCAS | reset;
+assign rewind       = status[9] | ioctl_isCAS | clock_bus.reset;
 
 tape cass 
 (

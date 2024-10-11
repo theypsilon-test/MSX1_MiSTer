@@ -1,5 +1,6 @@
 module mapper_konami_scc (
-   cpu_bus          cpu_bus,        // Interface for CPU communication
+   clock_bus_if     clock_bus,      // Interface for clock
+   cpu_bus_if       cpu_bus,        // Interface for CPU communication
    mapper_out       out,            // Interface for mapper output
    block_info       block_info,     // Struct containing mapper configuration and parameters 
    device_bus       device_out      // Interface for device output
@@ -25,8 +26,8 @@ module mapper_konami_scc (
     logic [1:0] sccEnable;  // SCC enable flag for each bank
 
     // Bank switching logic: On reset, set default bank values. On write, update bank values.
-    always @(posedge cpu_bus.clk) begin
-        if (cpu_bus.reset) begin
+    always @(posedge clock_bus.clk_sys) begin
+        if (clock_bus.reset) begin
             // Reset bank registers and disable SCC
             bank1 <= '{'h00, 'h00};  // Default bank 1 values
             bank2 <= '{'h01, 'h01};  // Default bank 2 values

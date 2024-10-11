@@ -42,19 +42,17 @@ interface clock_bus_if;
     logic     ce_3m58_p;
     logic     ce_3m58_n;
     logic     ce_10hz;
+    logic     reset;
 endinterface
 
-interface cpu_bus;
-    logic        clk;
-    logic        clk_en;
-    logic        clk_en_10_p;
-    logic        clk_en_5_n;
-    logic        reset;
+interface cpu_bus_if;
     logic        mreq;
     logic        iorq;
     logic        rd;
     logic        wr;
     logic        m1;
+    logic        halt;
+    logic        rfsh;
     logic [15:0] addr;
     logic  [7:0] data;
 endinterface

@@ -1,5 +1,6 @@
 module mapper_generic (
-    cpu_bus         cpu_bus,       // Interface for CPU communication
+    clock_bus_if    clock_bus,     // Interface for clock
+    cpu_bus_if      cpu_bus,       // Interface for CPU communication
     mapper_out      out,           // Interface for mapper output
     block_info      block_info     // Struct containing mapper configuration and parameters
 );
@@ -23,13 +24,13 @@ module mapper_generic (
     assign blockCompute = block < nrBlocks ? {1'b0,block} : 9'h100;
 
     // Bank switching logic
-    always @(posedge cpu_bus.clk) begin
-        if (cpu_bus.reset) begin
+    always @(posedge clock_bus.clk_sys) begin
+        if (clock_bus.reset) begin
             // Initialize bank values on reset
             bank[0] <= '{9'h100, 9'h100, 9'h000, 9'h001, 9'h002, 9'h003, 9'h100,  9'h100};
             bank[1] <= '{9'h100, 9'h100, 9'h000, 9'h001, 9'h002, 9'h003, 9'h100,  9'h100};
         end else begin
-            if (we && cpu_bus.clk_en) begin
+            if (we && clock_bus.ce_3m58_p) begin
                 // Bank switching logic based on address
                 if (block_info.typ == MAPPER_GENERIC8KB) begin
                     bank[block_info.id][cpu_bus.addr[15:13]] <= blockCompute;

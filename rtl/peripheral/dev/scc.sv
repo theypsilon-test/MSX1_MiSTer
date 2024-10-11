@@ -1,5 +1,6 @@
 module scc (
-    cpu_bus         cpu_bus,           // Interface for CPU communication
+    clock_bus_if    clock_bus,         // Interface for clock
+    cpu_bus_if      cpu_bus,           // Interface for CPU communication
     device_bus      device_bus,        // Interface for device control
     input     [2:0] dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
     input MSX::io_device_t   io_device[16],  // Array of IO devices with port and mask info
@@ -13,8 +14,8 @@ module scc (
                    (dev_enable[DEV_SCC][1] ? {sound_SCC[1][14], sound_SCC[1]} : '0);
 
     // Control logic for enabling or disabling SCC channels
-    always @(posedge cpu_bus.clk) begin
-        if (cpu_bus.reset) begin
+    always @(posedge clock_bus.clk_sys) begin
+        if (clock_bus.reset) begin
             // On reset, disable all SCC channels
             scc_enabled <= 2'b00;
         end else if (device_bus.typ == DEV_SCC && device_bus.num < 2) begin
@@ -42,9 +43,9 @@ module scc (
     generate
         for (i = 0; i < 2; i++) begin : SCC_INSTANCES
             scc_wave scc_wave_i (
-                .clk(cpu_bus.clk),        // Clock signal
-                .clkena(cpu_bus.clk_en),  // Clock enable signal
-                .reset(cpu_bus.reset),    // Reset signal
+                .clk(clock_bus.clk_sys),        // Clock signal
+                .clkena(clock_bus.ce_3m58_p),  // Clock enable signal
+                .reset(clock_bus.reset),    // Reset signal
                 .req(cs && device_bus.num == i),  // Request signal for SCC
                 .ack(),                   // Acknowledge signal (not connected)
                 .wrt(cpu_bus.wr),         // Write enable signal

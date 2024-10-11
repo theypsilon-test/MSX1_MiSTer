@@ -1,5 +1,6 @@
 module mapper_konami (
-    cpu_bus         cpu_bus,       // Interface for CPU communication
+    clock_bus_if    clock_bus,     // Interface for clock
+    cpu_bus_if      cpu_bus,       // Interface for CPU communication
     mapper_out      out,           // Interface for mapper output
     block_info      block_info     // Struct containing mapper configuration and parameters
 );
@@ -17,8 +18,8 @@ module mapper_konami (
     logic [7:0] bank1[2], bank2[2], bank3[2];
 
     // Bank switching logic
-    always @(posedge cpu_bus.clk) begin
-        if (cpu_bus.reset) begin
+    always @(posedge clock_bus.clk_sys) begin
+        if (clock_bus.reset) begin
             // Initialize bank values on reset
             bank1 <= '{'h01, 'h01};  // Default bank 1 values
             bank2 <= '{'h02, 'h02};  // Default bank 2 values

@@ -1,5 +1,6 @@
 module msx_slots (
-    cpu_bus                     cpu_bus,          // Interface for CPU communication
+    clock_bus_if                clock_bus,        // Interface for clock
+    cpu_bus_if                  cpu_bus,          // Interface for CPU communication
     input                 [1:0] active_slot,      // Currently active slot
     output                [7:0] data,             // Data output
     output signed        [15:0] sound,            // Sound output
@@ -67,6 +68,7 @@ module msx_slots (
     wire [7:0] mapper_data;
 
     mappers mappers_inst (
+        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .memory_bus(memory_bus),

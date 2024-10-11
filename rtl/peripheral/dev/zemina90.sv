@@ -1,5 +1,6 @@
 module zemina90 (
-    cpu_bus                 cpu_bus,         // Interface for CPU communication
+    clock_bus_if            clock_bus,       // Interface for clock
+    cpu_bus_if              cpu_bus,         // Interface for CPU communication
     device_bus              device_bus,      // Interface for device control
     input  [2:0]            dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
     input  MSX::io_device_t io_device[16],   // Array of IO devices with port and mask info
@@ -28,9 +29,9 @@ module zemina90 (
     generate
         for (i = 0; i < 3; i++) begin : zemina90_dev_INSTANCES
             zemina90_dev zemina90_dev_i (
-                .clk(cpu_bus.clk),
-                .clk_en(cpu_bus.clk_en),
-                .reset(cpu_bus.reset),
+                .clk(clock_bus.clk_sys),
+                .clk_en(clock_bus.ce_3m58_p),
+                .reset(clock_bus.reset),
                 .data(cpu_bus.data),
                 .wr(mapper_io[i] && io_en && cpu_bus.wr),  // IO write
                 .data_to_mapper(data_to_mapper_ar[i])

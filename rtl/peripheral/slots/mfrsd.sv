@@ -181,14 +181,14 @@ module mapper_mfrsd2
    input              en,
    output      [21:0] mem_addr
 );
-
+/*
 msx2_ram_mapper ram_mapper
 (
     .mapper_dout(mapper_dout),
     .mapper_addr(mem_addr),
     .ram_block_count(8'd32),
     .*
-);
+);*/
 
 endmodule
 

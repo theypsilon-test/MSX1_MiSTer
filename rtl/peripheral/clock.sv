@@ -33,12 +33,13 @@ always @(posedge clk) begin
       div <= div - 1'd1; 
 end
 
+assign clock_bus.reset     = reset;
 assign clock_bus.clk_sys   = clk;
 assign clock_bus.ce_10m7_p = clkdiv4[0];
 assign clock_bus.ce_10m7_n = ~clkdiv4[0];
 assign clock_bus.ce_5m39_p = &clkdiv4;
 assign clock_bus.ce_5m39_n = ~clkdiv4[1] & clkdiv4[0];
-assign clock_bus.ce_3m58_p = clkdiv6 == 3'd5;
+assign clock_bus.ce_3m58_p = clkdiv6 == 3'd5;   //CEN
 assign clock_bus.ce_3m58_n = clkdiv6 == 3'd2;
 assign clock_bus.ce_10hz   = div == 22'd0;
 

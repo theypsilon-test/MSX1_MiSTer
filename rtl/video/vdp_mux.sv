@@ -1,5 +1,6 @@
 module vdp_mux (
-    cpu_bus                 cpu_bus,
+    clock_bus_if            clock_bus,
+    cpu_bus_if              cpu_bus,
     video_bus               video_bus,
     input                   ce,
     input MSX_typ_t         MSX_typ,
@@ -19,19 +20,19 @@ assign data             = vdp18 ? d_from_vdp18 : d_from_vdp;
 assign interrupt_n      = vdp18 ? int_n_vdp18  : int_n_vdp;
 
 //Video access
-assign video_bus.R      = vdp18 ? R_vdp18            : {R_vdp,R_vdp[5:4]};
-assign video_bus.G      = vdp18 ? G_vdp18            : {G_vdp,G_vdp[5:4]};
-assign video_bus.B      = vdp18 ? B_vdp18            : {B_vdp,B_vdp[5:4]};
-assign video_bus.HS     = vdp18 ? ~HS_n_vdp18        : ~HS_n_vdp;
-assign video_bus.VS     = vdp18 ? ~VS_n_vdp18        : ~VS_n_vdp;
-assign video_bus.DE     = vdp18 ? DE_vdp18           : DE_vdp;
-assign video_bus.hblank = vdp18 ? hblank_vdp18       : hblank_vdp_cor;
-assign video_bus.vblank = vdp18 ? vblank_vdp18       : vblank_vdp;
-assign video_bus.ce_pix = vdp18 ? cpu_bus.clk_en_5_n : ~DHClk_vdp;
+assign video_bus.R      = vdp18 ? R_vdp18              : {R_vdp,R_vdp[5:4]};
+assign video_bus.G      = vdp18 ? G_vdp18              : {G_vdp,G_vdp[5:4]};
+assign video_bus.B      = vdp18 ? B_vdp18              : {B_vdp,B_vdp[5:4]};
+assign video_bus.HS     = vdp18 ? ~HS_n_vdp18          : ~HS_n_vdp;
+assign video_bus.VS     = vdp18 ? ~VS_n_vdp18          : ~VS_n_vdp;
+assign video_bus.DE     = vdp18 ? DE_vdp18             : DE_vdp;
+assign video_bus.hblank = vdp18 ? hblank_vdp18         : hblank_vdp_cor;
+assign video_bus.vblank = vdp18 ? vblank_vdp18         : vblank_vdp;
+assign video_bus.ce_pix = vdp18 ? clock_bus.ce_5m39_n  : ~DHClk_vdp;
 
 
 logic hblank_vdp_cor;
-always @(posedge cpu_bus.clk) begin
+always @(posedge clock_bus.clk_sys) begin
    if (hblank_vdp)
       hblank_vdp_cor <= 1'b1;
    else 
@@ -49,8 +50,8 @@ assign VRAM_we_lo_vdp = ~VRAM_we_n_vdp & DLClk_vdp & ~VRAM_address_vdp[16];
 assign VRAM_we_hi_vdp = ~VRAM_we_n_vdp & DLClk_vdp &  VRAM_address_vdp[16];
 
 logic iack;
-always @(posedge cpu_bus.clk) begin
-   if (cpu_bus.reset) iack <= 0;
+always @(posedge clock_bus.clk_sys) begin
+   if (clock_bus.reset) iack <= 0;
    else begin
       if (~cpu_bus.iorq && ~cpu_bus.mreq)
          iack <= 0;
@@ -71,9 +72,9 @@ wire  [7:0] VRAM_do_vdp18;
 wire        VRAM_we_vdp18;
 vdp18_core #(.compat_rgb_g(0)) vdp_vdp18
 (
-   .clk_i(cpu_bus.clk),
-   .clk_en_10m7_i(cpu_bus.clk_en_10_p),
-   .reset_n_i(~cpu_bus.reset),
+   .clk_i(clock_bus.clk_sys),
+   .clk_en_10m7_i(clock_bus.ce_10m7_p),
+   .reset_n_i(~clock_bus.reset),
 
    .csr_n_i(~(ce & vdp18) | ~cpu_bus.rd),
    .csw_n_i(~(ce & vdp18) | ~cpu_bus.wr),
@@ -106,8 +107,8 @@ wire  [7:0] VRAM_do_vdp;
 wire        VRAM_we_n_vdp;
 VDP vdp_vdp 
 (
-   .CLK21M(cpu_bus.clk),
-   .RESET(cpu_bus.reset),
+   .CLK21M(clock_bus.clk_sys),
+   .RESET(clock_bus.reset),
 
    .REQ(req & ce & ~vdp18),
    .ACK(),
@@ -148,7 +149,7 @@ wire  [7:0] VRAM_do, VRAM_di_lo, VRAM_di_hi;
 wire        VRAM_we_lo, VRAM_we_hi;
 spram #(.addr_width(16),.mem_name("VRA2")) vram_lo
 (
-   .clock(cpu_bus.clk),
+   .clock(clock_bus.clk_sys),
    .address(VRAM_address),
    .wren(VRAM_we_lo),
    .data(VRAM_do),
@@ -156,7 +157,7 @@ spram #(.addr_width(16),.mem_name("VRA2")) vram_lo
 );
 spram #(.addr_width(16),.mem_name("VRA3")) vram_hi
 (
-   .clock(cpu_bus.clk),
+   .clock(clock_bus.clk_sys),
    .address(VRAM_address),
    .wren(VRAM_we_hi),
    .data(VRAM_do),

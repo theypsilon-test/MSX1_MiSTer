@@ -1,5 +1,6 @@
 module devices (
-    cpu_bus         cpu_bus,            // Interface for CPU communication
+    clock_bus_if    clock_bus,          // Interface for clock
+    cpu_bus_if      cpu_bus,            // Interface for CPU communication
     device_bus      device_bus,         // Interface for device control
     sd_bus          sd_bus,
     sd_bus_control  sd_bus_control,
@@ -20,6 +21,7 @@ module devices (
     wire signed [15:0] opl3_sound;
     opl3 OPL3
     (
+        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
@@ -32,6 +34,7 @@ module devices (
     wire signed [15:0] scc_sound;
     scc SCC
     (
+        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
@@ -46,6 +49,7 @@ module devices (
     wire       msx2_ram_output_rq;
     msx2_ram msx2_ram
     (
+        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
@@ -58,6 +62,7 @@ module devices (
     wire [7:0] zemina_data_to_mapper;
     zemina90 zemina90
     (
+        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
@@ -69,6 +74,7 @@ module devices (
     wire       vy0010_output_rq;
     vy0010 vy0010
     (
+        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .sd_bus(sd_bus),

@@ -1,5 +1,6 @@
 module opl3 (
-    cpu_bus         cpu_bus,            // Interface for CPU communication
+    clock_bus_if    clock_bus,          // Interface for clock
+    cpu_bus_if      cpu_bus,            // Interface for CPU communication
     device_bus      device_bus,         // Interface for device control
     input     [2:0] dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
     input MSX::io_device_t   io_device[16],  // Array of IO devices with port and mask info
@@ -19,8 +20,8 @@ module opl3 (
     );
     
     // Control logic for enabling or disabling OPL3 channels
-    always @(posedge cpu_bus.clk) begin
-        if (cpu_bus.reset) begin
+    always @(posedge clock_bus.clk_sys) begin
+        if (clock_bus.reset) begin
             // Default to all OPL3 channels enabled
             opl3_enabled <= 3'b111;
         end else if (device_bus.typ == DEV_OPL3 && device_bus.num < 3) begin
@@ -42,9 +43,9 @@ module opl3 (
     generate
         for (i = 0; i < 3; i++) begin : OPL3_INSTANCES
             jt2413 OPL3_i (
-                .clk(cpu_bus.clk),
-                .rst(cpu_bus.reset),
-                .cen(cpu_bus.clk_en),
+                .clk(clock_bus.clk_sys),
+                .rst(clock_bus.reset),
+                .cen(clock_bus.ce_3m58_p),
                 .din(cpu_bus.data),
                 .addr(cpu_bus.addr[0]),
                 .cs_n(~(io_op && opl3_en[i] && opl3_enabled[i])),  // Chip select for OPL3

@@ -1,5 +1,6 @@
 module mapper_ascii8 (
-    cpu_bus         cpu_bus,                // Interface for CPU communication
+    clock_bus_if    clock_bus,              // Interface for clock
+    cpu_bus_if      cpu_bus,                // Interface for CPU communication
     mapper_out      out,                    // Interface for mapper output
     block_info      block_info              // Struct containing mapper configuration and parameters
 );
@@ -41,8 +42,8 @@ module mapper_ascii8 (
     wire  [7:0] sram_bank_base = sramBank[block_info.id][{cpu_bus.addr[15], cpu_bus.addr[13]}];
 
     // Initialize or update bank and SRAM enable signals
-    always @(posedge cpu_bus.clk) begin
-        if (cpu_bus.reset) begin
+    always @(posedge clock_bus.clk_sys) begin
+        if (clock_bus.reset) begin
             // Initialize banks and SRAM enable on reset
             bank       <= '{'{default: '0},'{default: '0}};
             sramBank   <= '{'{default: '0},'{default: '0}};
