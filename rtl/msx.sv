@@ -10,15 +10,7 @@ module msx
    input                    ce_10hz,
    input                    clk_sdram,
    //Video
-   output             [7:0] R /* verilator public */,
-   output             [7:0] G /* verilator public */,
-   output             [7:0] B /* verilator public */,
-   output                   DE /* verilator public */,
-   output                   HS /* verilator public */,
-   output                   VS /* verilator public */,
-   output                   hblank /* verilator public */,
-   output                   vblank /* verilator public */,
-   output                   ce_pix /* verilator public */,
+   video_bus                video_bus,
    //I/O
    output            [15:0] audio,
    input  [           10:0] ps2_key,
@@ -279,6 +271,19 @@ jt49_bus PSG
    .IOB_out(psg_iob)
 );
 
+logic iack;
+always @(posedge clk21m) begin
+   if (reset) iack <= 0;
+   else begin
+      if (iorq_n  & mreq_n)
+         iack <= 0;
+      else
+         if (req)
+            iack <= 1;
+   end
+end
+wire req = ~((iorq_n & mreq_n) | (wr_n & rd_n) | iack);
+assign req_dbg = req;
 //  -----------------------------------------------------------------------------
 //  -- RTC
 //  -----------------------------------------------------------------------------
@@ -300,156 +305,18 @@ rtc rtc
 //  -----------------------------------------------------------------------------
 //  -- Video
 //  -----------------------------------------------------------------------------
-wire       VRAM_we_lo_vdp, VRAM_we_hi_vdp, vdp18, vdp ;
-wire       vdp_int_n;
 wire [7:0] d_to_cpu_vdp;
-
-assign vdp18          = bios_config.MSX_typ == MSX1;
-assign vdp            = bios_config.MSX_typ == MSX2;
-
-//CPU access
-assign d_to_cpu_vdp   = vdp18 ? d_from_vdp18                : d_from_vdp;
-assign vdp_int_n      = vdp18 ? int_n_vdp18                 : int_n_vdp;
-
-//Video access
-assign R              = vdp18 ? R_vdp18                     : {R_vdp,R_vdp[5:4]};
-assign G              = vdp18 ? G_vdp18                     : {G_vdp,G_vdp[5:4]};
-assign B              = vdp18 ? B_vdp18                     : {B_vdp,B_vdp[5:4]};
-assign HS             = vdp18 ? ~HS_n_vdp18                 : ~HS_n_vdp;
-assign VS             = vdp18 ? ~VS_n_vdp18                 : ~VS_n_vdp;
-assign DE             = vdp18 ? DE_vdp18                    : DE_vdp;
-assign hblank         = vdp18 ? hblank_vdp18                : hblank_vdp_cor;
-assign vblank         = vdp18 ? vblank_vdp18                : vblank_vdp;
-assign ce_pix         = vdp18 ? ce_5m39_n                   : ~DHClk_vdp;
-
-logic hblank_vdp_cor;
-always @(posedge clk21m) begin
-   if (hblank_vdp)
-      hblank_vdp_cor <= 1'b1;
-   else 
-      if (DHClk_vdp & DLClk_vdp)
-         hblank_vdp_cor <= 1'b0;
-end
-
-
-//VRAM access
-assign VRAM_address   = vdp18 ? {2'b00, VRAM_address_vdp18} : VRAM_address_vdp[15:0];
-assign VRAM_we_lo     = vdp18 ? VRAM_we_vdp18               : VRAM_we_lo_vdp;
-assign VRAM_we_hi     = vdp18 ? 1'b0                        : VRAM_we_hi_vdp;
-assign VRAM_do        = vdp18 ? VRAM_do_vdp18               : VRAM_do_vdp;
-
-assign VRAM_we_lo_vdp = ~VRAM_we_n_vdp & DLClk_vdp & ~VRAM_address_vdp[16];
-assign VRAM_we_hi_vdp = ~VRAM_we_n_vdp & DLClk_vdp &  VRAM_address_vdp[16];
-
-logic iack;
-always @(posedge clk21m) begin
-   if (reset) iack <= 0;
-   else begin
-      if (iorq_n  & mreq_n)
-         iack <= 0;
-      else
-         if (req)
-            iack <= 1;
-   end
-end
-wire req = ~((iorq_n & mreq_n) | (wr_n & rd_n) | iack);
-
-wire        int_n_vdp18;
-wire  [7:0] d_from_vdp18;
-wire  [7:0] R_vdp18, G_vdp18, B_vdp18;
-wire        HS_n_vdp18, VS_n_vdp18, DE_vdp18, DLClk_vdp18, hblank_vdp18, vblank_vdp18, Blank_vdp18;
-wire [13:0] VRAM_address_vdp18;
-wire  [7:0] VRAM_do_vdp18;
-wire        VRAM_we_vdp18;
-vdp18_core #(.compat_rgb_g(0)) vdp_vdp18
+wire       vdp_int_n;   
+vdp_mux vdp
 (
-   .clk_i(clk21m),
-   .clk_en_10m7_i(ce_10m7_p),
-   .reset_n_i(~reset),
-   .csr_n_i(~(vdp_en & vdp18) | rd_n),
-   .csw_n_i(~(vdp_en & vdp18) | wr_n),
-   .mode_i(a[0]),
-   .cd_i(d_from_cpu),
-   .cd_o(d_from_vdp18),
-   .int_n_o(int_n_vdp18),
-   .vram_we_o(VRAM_we_vdp18),
-   .vram_a_o(VRAM_address_vdp18),
-   .vram_d_o(VRAM_do_vdp18),
-   .vram_d_i(VRAM_di_lo),
-   .border_i(msxConfig.border),
-   .rgb_r_o(R_vdp18),
-   .rgb_g_o(G_vdp18),
-   .rgb_b_o(B_vdp18),
-   .hsync_n_o(HS_n_vdp18),
-   .vsync_n_o(VS_n_vdp18),
-   .hblank_o(hblank_vdp18),
-   .vblank_o(vblank_vdp18),
-   .blank_n_o(DE_vdp18),
-   .is_pal_i(msxConfig.video_mode == PAL)
-);
-wire        int_n_vdp;
-wire  [7:0] d_from_vdp;
-wire  [5:0] R_vdp, G_vdp, B_vdp;
-wire        HS_n_vdp, VS_n_vdp, DE_vdp, DLClk_vdp, DHClk_vdp, Blank_vdp, hblank_vdp, vblank_vdp;
-wire [16:0] VRAM_address_vdp;
-wire  [7:0] VRAM_do_vdp;
-wire        VRAM_we_n_vdp;
-VDP vdp_vdp 
-(
-   .CLK21M(clk21m),
-   .RESET(reset),
-   .REQ(req & vdp_en & vdp),
-   .ACK(),
-   .WRT(~wr_n),
-   .ADR(a),
-   .DBI(d_from_vdp),
-   .DBO(d_from_cpu),
-   .INT_N(int_n_vdp),
-   .PRAMOE_N(),
-   .PRAMWE_N(VRAM_we_n_vdp),
-   .PRAMADR(VRAM_address_vdp),
-   .PRAMDBI({VRAM_di_hi, VRAM_di_lo}),
-   .PRAMDBO(VRAM_do_vdp),
-   .VDPSPEEDMODE(0),
-   .CENTERYJK_R25_N(0),
-   .PVIDEOR(R_vdp),
-   .PVIDEOG(G_vdp),
-   .PVIDEOB(B_vdp),
-   .PVIDEODE(DE_vdp),
-   .BLANK_O(Blank_vdp),
-   .HBLANK(hblank_vdp),
-   .VBLANK(vblank_vdp),
-   .PVIDEOHS_N(HS_n_vdp),
-   .PVIDEOVS_N(VS_n_vdp),
-   .PVIDEOCS_N(),
-   .PVIDEODHCLK(DHClk_vdp),
-   .PVIDEODLCLK(DLClk_vdp),
-   .DISPRESO(/*msxConfig.scandoubler*/ 0),
-   .LEGACY_VGA(1),
-   .RATIOMODE(3'b000),
-   .NTSC_PAL_TYPE(msxConfig.video_mode == AUTO),
-   .FORCED_V_MODE(msxConfig.video_mode == PAL),
-   .BORDER(msxConfig.border)
-);
-
-wire [15:0] VRAM_address;
-wire  [7:0] VRAM_do, VRAM_di_lo, VRAM_di_hi;
-wire        VRAM_we_lo, VRAM_we_hi;
-spram #(.addr_width(16),.mem_name("VRA2")) vram_lo
-(
-   .clock(clk21m),
-   .address(VRAM_address),
-   .wren(VRAM_we_lo),
-   .data(VRAM_do),
-   .q(VRAM_di_lo)
-);
-spram #(.addr_width(16),.mem_name("VRA3")) vram_hi
-(
-   .clock(clk21m),
-   .address(VRAM_address),
-   .wren(VRAM_we_hi),
-   .data(VRAM_do),
-   .q(VRAM_di_hi)
+   .cpu_bus(cpu_bus),
+   .video_bus(video_bus),
+   .ce(vdp_en),
+   .MSX_typ(bios_config.MSX_typ),
+   .data(d_to_cpu_vdp),
+   .interrupt_n(vdp_int_n),
+   .border(msxConfig.border),
+   .video_mode(msxConfig.video_mode)
 );
 
 wire signed [15:0] device_sound;
@@ -457,6 +324,8 @@ device_bus device_bus();
 cpu_bus cpu_bus();
 assign cpu_bus.clk = clk21m;
 assign cpu_bus.clk_en = ce_3m58_p;
+assign cpu_bus.clk_en_10_p = ce_10m7_p;
+assign cpu_bus.clk_en_5_n = ce_5m39_n;
 assign cpu_bus.reset = reset;
 assign cpu_bus.mreq = ~mreq_n;
 assign cpu_bus.iorq = ~iorq_n;

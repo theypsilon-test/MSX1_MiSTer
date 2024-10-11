@@ -193,6 +193,7 @@ assign LED_DISK  = {1'b1, ~vsd_sel & sd_act};
 assign BUTTONS = 0;
 
 localparam VDNUM = 6;
+video_bus video_bus();
 
 MSX::user_config_t msxConfig;
 MSX::bios_config_t bios_config;
@@ -390,9 +391,7 @@ assign selected_mapper[0] = cart_conf[0].selected_mapper;
 assign selected_mapper[1] = cart_conf[1].selected_mapper;
 msx MSX
 (
-   .HS(hsync),
-   .DE(blank_n),
-   .VS(vsync),
+   .video_bus(video_bus),
    .cas_motor(motor),
    .cas_audio_in(msxConfig.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
    .rtc_time(rtc),
@@ -525,7 +524,7 @@ video_freak video_freak
 (
 	.*,
 	.VGA_DE_IN(vga_de),
-   .VGA_VS(vsync),
+   .VGA_VS(video_bus.VS),
 	.ARX((ar != 0) ? (wide ? 12'd340 : 12'd400) : {10'b0, (ar - 1'd1)}),
 	.ARY((ar != 0) ? 12'd300 : 12'd0),
 	.CROP_SIZE(vcrop_en ? vcrop : 12'd0),
@@ -539,15 +538,15 @@ video_mixer #(.GAMMA(0)) video_mixer
    .hq2x(~status[5] & (status[4] ^ status[3])),
    .scandoubler(scandoubler),
    .gamma_bus(gamma_bus),
-   .ce_pix(ce_pix),
-   .R(R),
-   .G(G),
-   .B(B),
-   .HSync(hsync),
-   .VSync(vsync),
+   .ce_pix(video_bus.ce_pix),
+   .R(video_bus.R),
+   .G(video_bus.G),
+   .B(video_bus.B),
+   .HSync(video_bus.HS),
+   .VSync(video_bus.VS),
    
-   .HBlank(hblank),
-   .VBlank(vblank),
+   .HBlank(video_bus.hblank),
+   .VBlank(video_bus.vblank),
 
    .HDMI_FREEZE(),
    .freeze_sync(),

@@ -36,6 +36,8 @@ parameter DEVs_PSG            = dev_typ_t'(1 << 12);
 interface cpu_bus;
     logic        clk;
     logic        clk_en;
+    logic        clk_en_10_p;
+    logic        clk_en_5_n;
     logic        reset;
     logic        mreq;
     logic        iorq;
@@ -44,6 +46,18 @@ interface cpu_bus;
     logic        m1;
     logic [15:0] addr;
     logic  [7:0] data;
+endinterface
+
+interface video_bus;
+    logic  [7:0] R;
+    logic  [7:0] G;
+    logic  [7:0] B;
+    logic        DE;
+    logic        HS;
+    logic        VS;
+    logic        hblank;
+    logic        vblank;
+    logic        ce_pix;
 endinterface
 
 interface device_bus;

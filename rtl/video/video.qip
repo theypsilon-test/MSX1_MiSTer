@@ -1,2 +1,3 @@
-set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) VDPv/vdp.qip   ]
-set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) vdp18v/vdp18.qip   ]
+set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) VDPv/vdp.qip         ]
+set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) vdp18v/vdp18.qip     ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) vdp_mux.sv           ]
