@@ -55,6 +55,7 @@ interface cpu_bus_if;
     logic        rfsh;
     logic [15:0] addr;
     logic  [7:0] data;
+    logic        req;
 endinterface
 
 interface video_bus;

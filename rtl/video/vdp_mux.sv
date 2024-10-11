@@ -49,19 +49,6 @@ assign VRAM_do        = vdp18 ? VRAM_do_vdp18               : VRAM_do_vdp;
 assign VRAM_we_lo_vdp = ~VRAM_we_n_vdp & DLClk_vdp & ~VRAM_address_vdp[16];
 assign VRAM_we_hi_vdp = ~VRAM_we_n_vdp & DLClk_vdp &  VRAM_address_vdp[16];
 
-logic iack;
-always @(posedge clock_bus.clk_sys) begin
-   if (clock_bus.reset) iack <= 0;
-   else begin
-      if (~cpu_bus.iorq && ~cpu_bus.mreq)
-         iack <= 0;
-      else
-         if (req)
-            iack <= 1;
-   end
-end
-wire req = ~((~cpu_bus.iorq & ~cpu_bus.mreq) | (~cpu_bus.wr & ~cpu_bus.rd) | iack);
-
 wire        int_n_vdp18;
 wire  [7:0] d_from_vdp18;
 wire        VRAM_we_lo_vdp, VRAM_we_hi_vdp;
@@ -110,7 +97,7 @@ VDP vdp_vdp
    .CLK21M(clock_bus.clk_sys),
    .RESET(clock_bus.reset),
 
-   .REQ(req & ce & ~vdp18),
+   .REQ(cpu_bus.req & ce & ~vdp18),
    .ACK(),
    .WRT(cpu_bus.wr),
    .ADR(cpu_bus.addr),

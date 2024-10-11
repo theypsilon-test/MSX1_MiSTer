@@ -234,19 +234,6 @@ jt49_bus PSG
    .IOB_out(psg_iob)
 );
 
-logic iack;
-always @(posedge clock_bus.clk_sys) begin
-   if (clock_bus.reset) iack <= 0;
-   else begin
-      if (~cpu_bus.iorq  & ~cpu_bus.mreq)
-         iack <= 0;
-      else
-         if (req)
-            iack <= 1;
-   end
-end
-wire req = ~((~cpu_bus.iorq & ~cpu_bus.mreq) | (~cpu_bus.wr & ~cpu_bus.rd) | iack);
-assign req_dbg = req;
 //  -----------------------------------------------------------------------------
 //  -- RTC
 //  -----------------------------------------------------------------------------
@@ -258,7 +245,7 @@ rtc rtc
    .setup(clock_bus.reset),
    .rt(rtc_time),
    .clkena(clock_bus.ce_10hz),
-   .req(req & rtc_en),
+   .req(cpu_bus.req & rtc_en),
    .ack(),
    .wrt(cpu_bus.wr),
    .adr(cpu_bus.addr),
