@@ -2,11 +2,11 @@ module vdp_mux (
     cpu_bus                 cpu_bus,
     video_bus               video_bus,
     input                   ce,
-    input MSX::MSX_typ_t    MSX_typ,
+    input MSX_typ_t         MSX_typ,
     output            [7:0] data,
     output                  interrupt_n,
     input                   border,
-    input MSX::video_mode_t video_mode 
+    input video_mode_t      video_mode 
 );
 
 logic vdp18;

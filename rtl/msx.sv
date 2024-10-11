@@ -1,4 +1,4 @@
-module msx
+   module msx
 (
    input                    reset,
    //Clock
@@ -23,7 +23,6 @@ module msx
    input             [64:0] rtc_time,
    input MSX::bios_config_t bios_config,
    input MSX::user_config_t msxConfig,
-   input  mapper_typ_t      selected_mapper[2],
    input                    sram_save,
    input                    sram_load,
    input              [2:0] dev_enable[0:(1 << $bits(device_t))-1], 
@@ -77,30 +76,6 @@ assign audio            = compr[audio_mix[16:14]];
 wire [15:0] a;
 wire [7:0] d_to_cpu, d_from_cpu;
 wire mreq_n, wr_n, m1_n, iorq_n, rd_n, rfrsh_n;
-/*
-t80pa #(.Mode(0)) T80
-(
-   .RESET_n(~reset),
-   .CLK(clk21m),
-   .CEN_p(ce_3m58_p),
-   .CEN_n(ce_3m58_n),
-   .WAIT_n(wait_n),
-   .INT_n(vdp_int_n),
-   .NMI_n(1),
-   .BUSRQ_n(1),
-   .M1_n(m1_n),
-   .MREQ_n(mreq_n),
-   .IORQ_n(iorq_n),
-   .RD_n(rd_n),
-   .WR_n(wr_n),
-   .RFSH_n(rfrsh_n),
-   .HALT_n(1),
-   .BUSAK_n(),
-   .A(a),
-   .DI(d_to_cpu),
-   .DO(d_from_cpu)
-);
-*/
 tv80n Z80
 (
    .reset_n(~reset),
@@ -417,4 +392,5 @@ msx_slots msx_slots
    .bios_config(bios_config),
    .data_to_mapper(data_to_mapper)
 );
+
 endmodule

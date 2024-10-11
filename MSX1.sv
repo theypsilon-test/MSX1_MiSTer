@@ -243,11 +243,11 @@ wire      [64:0] rtc;
 //[14:13] MSX2 VideoMode
 //[16:15] MSX2 RAM Size
 //[19:17] SLOT A CART TYPE
-//[23:20] ROM A TYPE MAPPER
+//[23:20] ROM A TYPE MAPPER   UNUSED
 //[25:24] RESERVA
-//[28:26] SRAM SIZE 
+//[28:26] SRAM SIZE           UNUSED 
 //[31:29] SLOT B CART TYPE
-//[34:32] ROM B TYPE MAPPER
+//[34:32] ROM B TYPE MAPPER   UNUSED
 //[37:35] RESERVA
 //[38]    BORDER
 `include "build_id.v" 
@@ -259,12 +259,9 @@ localparam CONF_STR = {
    "FC6,DB,Load DB MAPPERS,31600000;",
    CONF_STR_SLOT_A,
    "H3FS3,ROM,Load,30C00000;",
-   CONF_STR_MAPPER_A,
-   CONF_STR_SRAM_SIZE_A,
    "-;",
    CONF_STR_SLOT_B,
    "H4F4,ROM,Load,31100000;",
-   CONF_STR_MAPPER_B,
    "H6-;",
    "H6R[38],SRAM Save;",
    "H6R[39],SRAM Load;",
@@ -298,7 +295,7 @@ assign status_menumask[1] = fdc_enabled;
 assign status_menumask[2] = bios_config.use_FDC;
 assign status_menumask[3] = ROM_A_load_hide;
 assign status_menumask[4] = ROM_B_load_hide;
-assign status_menumask[5] = sram_A_select_hide;
+assign status_menumask[5] = '0;
 assign status_menumask[6] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
 assign status_menumask[15:7] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
@@ -338,7 +335,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 
 /////////////////   CONFIG   /////////////////
 wire [5:0] mapper_A, mapper_B;
-wire       reload, sram_A_select_hide, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
+wire       reload, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
 msx_config msx_config 
 (
    .clk(clk21m),
@@ -349,8 +346,6 @@ msx_config msx_config
    .sdram_size(sdram_size),
    .cart_conf(cart_conf),
    .reload(reload),
-   .rom_loaded(),
-   .sram_A_select_hide(sram_A_select_hide),
    .ROM_A_load_hide(ROM_A_load_hide),
    .ROM_B_load_hide(ROM_B_load_hide),
    .fdc_enabled(fdc_enabled),
@@ -378,7 +373,6 @@ wire reset = RESET | status[0] | status[10] | reset_rq;
 ///////////////// Computer /////////////////
 wire  [7:0] R, G, B, cpu_din, cpu_dout;
 wire [15:0] cpu_addr, audio;
-wire        hsync, vsync, blank_n, hblank, vblank, ce_pix;
 wire        cpu_wr, cpu_rd, cpu_mreq, cpu_iorq, cpu_m1;
 wire [26:0] ram_addr;
 wire  [7:0] ram_din, ram_dout;
@@ -386,9 +380,6 @@ wire        ram_rnw, sdram_ce, bram_ce;
 wire        sd_tx, sd_rx;
 wire  [7:0] d_to_sd, d_from_sd;
 
-mapper_typ_t selected_mapper[2];
-assign selected_mapper[0] = cart_conf[0].selected_mapper;
-assign selected_mapper[1] = cart_conf[1].selected_mapper;
 msx MSX
 (
    .video_bus(video_bus),
@@ -415,7 +406,6 @@ msx MSX
    .lookup_SRAM(lookup_SRAM),
    .bios_config(bios_config),
    .io_device(io_device),
-   .selected_mapper(selected_mapper),
    .joy0(joy0[5:0]),
    .joy1(joy1[5:0]),
    .*
@@ -598,8 +588,6 @@ memory_upload memory_upload(
     .ram_din(upload_ram_din),
     .ram_ce(upload_ram_ce),
     .sdram_ready(upload_ram_ready),
-    //.sdram_rq(upload_sdram_rq),
-    //.bram_rq(upload_bram_rq),
     .kbd_request(kbd_request),
     .kbd_addr(kbd_addr),
     .kbd_din(kbd_din),

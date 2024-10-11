@@ -153,8 +153,6 @@ package MSX;
 
     typedef struct {
         cart_typ_t   typ;
-        mapper_typ_t selected_mapper;
-        logic [7:0]  selected_sram_size;
     } config_cart_t;
 
     typedef struct {
