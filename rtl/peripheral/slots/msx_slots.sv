@@ -3,7 +3,6 @@ module msx_slots (
     cpu_bus_if                  cpu_bus,          // Interface for CPU communication
     input                 [1:0] active_slot,      // Currently active slot
     output                [7:0] data,             // Data output
-    output signed        [15:0] sound,            // Sound output
     output               [26:0] ram_addr,         // RAM address
     output                [7:0] ram_din,          // Data input to RAM
     input                 [7:0] ram_dout,         // Data output from RAM
@@ -23,8 +22,6 @@ module msx_slots (
     memory_bus memory_bus();
 
     // Retrieve configuration for the current slot
-    wire [3:0] ref_ram    = active_block.ref_ram;
-    wire [1:0] ref_sram   = active_block.ref_sram;
     wire [1:0] offset_ram = active_block.offset_ram;
     wire       cart_num   = active_block.cart_num;
         

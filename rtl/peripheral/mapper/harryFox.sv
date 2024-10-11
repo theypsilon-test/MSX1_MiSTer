@@ -17,8 +17,6 @@ module mapper_harryFox (
     // Bank enable logic
     logic [2:0] bank[2][4];          // Storage for bank data, two entries for two different mapper IDs
     
-    logic [15:0] addr = 16'h4000;
-
     // Initialize or update bank and SRAM enable signals
     always @(posedge clock_bus.clk_sys) begin
         if (clock_bus.reset) begin

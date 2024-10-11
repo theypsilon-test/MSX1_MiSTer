@@ -308,7 +308,6 @@ devices devices
 );
 
 wire         [7:0] d_from_slots;
-wire signed [15:0] cart_sound;
 
 wire [1:0] active_subslot;
 wire [7:0] mapper_subslot_data;
@@ -338,7 +337,6 @@ msx_slots msx_slots
    .cpu_bus(cpu_bus),
    .device_bus(device_bus),
    .data(d_from_slots),  
-   .sound(cart_sound),
    .ram_addr(ram_addr),
    .ram_din(ram_din),
    .ram_rnw(ram_rnw),
