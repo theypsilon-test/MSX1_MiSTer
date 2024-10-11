@@ -33,6 +33,17 @@ parameter DEVs_MFRSD2         = dev_typ_t'(1 << 10);
 parameter DEVs_FLASH          = dev_typ_t'(1 << 11);
 parameter DEVs_PSG            = dev_typ_t'(1 << 12);
 
+interface clock_bus_if;
+    logic     clk_sys;
+    logic     ce_10m7_p;
+    logic     ce_10m7_n;
+    logic     ce_5m39_p;
+    logic     ce_5m39_n;   
+    logic     ce_3m58_p;
+    logic     ce_3m58_n;
+    logic     ce_10hz;
+endinterface
+
 interface cpu_bus;
     logic        clk;
     logic        clk_en;

@@ -194,6 +194,7 @@ assign BUTTONS = 0;
 
 localparam VDNUM = 6;
 video_bus video_bus();
+clock_bus_if clock_bus();
 
 MSX::user_config_t msxConfig;
 MSX::bios_config_t bios_config;
@@ -301,7 +302,7 @@ assign status_menumask[15:7] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 (
-   .clk_sys(clk21m),
+   .clk_sys(clock_bus.clk_sys),
    .HPS_BUS(HPS_BUS),
    .EXT_BUS(),
    .gamma_bus(gamma_bus),
@@ -338,7 +339,7 @@ wire [5:0] mapper_A, mapper_B;
 wire       reload, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
 msx_config msx_config 
 (
-   .clk(clk21m),
+   .clk(clock_bus.clk_sys),
    .reset(reset),
    .bios_config(bios_config),
    .HPS_status(status[63:0]),
@@ -352,20 +353,22 @@ msx_config msx_config
    .msxConfig(msxConfig)
 );
 /////////////////   CLOCKS   /////////////////
-wire clk21m, clk_sdram, locked_sdram;
-wire ce_10m7_p, ce_10m7_n, ce_5m39_p, ce_5m39_n, ce_3m58_p, ce_3m58_n, ce_10hz;
+wire clk_core, clk_sdram, locked_sdram;
+// wire ce_10m7_p, ce_10m7_n, ce_5m39_p, ce_5m39_n, ce_3m58_p, ce_3m58_n, ce_10hz;
 pll pll
 (
    .refclk(CLK_50M),
    .rst(0),
    .outclk_0(clk_sdram), //85.909090
-   .outclk_1(clk21m),    //21.477270
+   .outclk_1(clk_core),    //21.477270
    .locked(locked_sdram)
 );
 
 clock clock
 (
-	.*
+	.clk(clk_core),
+   .reset(reset),
+   .clock_bus(clock_bus)
 );
 
 /////////////////    RESET   /////////////////
@@ -382,6 +385,7 @@ wire  [7:0] d_to_sd, d_from_sd;
 
 msx MSX
 (
+   .clock_bus(clock_bus),
    .video_bus(video_bus),
    .cas_motor(motor),
    .cas_audio_in(msxConfig.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
@@ -417,7 +421,7 @@ wire vsdmiso;
 wire sdmiso = vsd_sel ? vsdmiso : SD_MISO;
 
 reg vsd_sel = 0;
-always @(posedge clk21m) if(img_mounted[4]) vsd_sel <= |img_size;
+always @(posedge clock_bus.clk_sys) if(img_mounted[4]) vsd_sel <= |img_size;
 
 assign SD_CS   = vsd_sel;
 assign SD_SCK  = sdclk  & ~vsd_sel;
@@ -425,7 +429,7 @@ assign SD_MOSI = sdmosi & ~vsd_sel;
 
 reg sd_act;
 reg [31:0] timeout = 0;
-always @(posedge clk21m) begin
+always @(posedge clock_bus.clk_sys) begin
     reg old_mosi, old_miso;
 
     old_mosi <= sdmosi;
@@ -443,7 +447,7 @@ end
 //////////////////   SPI   ///////////////////
 spi_divmmc spi
 (
-   .clk_sys(clk21m),
+   .clk_sys(clock_bus.clk_sys),
    .tx(sd_tx),
    .rx(sd_rx),
    .din(d_to_sd),
@@ -459,7 +463,7 @@ spi_divmmc spi
 sd_card sd_card
 (
     .*,
-    .clk_sys(clk21m),
+    .clk_sys(clock_bus.clk_sys),
     .img_mounted(img_mounted[4]),
     .img_size(img_size),
     .sd_lba(sd_lba[4]),
@@ -485,7 +489,7 @@ logic wide;
 wire  vcrop_en, vga_de;
 wire  [1:0] ar;
 
-assign CLK_VIDEO   = clk21m;
+assign CLK_VIDEO   = clock_bus.clk_sys;
 assign VGA_SL      = status[5:3] > 2 ? status[4:3] - 2'd2 : 2'd0;
 assign vcrop_en    = status[40];
 assign ar          = status[2:1];
@@ -557,7 +561,7 @@ assign tape_in = tape_adc_act & tape_adc;
 
 ltc2308_tape #(.ADC_RATE(120000), .CLK_RATE(21477272)) tape
 (
-   .clk(clk21m),
+   .clk(clock_bus.clk_sys),
    .ADC_BUS(ADC_BUS),
    .dout(tape_adc),
    .active(tape_adc_act)
@@ -572,7 +576,7 @@ wire  [8:0] kbd_addr;
 wire        kbd_request, kbd_we;
 wire        load_sram;
 memory_upload memory_upload(
-    .clk(clk21m),
+    .clk(clock_bus.clk_sys),
     .reset_rq(reset_rq),
     .ioctl_download(ioctl_download),
     .ioctl_index(ioctl_index),
@@ -607,11 +611,11 @@ wire        ddr3_rd, ddr3_rd_download, ddr3_rd_cas, ddr3_wr_download, ddr3_ready
 
 assign ddr3_addr = ddr3_request_download ? ddr3_addr_download : ddr3_addr_cas ;
 assign ddr3_rd   = ddr3_request_download ? ddr3_rd_download   : ddr3_rd_cas   ;
-assign DDRAM_CLK = clk21m;
+assign DDRAM_CLK = clock_bus.clk_sys;
 
 ddram buffer
 (
-   .DDRAM_CLK(clk21m),
+   .DDRAM_CLK(DDRAM_CLK),
    .addr(ddr3_addr),
    .dout(ddr3_dout),
    .din(),
@@ -678,7 +682,7 @@ wire [7:0]   backup_ram_din, backup_ram_dout;
 wire         backup_ram_req, backup_ram_rnw, backup_ram_ready;
 nvram_backup nvram_backup
 (
-   .clk(clk21m),
+   .clk(clock_bus.clk_sys),
    .lookup_SRAM(lookup_SRAM),
    .load_req(status[39] | load_sram),
    .save_req(status[38]),
@@ -704,7 +708,7 @@ nvram_backup nvram_backup
 ///////////////// CAS EMULATE /////////////////
 wire ioctl_isCAS, buff_mem_ready, motor, CAS_dout, play, rewind;
 logic cas_load = 0;
-always @(posedge clk21m) begin
+always @(posedge clock_bus.clk_sys) begin
    logic ioctl_download_last; 
    if (~ioctl_isCAS & ioctl_download_last )  begin
       cas_load <= 1'b1;
@@ -718,8 +722,8 @@ assign rewind       = status[9] | ioctl_isCAS | reset;
 
 tape cass 
 (
-   .clk(clk21m),
-   .ce_5m3(ce_5m39_p),
+   .clk(clock_bus.clk_sys),
+   .ce_5m3(clock_bus.ce_5m39_p),
    .cas_out(CAS_dout),
    .ram_a(ddr3_addr_cas),
    .ram_di(ddr3_dout),

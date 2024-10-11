@@ -2,13 +2,7 @@
 (
    input                    reset,
    //Clock
-   input                    clk21m,
-   input                    ce_10m7_p,
-   input                    ce_3m58_p,
-   input                    ce_3m58_n,
-   input                    ce_5m39_n,
-   input                    ce_10hz,
-   input                    clk_sdram,
+   clock_bus_if             clock_bus,
    //Video
    video_bus                video_bus,
    //I/O
@@ -79,7 +73,7 @@ wire mreq_n, wr_n, m1_n, iorq_n, rd_n, rfrsh_n;
 tv80n Z80
 (
    .reset_n(~reset),
-   .clk(ce_3m58_n),
+   .clk(clock_bus.ce_3m58_n),
    .wait_n(wait_n),
    .int_n(vdp_int_n),
    .nmi_n(1'b1),
@@ -102,20 +96,20 @@ tv80n Z80
 wire exwait_n = 1;
 
 logic wait_n = 1'b0;
-always @(posedge clk21m, negedge exwait_n, negedge u1_2_q) begin
+always @(posedge clock_bus.clk_sys, negedge exwait_n, negedge u1_2_q) begin
    if (~exwait_n)
       wait_n <= 1'b0;
    else if (~u1_2_q)
       wait_n <= 1'b1;
-   else if (ce_3m58_p)
+   else if (clock_bus.ce_3m58_p)
       wait_n <= m1_n;
 end
 
 logic u1_2_q = 1'b0;
-always @(posedge clk21m, negedge exwait_n) begin
+always @(posedge clock_bus.clk_sys, negedge exwait_n) begin
    if (~exwait_n)
       u1_2_q <= 1'b1;
-   else if (ce_3m58_p)
+   else if (clock_bus.ce_3m58_p)
       u1_2_q <= wait_n;
 end
 
@@ -123,7 +117,7 @@ logic map_valid = 0;
 wire ppi_en = ~ppi_n;
 wire [1:0] active_slot;
 
-always @(posedge reset, posedge clk21m) begin
+always @(posedge reset, posedge clock_bus.clk_sys) begin
     if (reset)
         map_valid = 0;
     else if (ppi_en)
@@ -154,7 +148,7 @@ assign cas_motor =  ppi_out_c[4];
 jt8255 PPI
 (
    .rst(reset),
-   .clk(clk21m),
+   .clk(clock_bus.clk_sys),
    .addr(a[1:0]),
    .din(d_from_cpu),
    .dout(d_from_8255),
@@ -187,7 +181,7 @@ wire [7:0] d_from_kb;
 keyboard msx_key
 (
    .reset(reset),
-   .clk(clk21m),
+   .clk(clock_bus.clk_sys),
    .ps2_key(ps2_key),
    .kb_row(ppi_out_c[3:0]),
    .kb_data(d_from_kb),
@@ -208,29 +202,29 @@ assign psg_ioa = {cas_audio_in,1'b0, psg_iob[6] ? joyB : joyA};
 wire [9:0] ay_ch_mix;
 
 logic u21_1_q = 1'b0;
-always @(posedge clk21m,  posedge psg_n) begin
+always @(posedge clock_bus.clk_sys,  posedge psg_n) begin
    if (psg_n)
       u21_1_q <= 1'b0;
-   else if (ce_3m58_p)
+   else if (clock_bus.ce_3m58_p)
       u21_1_q <= ~psg_n;
 end
 
 logic u21_2_q = 1'b0;
-always @(posedge clk21m, posedge psg_n) begin
+always @(posedge clock_bus.clk_sys, posedge psg_n) begin
    if (psg_n)
       u21_2_q <= 1'b0;
-   else if (ce_3m58_p)
+   else if (clock_bus.ce_3m58_p)
       u21_2_q <= u21_1_q;
 end
 
-wire psg_e = !(!u21_2_q | ce_3m58_p) | psg_n;
+wire psg_e = !(!u21_2_q | clock_bus.ce_3m58_p) | psg_n;
 wire psg_bc   = !(a[0] | psg_e);
 wire psg_bdir = !(a[1] | psg_e);
 jt49_bus PSG
 (
    .rst_n(~reset),
-   .clk(clk21m),
-   .clk_en(ce_3m58_p),
+   .clk(clock_bus.clk_sys),
+   .clk_en(clock_bus.ce_3m58_p),
    .bdir(psg_bdir),
    .bc1(psg_bc),
    .din(d_from_cpu),
@@ -247,7 +241,7 @@ jt49_bus PSG
 );
 
 logic iack;
-always @(posedge clk21m) begin
+always @(posedge clock_bus.clk_sys) begin
    if (reset) iack <= 0;
    else begin
       if (iorq_n  & mreq_n)
@@ -265,11 +259,11 @@ assign req_dbg = req;
 wire [7:0] d_from_rtc;
 rtc rtc
 (
-   .clk21m(clk21m),
+   .clk21m(clock_bus.clk_sys),
    .reset(reset),
    .setup(reset),
    .rt(rtc_time),
-   .clkena(ce_10hz),
+   .clkena(clock_bus.ce_10hz),
    .req(req & rtc_en),
    .ack(),
    .wrt(~wr_n),
@@ -297,10 +291,10 @@ vdp_mux vdp
 wire signed [15:0] device_sound;
 device_bus device_bus();
 cpu_bus cpu_bus();
-assign cpu_bus.clk = clk21m;
-assign cpu_bus.clk_en = ce_3m58_p;
-assign cpu_bus.clk_en_10_p = ce_10m7_p;
-assign cpu_bus.clk_en_5_n = ce_5m39_n;
+assign cpu_bus.clk = clock_bus.clk_sys;
+assign cpu_bus.clk_en = clock_bus.ce_3m58_p;
+assign cpu_bus.clk_en_10_p = clock_bus.ce_10m7_p;
+assign cpu_bus.clk_en_5_n = clock_bus.ce_5m39_n;
 assign cpu_bus.reset = reset;
 assign cpu_bus.mreq = ~mreq_n;
 assign cpu_bus.iorq = ~iorq_n;
