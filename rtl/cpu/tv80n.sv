@@ -29,33 +29,21 @@
 
 module tv80n (/*AUTOARG*/
   // Outputs
-  m1_n, mreq_n, iorq_n, rd_n, wr_n, rfsh_n, halt_n, busak_n, A, dout,
+  clock_bus_if clock_bus,
+  output       busak_n,
   // Inputs
-  reset_n, clk, wait_n, int_n, nmi_n, busrq_n, di
+  cpu_bus_if   cpu_bus,
+  input        wait_n, 
+  input        int_n, 
+  input        nmi_n, 
+  input        busrq_n, 
+  input  [7:0] di
   );
 
   parameter Mode = 0;    // 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
   parameter T2Write = 0; // 0 => wr_n active in T3, /=0 => wr_n active in T2
   parameter IOWait  = 1; // 0 => Single cycle I/O, 1 => Std I/O cycle
 
-
-  input         reset_n /* verilator public */; 
-  input         clk; 
-  input         wait_n; 
-  input         int_n; 
-  input         nmi_n; 
-  input         busrq_n; 
-  output        m1_n /* verilator public */; 
-  output        mreq_n /* verilator public */; 
-  output        iorq_n /* verilator public */; 
-  output        rd_n /* verilator public */; 
-  output        wr_n /* verilator public */; 
-  output        rfsh_n; 
-  output        halt_n; 
-  output        busak_n; 
-  output [15:0] A /* verilator public */;
-  input [7:0]   di /* verilator public */;
-  output [7:0]  dout /* verilator public */;
 
   reg           mreq_n; 
   reg           iorq_n; 
@@ -66,20 +54,22 @@ module tv80n (/*AUTOARG*/
   reg           nxt_rd_n; 
   reg           nxt_wr_n; 
   
-  wire          cen;
   wire          intcycle_n;
   wire          no_read;
   wire          write;
   wire          iorq;
+  wire          m1_n;
+  wire          rfsh_n;
+  wire          halt_n;
+  wire [15:0]   A;
+  wire  [7:0]   dout;
   reg [7:0]     di_reg;
   wire [6:0]    mcycle;
   wire [6:0]    tstate;
 
-  assign    cen = 1;
-
   tv80_core #(Mode, IOWait) i_tv80_core
     (
-     .cen (cen),
+     .cen (1),
      .m1_n (m1_n),
      .iorq (iorq),
      .no_read (no_read),
@@ -89,10 +79,10 @@ module tv80n (/*AUTOARG*/
      .wait_n (wait_n),
      .int_n (int_n),
      .nmi_n (nmi_n),
-     .reset_n (reset_n),
+     .reset_n (~clock_bus.reset),
      .busrq_n (busrq_n),
      .busak_n (busak_n),
-     .clk (clk),
+     .clk (clock_bus.ce_3m58_n),
      .IntE (),
      .stop (),
      .A (A),
@@ -149,9 +139,9 @@ module tv80n (/*AUTOARG*/
 	end // else: !if(mcycle[0])
     end // always @ *
 
-  always @(negedge clk)
+  always @(negedge clock_bus.ce_3m58_n)
     begin
-      if (!reset_n)
+      if (clock_bus.reset)
         begin
 	  rd_n   <= `TV80DELAY 1'b1;
 	  wr_n   <= `TV80DELAY 1'b1;
@@ -167,9 +157,9 @@ module tv80n (/*AUTOARG*/
 	end // else: !if(!reset_n)
     end // always @ (posedge clk or negedge reset_n)
 
-  always @(posedge clk)
+  always @(posedge clock_bus.ce_3m58_n)
     begin
-      if (!reset_n)
+      if (clock_bus.reset)
         begin
 	  di_reg <= `TV80DELAY 0;
         end
@@ -179,6 +169,31 @@ module tv80n (/*AUTOARG*/
 	    di_reg <= `TV80DELAY di;
 	end // else: !if(!reset_n)
     end // always @ (posedge clk)
+
+  logic iack;
+  always @(posedge clock_bus.clk_sys) begin
+    if (clock_bus.reset) iack <= 0;
+    else begin
+        if (iorq_n  & mreq_n)
+          iack <= 0;
+        else
+          if (req)
+              iack <= 1;
+    end
+  end
+  wire req = ~((iorq_n & mreq_n) | (wr_n & rd_n) | iack);
+
   
+  assign cpu_bus.mreq = ~mreq_n;
+  assign cpu_bus.iorq = ~iorq_n;
+  assign cpu_bus.rd = ~rd_n;
+  assign cpu_bus.wr = ~wr_n;
+  assign cpu_bus.halt = ~halt_n;
+  assign cpu_bus.rfsh = ~rfsh_n;
+  assign cpu_bus.addr = A;
+  assign cpu_bus.data = dout;
+  assign cpu_bus.m1  = ~m1_n;
+  assign cpu_bus.req = req;
+
 endmodule // t80n
 
