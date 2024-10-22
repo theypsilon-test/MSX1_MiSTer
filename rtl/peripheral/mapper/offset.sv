@@ -1,8 +1,8 @@
 module mapper_offset (
-    cpu_bus_if      cpu_bus,       // Interface for CPU communication
-    block_info      block_info,    // Struct containing mapper configuration and parameters
-    mapper_out      out,           // Interface for mapper output
-    device_bus      device_out     // Interface for device output
+    cpu_bus_if.device_mp    cpu_bus,       // Interface for CPU communication
+    block_info              block_info,    // Struct containing mapper configuration and parameters
+    mapper_out              out,           // Interface for mapper output
+    device_bus              device_out     // Interface for device output
 );
     // Chip select is valid if the mapper type is OFFSET and memory request (mreq) is active
     wire cs = (block_info.typ == MAPPER_OFFSET) & cpu_bus.mreq;

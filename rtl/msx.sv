@@ -55,7 +55,7 @@
 );
 
 device_bus device_bus();
-cpu_bus_if cpu_bus();
+cpu_bus_if cpu_bus(clock_bus.clk_sys, clock_bus.ce_3m58_n, clock_bus.reset);
 sd_bus sd_bus();
 sd_bus_control sd_bus_control();
 
@@ -75,8 +75,7 @@ assign audio            = compr[audio_mix[16:14]];
 wire [7:0] d_to_cpu;
 tv80n Z80
 (
-   .clock_bus(clock_bus),
-   .cpu_bus(cpu_bus),
+   .cpu_bus(cpu_bus.cpu_mp),
    .wait_n(wait_n),
    .int_n(vdp_int_n),
    .nmi_n(1'b1),
@@ -96,7 +95,7 @@ always @(posedge clock_bus.clk_sys, negedge exwait_n, negedge u1_2_q) begin
    else if (~u1_2_q)
       wait_n <= 1'b1;
    else if (clock_bus.ce_3m58_p)
-      wait_n <= ~cpu_bus.m1;
+      wait_n <= ~cpu_bus.device_mp.m1;
 end
 
 logic u1_2_q = 1'b0;
@@ -119,18 +118,18 @@ always @(posedge clock_bus.reset, posedge clock_bus.clk_sys) begin
 end
 
 assign active_slot =    ~map_valid                   ? 2'b00         :
-                        cpu_bus.addr[15:14] == 2'b00 ? ppi_out_a[1:0] :
-                        cpu_bus.addr[15:14] == 2'b01 ? ppi_out_a[3:2] :
-                        cpu_bus.addr[15:14] == 2'b10 ? ppi_out_a[5:4] :
+                        cpu_bus.device_mp.addr[15:14] == 2'b00 ? ppi_out_a[1:0] :
+                        cpu_bus.device_mp.addr[15:14] == 2'b01 ? ppi_out_a[3:2] :
+                        cpu_bus.device_mp.addr[15:14] == 2'b10 ? ppi_out_a[5:4] :
                                                        ppi_out_a[7:6] ;
 
 //  -----------------------------------------------------------------------------
 //  -- IO Decoder
 //  -----------------------------------------------------------------------------
-wire psg_n  = ~((cpu_bus.addr[7:3] == 5'b10100)   & cpu_bus.iorq & ~cpu_bus.m1);
-wire ppi_n  = ~((cpu_bus.addr[7:3] == 5'b10101)   & cpu_bus.iorq & ~cpu_bus.m1);
-wire vdp_en =   (cpu_bus.addr[7:3] == 5'b10011)   & cpu_bus.iorq & ~cpu_bus.m1 ;
-wire rtc_en =   (cpu_bus.addr[7:1] == 7'b1011010) & cpu_bus.iorq & ~cpu_bus.m1 & bios_config.MSX_typ == MSX2;
+wire psg_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10100)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1);
+wire ppi_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10101)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1);
+wire vdp_en =   (cpu_bus.device_mp.addr[7:3] == 5'b10011)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1 ;
+wire rtc_en =   (cpu_bus.device_mp.addr[7:1] == 7'b1011010) & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1 & bios_config.MSX_typ == MSX2;
 
 //  -----------------------------------------------------------------------------
 //  -- 82C55 PPI
@@ -143,11 +142,11 @@ jt8255 PPI
 (
    .rst(clock_bus.reset),
    .clk(clock_bus.clk_sys),
-   .addr(cpu_bus.addr[1:0]),
-   .din(cpu_bus.data),
+   .addr(cpu_bus.device_mp.addr[1:0]),
+   .din(cpu_bus.device_mp.data),
    .dout(d_from_8255),
-   .rdn(~cpu_bus.rd),
-   .wrn(~cpu_bus.wr),
+   .rdn(~cpu_bus.device_mp.rd),
+   .wrn(~cpu_bus.device_mp.wr),
    .csn(ppi_n),
    .porta_din(8'h0),
    .portb_din(d_from_kb),
@@ -160,7 +159,7 @@ jt8255 PPI
 //  -----------------------------------------------------------------------------
 //  -- CPU data multiplex
 //  -----------------------------------------------------------------------------
-assign d_to_cpu = ~cpu_bus.rd             ? 8'hFF           :
+assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
                   vdp_en                  ? d_to_cpu_vdp    :
                   rtc_en                  ? d_from_rtc      :
                   ~psg_n                  ? d_from_psg      :
@@ -212,8 +211,8 @@ always @(posedge clock_bus.clk_sys, posedge psg_n) begin
 end
 
 wire psg_e = !(!u21_2_q | clock_bus.ce_3m58_p) | psg_n;
-wire psg_bc   = !(cpu_bus.addr[0] | psg_e);
-wire psg_bdir = !(cpu_bus.addr[1] | psg_e);
+wire psg_bc   = !(cpu_bus.device_mp.addr[0] | psg_e);
+wire psg_bdir = !(cpu_bus.device_mp.addr[1] | psg_e);
 jt49_bus PSG
 (
    .rst_n(~clock_bus.reset),
@@ -221,7 +220,7 @@ jt49_bus PSG
    .clk_en(clock_bus.ce_3m58_p),
    .bdir(psg_bdir),
    .bc1(psg_bc),
-   .din(cpu_bus.data),
+   .din(cpu_bus.device_mp.data),
    .sel(0),
    .dout(d_from_psg),
    .sound(ay_ch_mix),
@@ -245,12 +244,12 @@ rtc rtc
    .setup(clock_bus.reset),
    .rt(rtc_time),
    .clkena(clock_bus.ce_10hz),
-   .req(cpu_bus.req & rtc_en),
+   .req(cpu_bus.device_mp.req & rtc_en),
    .ack(),
-   .wrt(cpu_bus.wr),
-   .adr(cpu_bus.addr),
+   .wrt(cpu_bus.device_mp.wr),
+   .adr(cpu_bus.device_mp.addr),
    .dbi(d_from_rtc),
-   .dbo(cpu_bus.data)
+   .dbo(cpu_bus.device_mp.data)
 );
 //  -----------------------------------------------------------------------------
 //  -- Video
@@ -260,7 +259,7 @@ wire       vdp_int_n;
 vdp_mux vdp
 (
    .clock_bus(clock_bus),
-   .cpu_bus(cpu_bus),
+   .cpu_bus(cpu_bus.device_mp),
    .video_bus(video_bus),
    .ce(vdp_en),
    .MSX_typ(bios_config.MSX_typ),
@@ -294,7 +293,7 @@ wire [7:0] data_to_mapper;
 devices devices
 (
    .clock_bus(clock_bus),
-   .cpu_bus(cpu_bus),
+   .cpu_bus(cpu_bus.device_mp),
    .device_bus(device_bus),
    .sd_bus(sd_bus),
    .sd_bus_control(sd_bus_control),
@@ -315,7 +314,7 @@ wire mapper_subslot_rq;
 subslot subslot_inst 
 (
    .clock_bus(clock_bus),
-   .cpu_bus(cpu_bus),
+   .cpu_bus(cpu_bus.device_mp),
    .expander_enable(bios_config.slot_expander_en),
    .data(mapper_subslot_data),
    .active_subslot(active_subslot),
@@ -323,7 +322,7 @@ subslot subslot_inst
    .active_slot(active_slot)
 );
 
-wire [5:0] layout_id = {active_slot, active_subslot, cpu_bus.addr[15:14]};
+wire [5:0] layout_id = {active_slot, active_subslot, cpu_bus.device_mp.addr[15:14]};
 MSX::block_t active_block;
 MSX::lookup_RAM_t active_RAM;
 MSX::lookup_SRAM_t active_SRAM;
@@ -334,7 +333,7 @@ assign active_SRAM = lookup_SRAM[active_block.ref_sram];
 msx_slots msx_slots
 (
    .clock_bus(clock_bus),
-   .cpu_bus(cpu_bus),
+   .cpu_bus(cpu_bus.device_mp),
    .device_bus(device_bus),
    .data(d_from_slots),  
    .ram_addr(ram_addr),

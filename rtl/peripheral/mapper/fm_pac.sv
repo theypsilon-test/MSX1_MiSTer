@@ -1,9 +1,9 @@
 module mapper_fm_pac (
-    clock_bus_if     clock_bus,     // Interface for clock
-    cpu_bus_if       cpu_bus,       // Interface for CPU communication
-    block_info       block_info,    // Struct containing mapper configuration and parameters
-    mapper_out       out,           // Interface for mapper output
-    device_bus       device_out     // Interface for device output
+    clock_bus_if            clock_bus,     // Interface for clock
+    cpu_bus_if.device_mp    cpu_bus,       // Interface for CPU communication
+    block_info              block_info,    // Struct containing mapper configuration and parameters
+    mapper_out              out,           // Interface for mapper output
+    device_bus              device_out     // Interface for device output
 );
 
     // Internal logic variables

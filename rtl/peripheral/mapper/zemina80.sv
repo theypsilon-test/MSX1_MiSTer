@@ -1,8 +1,8 @@
 module mapper_zemina80 (
-    clock_bus_if    clock_bus,     // Interface for clock
-    cpu_bus_if      cpu_bus,       // Interface for CPU communication
-    mapper_out      out,           // Interface for mapper output
-    block_info      block_info     // Struct containing mapper configuration and parameters
+    clock_bus_if            clock_bus,     // Interface for clock
+    cpu_bus_if.device_mp    cpu_bus,       // Interface for CPU communication
+    mapper_out              out,           // Interface for mapper output
+    block_info              block_info     // Struct containing mapper configuration and parameters
 );
   
     // Control signals for memory mapping

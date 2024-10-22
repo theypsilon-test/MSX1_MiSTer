@@ -28,16 +28,15 @@
 `define TV80DELAY
 
 module tv80n (/*AUTOARG*/
-  // Outputs
-  clock_bus_if clock_bus,
-  output       busak_n,
-  // Inputs
-  cpu_bus_if   cpu_bus,
-  input        wait_n, 
-  input        int_n, 
-  input        nmi_n, 
-  input        busrq_n, 
-  input  [7:0] di
+    // Outputs
+    cpu_bus_if.cpu_mp cpu_bus,
+    output            busak_n,
+    // Inputs
+    input             wait_n, 
+    input             int_n, 
+    input             nmi_n, 
+    input             busrq_n, 
+    input       [7:0] di
   );
 
   parameter Mode = 0;    // 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
@@ -79,10 +78,10 @@ module tv80n (/*AUTOARG*/
      .wait_n (wait_n),
      .int_n (int_n),
      .nmi_n (nmi_n),
-     .reset_n (~clock_bus.reset),
+     .reset_n (~cpu_bus.reset),
      .busrq_n (busrq_n),
      .busak_n (busak_n),
-     .clk (clock_bus.ce_3m58_n),
+     .clk (cpu_bus.clk_en),
      .IntE (),
      .stop (),
      .A (A),
@@ -139,9 +138,9 @@ module tv80n (/*AUTOARG*/
 	end // else: !if(mcycle[0])
     end // always @ *
 
-  always @(negedge clock_bus.ce_3m58_n)
+  always @(negedge cpu_bus.clk_en)
     begin
-      if (clock_bus.reset)
+      if (cpu_bus.reset)
         begin
 	  rd_n   <= `TV80DELAY 1'b1;
 	  wr_n   <= `TV80DELAY 1'b1;
@@ -157,9 +156,9 @@ module tv80n (/*AUTOARG*/
 	end // else: !if(!reset_n)
     end // always @ (posedge clk or negedge reset_n)
 
-  always @(posedge clock_bus.ce_3m58_n)
+  always @(posedge cpu_bus.clk_en)
     begin
-      if (clock_bus.reset)
+      if (cpu_bus.reset)
         begin
 	  di_reg <= `TV80DELAY 0;
         end
@@ -171,8 +170,8 @@ module tv80n (/*AUTOARG*/
     end // always @ (posedge clk)
 
   logic iack;
-  always @(posedge clock_bus.clk_sys) begin
-    if (clock_bus.reset) iack <= 0;
+  always @(posedge cpu_bus.clk) begin
+    if (cpu_bus.reset) iack <= 0;
     else begin
         if (iorq_n  & mreq_n)
           iack <= 0;

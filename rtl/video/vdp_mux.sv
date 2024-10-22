@@ -1,6 +1,6 @@
 module vdp_mux (
     clock_bus_if            clock_bus,
-    cpu_bus_if              cpu_bus,
+    cpu_bus_if.device_mp    cpu_bus,
     video_bus               video_bus,
     input                   ce,
     input MSX_typ_t         MSX_typ,

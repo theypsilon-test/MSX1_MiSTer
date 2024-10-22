@@ -1,11 +1,11 @@
 module subslot (
-    clock_bus_if        clock_bus,      // Interface for clock
-    cpu_bus_if          cpu_bus,        // Interface for CPU communication
-    input         [1:0] active_slot,    // Currently active slot
-    input         [3:0] expander_enable,// Enable signals for the expander
-    output        [7:0] data,           // Data output
-    output        [1:0] active_subslot, // Currently active subslot
-    output              output_rq       // Chip select signal
+    clock_bus_if            clock_bus,      // Interface for clock
+    cpu_bus_if.device_mp    cpu_bus,        // Interface for CPU communication
+    input             [1:0] active_slot,    // Currently active slot
+    input             [3:0] expander_enable,// Enable signals for the expander
+    output            [7:0] data,           // Data output
+    output            [1:0] active_subslot, // Currently active subslot
+    output                  output_rq       // Chip select signal
 );
 
     // Array to store mapper slot data for 4 slots

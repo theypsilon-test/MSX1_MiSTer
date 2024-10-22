@@ -1,16 +1,16 @@
 module devices (
-    clock_bus_if        clock_bus,        // Clock interface
-    cpu_bus_if          cpu_bus,          // CPU bus interface
-    device_bus          device_bus,       // Device control bus interface
-    sd_bus              sd_bus,           // SD bus interface
-    sd_bus_control      sd_bus_control,   // SD bus control interface
-    image_info          image_info,       // Image information
-    input [2:0]         dev_enable[0:(1 << $bits(device_t))-1], // Enable signals
-    input MSX::io_device_t io_device[16], // Array of IO devices
-    output signed [15:0] sound,           // Combined audio output
-    output [7:0]        data,             // Combined data output
-    output              output_rq,        // Combined output request
-    output [7:0]        data_to_mapper    // Data output to mapper
+    clock_bus_if            clock_bus,                              // Clock interface
+    cpu_bus_if.device_mp    cpu_bus,                                // CPU bus interface
+    device_bus              device_bus,                             // Device control bus interface
+    sd_bus                  sd_bus,                                 // SD bus interface
+    sd_bus_control          sd_bus_control,                         // SD bus control interface
+    image_info              image_info,                             // Image information
+    input [2:0]             dev_enable[0:(1 << $bits(device_t))-1], // Enable signals
+    input MSX::io_device_t  io_device[16],                          // Array of IO devices
+    output    signed [15:0] sound,                                  // Combined audio output
+    output            [7:0] data,                                   // Combined data output
+    output                  output_rq,                              // Combined output request
+    output            [7:0] data_to_mapper                          // Data output to mapper
 );
 
     // Výstupy kombinující jednotlivé zařízení

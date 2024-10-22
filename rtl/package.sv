@@ -45,17 +45,54 @@ interface clock_bus_if;
     logic     reset;
 endinterface
 
-interface cpu_bus_if;
-    logic        mreq;
-    logic        iorq;
-    logic        rd;
-    logic        wr;
-    logic        m1;
-    logic        halt;
-    logic        rfsh;
-    logic [15:0] addr;
-    logic  [7:0] data;
-    logic        req;
+interface cpu_bus_if(
+    input       clk,
+    input       clk_en,
+    input       reset
+);
+    wire        mreq;
+    wire        iorq;
+    wire        rd;
+    wire        wr;
+    wire        m1;
+    wire        halt;
+    wire        rfsh;
+    wire [15:0] addr;
+    wire  [7:0] data;
+    wire        req;
+
+    modport cpu_mp (
+        input   clk,
+        input   clk_en,
+        input   reset,
+        output  mreq,
+        output  iorq,
+        output  rd,
+        output  wr,
+        output  m1,
+        output  halt,
+        output  rfsh,
+        output  addr,
+        output  data,
+        output  req
+    );
+    
+    modport device_mp (
+        input   clk,
+        input   clk_en,
+        input   reset,
+        input   mreq,
+        input   iorq,
+        input   rd,
+        input   wr,
+        input   m1,
+        input   halt,
+        input   rfsh,
+        input   addr,
+        input   data,
+        input   req
+    );
+
 endinterface
 
 interface video_bus;

@@ -1,13 +1,13 @@
 module vy0010
 (
-   clock_bus_if    clock_bus,          // Interface for clock
-   cpu_bus_if      cpu_bus,            // Interface for CPU communication
-   device_bus      device_bus,         // Interface for device control
-   sd_bus          sd_bus,             // Data from SD
-   sd_bus_control  sd_bus_control,     // Control SD
-   image_info      image_info,
-   output   [7:0]  data,
-   output          output_rq
+   clock_bus_if         clock_bus,          // Interface for clock
+   cpu_bus_if.device_mp cpu_bus,            // Interface for CPU communication
+   device_bus           device_bus,         // Interface for device control
+   sd_bus               sd_bus,             // Data from SD
+   sd_bus_control       sd_bus_control,     // Control SD
+   image_info           image_info,
+   output        [7:0]  data,
+   output               output_rq
 );
 
 wire cs = (device_bus.typ == DEV_VY0010) && (device_bus.num == 0); // Only first instance

@@ -1,6 +1,6 @@
 module msx_slots (
     clock_bus_if                clock_bus,        // Interface for clock
-    cpu_bus_if                  cpu_bus,          // Interface for CPU communication
+    cpu_bus_if.device_mp        cpu_bus,          // Interface for CPU communication
     input                 [1:0] active_slot,      // Currently active slot
     output                [7:0] data,             // Data output
     output               [26:0] ram_addr,         // RAM address
@@ -14,7 +14,7 @@ module msx_slots (
     input  MSX::lookup_RAM_t    active_RAM,       // RAM lookup table
     input  MSX::lookup_SRAM_t   active_SRAM,      // SRAM lookup table
     input  MSX::bios_config_t   bios_config,      // BIOS configuration
-    device_bus               device_bus,          // Interface for device control
+    device_bus                  device_bus,       // Interface for device control
     input                 [7:0] data_to_mapper
 );
     // Mapper and memory bus configuration

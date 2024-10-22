@@ -1,11 +1,11 @@
 module mappers (
-    clock_bus_if        clock_bus,     // Interface for clock
-    cpu_bus_if          cpu_bus,       // Interface for CPU communication
-    block_info          block_info,    // Struct containing block configuration and parameters
-    device_bus          device_bus,    // Interface for device control
-    memory_bus          memory_bus,    // Interface for memory control
-    output       [7:0]  data,          // Data output from the active mapper; defaults to FF if no mapper is active
-    input        [7:0]  data_to_mapper
+    clock_bus_if            clock_bus,     // Interface for clock
+    cpu_bus_if.device_mp    cpu_bus,       // Interface for CPU communication
+    block_info              block_info,    // Struct containing block configuration and parameters
+    device_bus              device_bus,    // Interface for device control
+    memory_bus              memory_bus,    // Interface for memory control
+    output            [7:0] data,          // Data output from the active mapper; defaults to FF if no mapper is active
+    input             [7:0] data_to_mapper
 );
 
     // Intermediate signals from each mapper
@@ -105,6 +105,7 @@ module mappers (
 
     // Instantiate the Generic mapper
     mapper_generic mapper_generic (
+        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(generic_out)
