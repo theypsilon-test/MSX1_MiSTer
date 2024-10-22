@@ -1,5 +1,4 @@
 module mapper_harryFox (
-    clock_bus_if            clock_bus,              // Interface for clock
     cpu_bus_if.device_mp    cpu_bus,                // Interface for CPU communication
     block_info              block_info,             // Struct containing mapper configuration and parameters
     mapper_out              out                     // Interface for mapper output
@@ -18,12 +17,12 @@ module mapper_harryFox (
     logic [2:0] bank[2][4];          // Storage for bank data, two entries for two different mapper IDs
     
     // Initialize or update bank and SRAM enable signals
-    always @(posedge clock_bus.clk_sys) begin
-        if (clock_bus.reset) begin
+    always @(posedge cpu_bus.clk) begin
+        if (cpu_bus.reset) begin
             // Initialize banks on reset
             bank[0]    <= '{'b100, 'b000, 'b001, 'b100};
             bank[1]    <= '{'b100, 'b000, 'b001, 'b100};
-        end else if (cs & cpu_bus.wr & clock_bus.ce_3m58_p) begin
+        end else if (cs && cpu_bus.wr && cpu_bus.req) begin
             case (cpu_bus.addr[15:12])
                 4'h6: begin
                     bank[block_info.id][1] = {1'b0, cpu_bus.data[0], 1'b0};

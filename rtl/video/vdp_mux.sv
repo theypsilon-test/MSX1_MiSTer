@@ -1,5 +1,5 @@
 module vdp_mux (
-    clock_bus_if            clock_bus,
+    clock_bus_if.base_mp    clock_bus,
     cpu_bus_if.device_mp    cpu_bus,
     video_bus               video_bus,
     input                   ce,
@@ -32,7 +32,7 @@ assign video_bus.ce_pix = vdp18 ? clock_bus.ce_5m39_n  : ~DHClk_vdp;
 
 
 logic hblank_vdp_cor;
-always @(posedge clock_bus.clk_sys) begin
+always @(posedge cpu_bus.clk) begin
    if (hblank_vdp)
       hblank_vdp_cor <= 1'b1;
    else 
@@ -59,9 +59,9 @@ wire  [7:0] VRAM_do_vdp18;
 wire        VRAM_we_vdp18;
 vdp18_core #(.compat_rgb_g(0)) vdp_vdp18
 (
-   .clk_i(clock_bus.clk_sys),
+   .clk_i(cpu_bus.clk),
    .clk_en_10m7_i(clock_bus.ce_10m7_p),
-   .reset_n_i(~clock_bus.reset),
+   .reset_n_i(~cpu_bus.reset),
 
    .csr_n_i(~(ce & vdp18) | ~cpu_bus.rd),
    .csw_n_i(~(ce & vdp18) | ~cpu_bus.wr),
@@ -94,8 +94,8 @@ wire  [7:0] VRAM_do_vdp;
 wire        VRAM_we_n_vdp;
 VDP vdp_vdp 
 (
-   .CLK21M(clock_bus.clk_sys),
-   .RESET(clock_bus.reset),
+   .CLK21M(cpu_bus.clk),
+   .RESET(cpu_bus.reset),
 
    .REQ(cpu_bus.req & ce & ~vdp18),
    .ACK(),
@@ -136,7 +136,7 @@ wire  [7:0] VRAM_do, VRAM_di_lo, VRAM_di_hi;
 wire        VRAM_we_lo, VRAM_we_hi;
 spram #(.addr_width(16),.mem_name("VRA2")) vram_lo
 (
-   .clock(clock_bus.clk_sys),
+   .clock(cpu_bus.clk),
    .address(VRAM_address),
    .wren(VRAM_we_lo),
    .data(VRAM_do),
@@ -144,7 +144,7 @@ spram #(.addr_width(16),.mem_name("VRA2")) vram_lo
 );
 spram #(.addr_width(16),.mem_name("VRA3")) vram_hi
 (
-   .clock(clock_bus.clk_sys),
+   .clock(cpu_bus.clk),
    .address(VRAM_address),
    .wren(VRAM_we_hi),
    .data(VRAM_do),

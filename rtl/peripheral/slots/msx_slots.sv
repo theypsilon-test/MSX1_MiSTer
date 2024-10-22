@@ -1,5 +1,5 @@
 module msx_slots (
-    clock_bus_if                clock_bus,        // Interface for clock
+    clock_bus_if.base_mp        clock_bus,        // Interface for clock
     cpu_bus_if.device_mp        cpu_bus,          // Interface for CPU communication
     input                 [1:0] active_slot,      // Currently active slot
     output                [7:0] data,             // Data output

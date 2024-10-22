@@ -194,7 +194,7 @@ assign BUTTONS = 0;
 
 localparam VDNUM = 6;
 video_bus video_bus();
-clock_bus_if clock_bus();
+clock_bus_if clock_bus(clk_core, RESET || status[0] || status[10] || reset_rq);
 
 MSX::user_config_t msxConfig;
 MSX::bios_config_t bios_config;
@@ -302,7 +302,7 @@ assign status_menumask[15:7] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 (
-   .clk_sys(clock_bus.clk_sys),
+   .clk_sys(clock_bus.base_mp.clk),
    .HPS_BUS(HPS_BUS),
    .EXT_BUS(),
    .gamma_bus(gamma_bus),
@@ -339,8 +339,8 @@ wire [5:0] mapper_A, mapper_B;
 wire       reload, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
 msx_config msx_config 
 (
-   .clk(clock_bus.clk_sys),
-   .reset(clock_bus.reset),
+   .clk(clock_bus.base_mp.clk),
+   .reset(clock_bus.base_mp.reset),
    .bios_config(bios_config),
    .HPS_status(status[63:0]),
    .scandoubler(scandoubler),
@@ -366,9 +366,7 @@ pll pll
 
 clock clock
 (
-	.clk(clk_core),
-   .reset(RESET | status[0] | status[10] | reset_rq),
-   .clock_bus(clock_bus)
+   .clock_bus(clock_bus.generator_mp)
 );
 
 ///////////////// Computer /////////////////
@@ -383,7 +381,7 @@ wire  [7:0] d_to_sd, d_from_sd;
 
 msx MSX
 (
-   .clock_bus(clock_bus),
+   .clock_bus(clock_bus.base_mp),
    .video_bus(video_bus),
    .cas_motor(motor),
    .cas_audio_in(msxConfig.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
@@ -419,7 +417,7 @@ wire vsdmiso;
 wire sdmiso = vsd_sel ? vsdmiso : SD_MISO;
 
 reg vsd_sel = 0;
-always @(posedge clock_bus.clk_sys) if(img_mounted[4]) vsd_sel <= |img_size;
+always @(posedge clock_bus.base_mp.clk) if(img_mounted[4]) vsd_sel <= |img_size;
 
 assign SD_CS   = vsd_sel;
 assign SD_SCK  = sdclk  & ~vsd_sel;
@@ -427,7 +425,7 @@ assign SD_MOSI = sdmosi & ~vsd_sel;
 
 reg sd_act;
 reg [31:0] timeout = 0;
-always @(posedge clock_bus.clk_sys) begin
+always @(posedge clock_bus.base_mp.clk) begin
     reg old_mosi, old_miso;
 
     old_mosi <= sdmosi;
@@ -445,7 +443,7 @@ end
 //////////////////   SPI   ///////////////////
 spi_divmmc spi
 (
-   .clk_sys(clock_bus.clk_sys),
+   .clk_sys(clock_bus.base_mp.clk),
    .tx(sd_tx),
    .rx(sd_rx),
    .din(d_to_sd),
@@ -461,8 +459,8 @@ spi_divmmc spi
 sd_card sd_card
 (
     .*,
-    .reset(clock_bus.reset),
-    .clk_sys(clock_bus.clk_sys),
+    .reset(clock_bus.base_mp.reset),
+    .clk_sys(clock_bus.base_mp.clk),
     .img_mounted(img_mounted[4]),
     .img_size(img_size),
     .sd_lba(sd_lba[4]),
@@ -488,7 +486,7 @@ logic wide;
 wire  vcrop_en, vga_de;
 wire  [1:0] ar;
 
-assign CLK_VIDEO   = clock_bus.clk_sys;
+assign CLK_VIDEO   = clock_bus.base_mp.clk;
 assign VGA_SL      = status[5:3] > 2 ? status[4:3] - 2'd2 : 2'd0;
 assign vcrop_en    = status[40];
 assign ar          = status[2:1];
@@ -560,7 +558,7 @@ assign tape_in = tape_adc_act & tape_adc;
 
 ltc2308_tape #(.ADC_RATE(120000), .CLK_RATE(21477272)) tape
 (
-   .clk(clock_bus.clk_sys),
+   .clk(clock_bus.base_mp.clk),
    .ADC_BUS(ADC_BUS),
    .dout(tape_adc),
    .active(tape_adc_act)
@@ -575,7 +573,7 @@ wire  [8:0] kbd_addr;
 wire        kbd_request, kbd_we;
 wire        load_sram;
 memory_upload memory_upload(
-    .clk(clock_bus.clk_sys),
+    .clk(clock_bus.base_mp.clk),
     .reset_rq(reset_rq),
     .ioctl_download(ioctl_download),
     .ioctl_index(ioctl_index),
@@ -610,7 +608,7 @@ wire        ddr3_rd, ddr3_rd_download, ddr3_rd_cas, ddr3_wr_download, ddr3_ready
 
 assign ddr3_addr = ddr3_request_download ? ddr3_addr_download : ddr3_addr_cas ;
 assign ddr3_rd   = ddr3_request_download ? ddr3_rd_download   : ddr3_rd_cas   ;
-assign DDRAM_CLK = clock_bus.clk_sys;
+assign DDRAM_CLK = clock_bus.base_mp.clk;
 
 ddram buffer
 (
@@ -621,7 +619,7 @@ ddram buffer
    .we(),
    .rd(ddr3_rd),
    .ready(ddr3_ready),
-   .reset(clock_bus.reset),
+   .reset(clock_bus.base_mp.reset),
    .*
 );
 
@@ -681,7 +679,7 @@ wire [7:0]   backup_ram_din, backup_ram_dout;
 wire         backup_ram_req, backup_ram_rnw, backup_ram_ready;
 nvram_backup nvram_backup
 (
-   .clk(clock_bus.clk_sys),
+   .clk(clock_bus.base_mp.clk),
    .lookup_SRAM(lookup_SRAM),
    .load_req(status[39] | load_sram),
    .save_req(status[38]),
@@ -707,7 +705,7 @@ nvram_backup nvram_backup
 ///////////////// CAS EMULATE /////////////////
 wire ioctl_isCAS, buff_mem_ready, motor, CAS_dout, play, rewind;
 logic cas_load = 0;
-always @(posedge clock_bus.clk_sys) begin
+always @(posedge clock_bus.base_mp.clk) begin
    logic ioctl_download_last; 
    if (~ioctl_isCAS & ioctl_download_last )  begin
       cas_load <= 1'b1;
@@ -717,12 +715,12 @@ end
 
 assign play         = ~motor & cas_load;
 assign ioctl_isCAS  = ioctl_download & (ioctl_index[5:0] == 6'd5);
-assign rewind       = status[9] | ioctl_isCAS | clock_bus.reset;
+assign rewind       = status[9] | ioctl_isCAS | clock_bus.base_mp.reset;
 
 tape cass 
 (
-   .clk(clock_bus.clk_sys),
-   .ce_5m3(clock_bus.ce_5m39_p),
+   .clk(clock_bus.base_mp.clk),
+   .ce_5m3(clock_bus.base_mp.ce_5m39_p),
    .cas_out(CAS_dout),
    .ram_a(ddr3_addr_cas),
    .ram_di(ddr3_dout),

@@ -1,5 +1,5 @@
 module devices (
-    clock_bus_if            clock_bus,                              // Clock interface
+    clock_bus_if.base_mp    clock_bus,                              // Clock interface
     cpu_bus_if.device_mp    cpu_bus,                                // CPU bus interface
     device_bus              device_bus,                             // Device control bus interface
     sd_bus                  sd_bus,                                 // SD bus interface
@@ -22,7 +22,6 @@ module devices (
     // Definice instancí zařízení s výstupy pro propojení
     wire signed [15:0] opl3_sound;
     opl3 opl3 (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
@@ -34,7 +33,6 @@ module devices (
     wire       scc_output_rq;
     wire signed [15:0] scc_sound;
     scc scc (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
@@ -48,7 +46,6 @@ module devices (
     wire [7:0] msx2_ram_data;
     wire       msx2_ram_output_rq;
     msx2_ram msx2_ram (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
@@ -60,7 +57,6 @@ module devices (
 
     wire [7:0] zemina_data_to_mapper;
     zemina90 zemina90 (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
@@ -71,7 +67,6 @@ module devices (
     wire [7:0] vy0010_data;
     wire       vy0010_output_rq;
     vy0010 vy0010 (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .sd_bus(sd_bus),

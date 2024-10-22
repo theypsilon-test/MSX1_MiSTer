@@ -1,5 +1,4 @@
 module mapper_ascii16 (
-    clock_bus_if            clock_bus,              // Interface for clock
     cpu_bus_if.device_mp    cpu_bus,                // Interface for CPU communication
     block_info              block_info,             // Struct containing mapper configuration and parameters
     mapper_out              out                     // Interface for mapper output
@@ -29,13 +28,13 @@ module mapper_ascii16 (
     wire sram_exists = (block_info.sram_size > 0);
 
     // Initialize or update bank and SRAM enable signals
-    always @(posedge clock_bus.clk_sys) begin
-        if (clock_bus.reset) begin
+    always @(posedge cpu_bus.clk) begin
+        if (cpu_bus.reset) begin
             // Initialize banks and SRAM enable on reset
             bank0      <= '{'h00, 'h00};
             bank1      <= '{'h00, 'h00};
             sramEnable <= '{2'd0, 2'd0};
-        end else if (cs & cpu_bus.wr) begin
+        end else if (cs & cpu_bus.wr && cpu_bus.req) begin
             if (mode_rtype) begin
                 // Write to bank1 in R-TYPE mode (0x7000-0x7FFF)
                 if (cpu_bus.addr[15:12] == 4'b0111) begin

@@ -1,5 +1,5 @@
 module mappers (
-    clock_bus_if            clock_bus,     // Interface for clock
+    clock_bus_if.base_mp    clock_bus,     // Interface for clock
     cpu_bus_if.device_mp    cpu_bus,       // Interface for CPU communication
     block_info              block_info,    // Struct containing block configuration and parameters
     device_bus              device_bus,    // Interface for device control
@@ -30,7 +30,6 @@ module mappers (
 
     // Instantiate the ASCII8 mapper
     mapper_ascii8 ascii8 (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(ascii8_out)
@@ -38,7 +37,6 @@ module mappers (
 
     // Instantiate the ASCII16 mapper
     mapper_ascii16 ascii16 (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(ascii16_out)
@@ -54,7 +52,6 @@ module mappers (
 
     // Instantiate the KONAMI mapper
     mapper_konami konami (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(konami_out)
@@ -62,7 +59,6 @@ module mappers (
 
     // Instantiate the KONAMI SCC mapper
     mapper_konami_scc konami_scc (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(konami_SCC_out),
@@ -71,7 +67,6 @@ module mappers (
 
     // Instantiate the FM-PAC mapper
     mapper_fm_pac fm_pac (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(fm_pac_out),
@@ -80,7 +75,6 @@ module mappers (
     
     // Instantiate the Konami Gamemaster2 mapper
     mapper_gamemaster2 gm2 (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(gm2_out)
@@ -97,7 +91,6 @@ module mappers (
    
     // Instantiate the Cross Blaim mapper
     mapper_crossBlaim mapper_crossBlaim (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(crossBlaim_out)
@@ -105,14 +98,12 @@ module mappers (
 
     // Instantiate the Generic mapper
     mapper_generic mapper_generic (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(generic_out)
     );
     // Instantiate the Harry Fox mapper
     mapper_harryFox mapper_harryFox (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(harryFox_out)
@@ -120,7 +111,6 @@ module mappers (
 
     // Instantiate the Zemina80in1 mapper
     mapper_zemina80 mapper_zemina80 (
-        .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(zeimna80_out)

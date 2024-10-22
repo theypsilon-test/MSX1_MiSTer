@@ -1,6 +1,5 @@
 module vy0010
 (
-   clock_bus_if         clock_bus,          // Interface for clock
    cpu_bus_if.device_mp cpu_bus,            // Interface for CPU communication
    device_bus           device_bus,         // Interface for device control
    sd_bus               sd_bus,             // Data from SD
@@ -16,7 +15,7 @@ logic image_mounted = 1'b0;
 logic layout = 1'b0;
 logic [7:0] sideReg, driveReg;
 
-always @(posedge clock_bus.clk_sys) begin
+always @(posedge cpu_bus.clk) begin
    if (image_info.mounted) begin
       image_mounted <= (image_info.size != 0);
       layout <= (image_info.size > 'h5A000) ? 1'b0 : 1'b1;
@@ -29,15 +28,15 @@ wire ck2      = cs & (cpu_bus.addr[13:0] == 14'h3ffd);
 wire nu       = cs & (cpu_bus.addr[13:0] == 14'h3ffe);
 wire status   = cs & (cpu_bus.addr[13:0] == 14'h3fff);
 
-always @(posedge clock_bus.clk_sys) begin
-   if (clock_bus.reset)
+always @(posedge cpu_bus.clk) begin
+   if (cpu_bus.reset)
       sideReg <= 8'd0;
    else if (ck1 & cpu_bus.wr)
       sideReg <= cpu_bus.data;
 end
 
-always @(posedge clock_bus.clk_sys) begin
-   if (clock_bus.reset)
+always @(posedge cpu_bus.clk) begin
+   if (cpu_bus.reset)
       driveReg <= 8'd0;
    else if (ck2 & cpu_bus.wr)
       driveReg <= cpu_bus.data;
@@ -62,9 +61,9 @@ wire [7:0] d_from_wd17;
 wire drq, intrq;
 wd1793 #(.RWMODE(1), .EDSK(0)) fdc1
 (
-   .clk_sys(clock_bus.clk_sys),
-   .ce(clock_bus.ce_3m58_p),
-   .reset(clock_bus.reset),
+   .clk_sys(cpu_bus.clk),
+   .ce(cpu_bus.clk_en),
+   .reset(cpu_bus.reset),
    .io_en(wdcs),
    .rd(cpu_bus.rd),
    .wr(cpu_bus.wr),

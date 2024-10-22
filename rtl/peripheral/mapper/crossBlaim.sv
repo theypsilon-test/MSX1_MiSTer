@@ -1,5 +1,4 @@
 module mapper_crossBlaim (
-    clock_bus_if            clock_bus,              // Interface for clock
     cpu_bus_if.device_mp    cpu_bus,                // Interface for CPU communication
     block_info              block_info,             // Struct containing mapper configuration and parameters
     mapper_out              out                     // Interface for mapper output
@@ -18,12 +17,12 @@ module mapper_crossBlaim (
     logic [2:0] bank[2][4];          // Storage for bank data, two entries for two different mapper IDs
     
     // Initialize or update bank and SRAM enable signals
-    always @(posedge clock_bus.clk_sys) begin
-        if (clock_bus.reset) begin
+    always @(posedge cpu_bus.clk) begin
+        if (cpu_bus.reset) begin
             // Initialize banks and SRAM enable on reset
             bank[0]    <= '{'b001, 'b000, 'b001, 'b001};
             bank[1]    <= '{'b001, 'b000, 'b001, 'b001};
-        end else if (cs & cpu_bus.wr & clock_bus.ce_3m58_p) begin
+        end else if (cs & cpu_bus.wr & cpu_bus.req) begin
             case (cpu_bus.data[1:0])
                 2'd0, 2'd1 :
                     bank[block_info.id] = '{'b001, 'b000, 'b001, 'b001};

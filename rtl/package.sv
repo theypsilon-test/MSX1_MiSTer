@@ -33,16 +33,42 @@ parameter DEVs_MFRSD2         = dev_typ_t'(1 << 10);
 parameter DEVs_FLASH          = dev_typ_t'(1 << 11);
 parameter DEVs_PSG            = dev_typ_t'(1 << 12);
 
-interface clock_bus_if;
-    logic     clk_sys;
-    logic     ce_10m7_p;
-    logic     ce_10m7_n;
-    logic     ce_5m39_p;
-    logic     ce_5m39_n;   
-    logic     ce_3m58_p;
-    logic     ce_3m58_n;
-    logic     ce_10hz;
-    logic     reset;
+interface clock_bus_if(
+    input     clk,
+    input     reset
+);
+    wire     ce_10m7_p;
+    wire     ce_10m7_n;
+    wire     ce_5m39_p;
+    wire     ce_5m39_n;   
+    wire     ce_3m58_p;
+    wire     ce_3m58_n;
+    wire     ce_10hz;
+
+    modport generator_mp (
+        input   clk,
+        input   reset,
+        output  ce_10m7_p,
+        output  ce_10m7_n,
+        output  ce_5m39_p,
+        output  ce_5m39_n,   
+        output  ce_3m58_p,
+        output  ce_3m58_n,
+        output  ce_10hz
+    );
+
+    modport base_mp (
+        input   clk,
+        input   reset,
+        input   ce_10m7_p,
+        input   ce_10m7_n,
+        input   ce_5m39_p,
+        input   ce_5m39_n,   
+        input   ce_3m58_p,
+        input   ce_3m58_n,
+        input   ce_10hz
+    );
+
 endinterface
 
 interface cpu_bus_if(

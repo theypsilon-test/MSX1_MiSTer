@@ -1,5 +1,4 @@
 module mapper_gamemaster2 (
-    clock_bus_if            clock_bus, // Interface for clock
     cpu_bus_if.device_mp    cpu_bus,   // Interface for CPU communication
     mapper_out              out,       // Interface for mapper output
     block_info              block_info // Struct containing mapper configuration and parameters
@@ -21,14 +20,14 @@ module mapper_gamemaster2 (
     logic [5:0] bank1, bank2, bank3;
 
     // Bank switching logic based on CPU reset and clock signals
-    always @(posedge clock_bus.reset or posedge clock_bus.clk_sys) begin
-        if (clock_bus.reset) begin
+    always @(posedge cpu_bus.reset or posedge cpu_bus.clk) begin
+        if (cpu_bus.reset) begin
             // Initialize banks after reset
             bank1 <= 6'h01;  // Default bank 1
             bank2 <= 6'h02;  // Default bank 2
             bank3 <= 6'h03;  // Default bank 3
         end else begin
-            if (cs && cpu_bus.wr) begin
+            if (cs && cpu_bus.wr && cpu_bus.req) begin
                 // Update bank registers based on the address range during a write
                 case (cpu_bus.addr[15:12])
                     4'h6: bank1 <= cpu_bus.data[5:0];  // Bank 1 (6000h - 6FFFh)

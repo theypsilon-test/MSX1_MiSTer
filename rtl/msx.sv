@@ -1,7 +1,7 @@
    module msx
 (
    //Clock
-   clock_bus_if             clock_bus,
+   clock_bus_if.base_mp     clock_bus,
    //Video
    video_bus                video_bus,
    //I/O
@@ -55,7 +55,7 @@
 );
 
 device_bus device_bus();
-cpu_bus_if cpu_bus(clock_bus.clk_sys, clock_bus.ce_3m58_n, clock_bus.reset);
+cpu_bus_if cpu_bus(clock_bus.clk, clock_bus.ce_3m58_n, clock_bus.reset);
 sd_bus sd_bus();
 sd_bus_control sd_bus_control();
 
@@ -89,7 +89,7 @@ tv80n Z80
 wire exwait_n = 1;
 
 logic wait_n = 1'b0;
-always @(posedge clock_bus.clk_sys, negedge exwait_n, negedge u1_2_q) begin
+always @(posedge clock_bus.clk, negedge exwait_n, negedge u1_2_q) begin
    if (~exwait_n)
       wait_n <= 1'b0;
    else if (~u1_2_q)
@@ -99,7 +99,7 @@ always @(posedge clock_bus.clk_sys, negedge exwait_n, negedge u1_2_q) begin
 end
 
 logic u1_2_q = 1'b0;
-always @(posedge clock_bus.clk_sys, negedge exwait_n) begin
+always @(posedge clock_bus.clk, negedge exwait_n) begin
    if (~exwait_n)
       u1_2_q <= 1'b1;
    else if (clock_bus.ce_3m58_p)
@@ -110,7 +110,7 @@ logic map_valid = 0;
 wire ppi_en = ~ppi_n;
 wire [1:0] active_slot;
 
-always @(posedge clock_bus.reset, posedge clock_bus.clk_sys) begin
+always @(posedge clock_bus.reset, posedge clock_bus.clk) begin
     if (clock_bus.reset)
         map_valid = 0;
     else if (ppi_en)
@@ -141,7 +141,7 @@ assign cas_motor =  ppi_out_c[4];
 jt8255 PPI
 (
    .rst(clock_bus.reset),
-   .clk(clock_bus.clk_sys),
+   .clk(clock_bus.clk),
    .addr(cpu_bus.device_mp.addr[1:0]),
    .din(cpu_bus.device_mp.data),
    .dout(d_from_8255),
@@ -174,7 +174,7 @@ wire [7:0] d_from_kb;
 keyboard msx_key
 (
    .reset(clock_bus.reset),
-   .clk(clock_bus.clk_sys),
+   .clk(clock_bus.clk),
    .ps2_key(ps2_key),
    .kb_row(ppi_out_c[3:0]),
    .kb_data(d_from_kb),
@@ -195,7 +195,7 @@ assign psg_ioa = {cas_audio_in,1'b0, psg_iob[6] ? joyB : joyA};
 wire [9:0] ay_ch_mix;
 
 logic u21_1_q = 1'b0;
-always @(posedge clock_bus.clk_sys,  posedge psg_n) begin
+always @(posedge clock_bus.clk,  posedge psg_n) begin
    if (psg_n)
       u21_1_q <= 1'b0;
    else if (clock_bus.ce_3m58_p)
@@ -203,7 +203,7 @@ always @(posedge clock_bus.clk_sys,  posedge psg_n) begin
 end
 
 logic u21_2_q = 1'b0;
-always @(posedge clock_bus.clk_sys, posedge psg_n) begin
+always @(posedge clock_bus.clk, posedge psg_n) begin
    if (psg_n)
       u21_2_q <= 1'b0;
    else if (clock_bus.ce_3m58_p)
@@ -216,7 +216,7 @@ wire psg_bdir = !(cpu_bus.device_mp.addr[1] | psg_e);
 jt49_bus PSG
 (
    .rst_n(~clock_bus.reset),
-   .clk(clock_bus.clk_sys),
+   .clk(clock_bus.clk),
    .clk_en(clock_bus.ce_3m58_p),
    .bdir(psg_bdir),
    .bc1(psg_bc),
@@ -239,7 +239,7 @@ jt49_bus PSG
 wire [7:0] d_from_rtc;
 rtc rtc
 (
-   .clk21m(clock_bus.clk_sys),
+   .clk21m(clock_bus.clk),
    .reset(clock_bus.reset),
    .setup(clock_bus.reset),
    .rt(rtc_time),
@@ -313,7 +313,6 @@ wire [7:0] mapper_subslot_data;
 wire mapper_subslot_rq;
 subslot subslot_inst 
 (
-   .clock_bus(clock_bus),
    .cpu_bus(cpu_bus.device_mp),
    .expander_enable(bios_config.slot_expander_en),
    .data(mapper_subslot_data),

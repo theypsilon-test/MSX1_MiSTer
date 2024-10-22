@@ -1,5 +1,4 @@
 module zemina90 (
-    clock_bus_if            clock_bus,                              // Interface for clock
     cpu_bus_if.device_mp    cpu_bus,                                // Interface for CPU communication
     device_bus              device_bus,                             // Interface for device control
     input  [2:0]            dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
@@ -29,9 +28,9 @@ module zemina90 (
     generate
         for (i = 0; i < 3; i++) begin : zemina90_dev_INSTANCES
             zemina90_dev zemina90_dev_i (
-                .clk(clock_bus.clk_sys),
-                .clk_en(clock_bus.ce_3m58_p),
-                .reset(clock_bus.reset),
+                .clk(cpu_bus.clk),
+                .req(cpu_bus.req),
+                .reset(cpu_bus.reset),
                 .data(cpu_bus.data),
                 .wr(mapper_io[i] && io_en && cpu_bus.wr),  // IO write
                 .data_to_mapper(data_to_mapper_ar[i])
@@ -44,7 +43,7 @@ endmodule
 module zemina90_dev (
     input              reset,
     input              clk,
-    input              clk_en,
+    input              req,
     input              wr,
     input       [15:0] addr,
     input        [7:0] data,
@@ -62,7 +61,7 @@ module zemina90_dev (
             mem_seg[1] <= 8'd1;
             mem_seg[2] <= 8'd0;
             mem_seg[3] <= 8'd1;
-        end else if (wr && clk_en) begin
+        end else if (wr && req) begin
             $display("Write IO Zemina 90 addr %x value %x store page %x ", {data[7:6], 2'b00}, {2'b00,data[5:4]}, page );
             case(data[7:6])
             2'b00, 2'b01: begin  // 0x00 && 0x40

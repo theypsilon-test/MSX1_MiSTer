@@ -1,5 +1,4 @@
 module subslot (
-    clock_bus_if            clock_bus,      // Interface for clock
     cpu_bus_if.device_mp    cpu_bus,        // Interface for CPU communication
     input             [1:0] active_slot,    // Currently active slot
     input             [3:0] expander_enable,// Enable signals for the expander
@@ -21,8 +20,8 @@ module subslot (
     wire mapper_rd = mapper_cs & cpu_bus.rd;
 
     // On clock or reset, update the mapper_slot data
-    always @(posedge clock_bus.clk_sys or posedge clock_bus.reset) begin
-        if (clock_bus.reset) begin
+    always @(posedge cpu_bus.clk or posedge cpu_bus.reset) begin
+        if (cpu_bus.reset) begin
             // Initialize mapper_slot array on reset
             mapper_slot[0] <= 8'h00;
             mapper_slot[1] <= 8'h00;

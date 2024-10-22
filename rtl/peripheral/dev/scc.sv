@@ -1,5 +1,4 @@
 module scc (
-    clock_bus_if           clock_bus,                               // Interface for clock
     cpu_bus_if.device_mp   cpu_bus,                                 // Interface for CPU communication
     device_bus             device_bus,                              // Interface for device control
     input            [2:0] dev_enable[0:(1 << $bits(device_t))-1],  // Enable signals for each device
@@ -14,8 +13,8 @@ module scc (
                    (dev_enable[DEV_SCC][1] ? {sound_SCC[1][14], sound_SCC[1]} : '0);
 
     // Control logic for enabling or disabling SCC channels
-    always @(posedge clock_bus.clk_sys) begin
-        if (clock_bus.reset) begin
+    always @(posedge cpu_bus.clk) begin
+        if (cpu_bus.reset) begin
             // On reset, disable all SCC channels
             scc_enabled <= 2'b00;
         end else if (device_bus.typ == DEV_SCC && device_bus.num < 2) begin
@@ -43,18 +42,18 @@ module scc (
     generate
         for (i = 0; i < 2; i++) begin : SCC_INSTANCES
             scc_wave scc_wave_i (
-                .clk(clock_bus.clk_sys),        // Clock signal
-                .clkena(clock_bus.ce_3m58_p),  // Clock enable signal
-                .reset(clock_bus.reset),    // Reset signal
-                .req(cs && device_bus.num == i),  // Request signal for SCC
-                .ack(),                   // Acknowledge signal (not connected)
-                .wrt(cpu_bus.wr),         // Write enable signal
-                .adr(cpu_bus.addr[7:0]),  // Address bus (8 bits)
-                .dbo(cpu_bus.data),       // Data output from CPU to SCC
-                .dbi(data_SCC[i]),        // Data input from SCC to CPU
-                .wave(sound_SCC[i]),      // Sound output from SCC
-                .sccPlusChip('0),         // SCC Plus chip flag (default 0)
-                .sccPlusMode('0)          // SCC Plus mode flag (default 0)
+                .clk(cpu_bus.clk),                  // Clock signal
+                .clkena(cpu_bus.clk_en),            // Clock enable signal
+                .reset(cpu_bus.reset),              // Reset signal
+                .req(cs && device_bus.num == i),    // Request signal for SCC
+                .ack(),                             // Acknowledge signal (not connected)
+                .wrt(cpu_bus.wr),                   // Write enable signal
+                .adr(cpu_bus.addr[7:0]),            // Address bus (8 bits)
+                .dbo(cpu_bus.data),                 // Data output from CPU to SCC
+                .dbi(data_SCC[i]),                  // Data input from SCC to CPU
+                .wave(sound_SCC[i]),                // Sound output from SCC
+                .sccPlusChip('0),                   // SCC Plus chip flag (default 0)
+                .sccPlusMode('0)                    // SCC Plus mode flag (default 0)
             );
         end
     endgenerate
