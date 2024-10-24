@@ -30,7 +30,7 @@ verilator \
 ../rtl/cpu/tv80_core.v \
 ../rtl/cpu/tv80_mcode.v \
 ../rtl/cpu/tv80_reg.v \
-../rtl/cpu/tv80n.v \
+../rtl/cpu/tv80n.sv \
 ../rtl/peripheral/jt8255.v \
 ../rtl/peripheral/keyboard.sv \
 ../rtl/peripheral/dev/io_decoder.sv        \
@@ -41,6 +41,7 @@ verilator \
 ../rtl/peripheral/slots/mappers.sv         \
 ../rtl/peripheral/slots/devices.sv         \
 ../rtl/peripheral/mapper/offset.sv         \
+../rtl/video/vdp_mux.sv                    \
 \
 ../rtl/video/vdp18v/vdp18_pack-p.sv        \
 ../rtl/video/vdp18v/vdp18_col_pack-p.sv    \
@@ -53,7 +54,7 @@ verilator \
 ./rtl/peripheral/mapper/zemina90.sv      \
 ./rtl/peripheral/mapper/fm_pac.sv         \
 ./rtl/peripheral/mapper/ascii8.sv         \
-./rtl/peripheral/mapper/ascii16.sv        \
+../rtl/peripheral/mapper/ascii16.sv        \
 ./rtl/peripheral/mapper/konami.sv         \
 ./rtl/peripheral/mapper/konami_scc.sv     \
 ./rtl/peripheral/mapper/gamemaster2.sv    \
@@ -62,11 +63,11 @@ verilator \
 ./rtl/peripheral/dev/opl3.sv              \
 ./rtl/peripheral/dev/scc.sv               \
 ./rtl/sound/scc_wave.sv                   \
-../rtl/peripheral/dev/vy-0010.sv           \
+./rtl/peripheral/dev/vy-0010.sv           \
 ./rtl/wd1793.sv           \
 \
 ./rtl/sound/jt49/hdl/jt49_bus.sv          \
 ./rtl/peripheral/spi_divmmc.sv            \
 ./rtl/sd_card.sv                          \
 ./rtl/tape.sv                             \
-./rtl/nvram_backup.sv                     \
+../rtl/nvram_backup.sv                     \

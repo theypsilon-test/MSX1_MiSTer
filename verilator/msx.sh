@@ -29,7 +29,7 @@ verilator \
 ../rtl/cpu/tv80_core.v \
 ../rtl/cpu/tv80_mcode.v \
 ../rtl/cpu/tv80_reg.v \
-../rtl/cpu/tv80n.v \
+../rtl/cpu/tv80n.sv \
 ../rtl/peripheral/jt8255.v \
 ../rtl/peripheral/keyboard.sv \
 ../rtl/peripheral/dev/io_decoder.sv        \
@@ -64,6 +64,7 @@ verilator \
 ../rtl/video/VDPv/vdp_vga.sv               \
 ../rtl/video/VDPv/vdp_wait_control.sv      \
 ../rtl/video/VDPv/vdp_ram.sv               \
+../rtl/video/vdp_mux.sv                    \
 \
 ../rtl/peripheral/mapper/crossBlaim.sv     \
 ../rtl/peripheral/mapper/generic.sv        \

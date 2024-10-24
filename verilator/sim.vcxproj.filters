@@ -135,6 +135,21 @@
     <ClCompile Include="obj_dir\Vemu_ddram__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_device_bus__DepSet_h47325e6d__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_device_bus__DepSet_h47325e6d__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_device_bus__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_dpram__A9__DepSet_ha4ff9884__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_dpram__A9__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="obj_dir\Vemu_emu__DepSet_h60dc175e__0.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -148,6 +163,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_emu__DepSet_hd7d7c3aa__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_emu__DepSet_hd7d7c3aa__0__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_emu__Slow.cpp">
@@ -169,6 +187,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_keyboard__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_mapper_out__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_memory_bus__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_MSX__DepSet_h8aa69a26__0.cpp">
@@ -195,10 +231,34 @@
     <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_nvram_backup__DepSet_h5c8e32ac__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_nvram_backup__DepSet_h183b15f9__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_nvram_backup__DepSet_h183b15f9__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_nvram_backup__DepSet_h2540450f__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_nvram_backup__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="obj_dir\Vemu_pll__DepSet_hc0a77e1e__0__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_pll__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_sd_bus_control__DepSet_he1e20d63__0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_sd_bus_control__DepSet_he1e20d63__0__Slow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_dir\Vemu_sd_bus_control__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_sdram__DepSet_hb780563e__0__Slow.cpp">
@@ -244,24 +304,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__Slow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0__Slow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="obj_dir\Vemu_mapper_out__Slow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0__Slow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="obj_dir\Vemu_memory_bus__Slow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -350,6 +392,12 @@
     <ClInclude Include="obj_dir\Vemu_ddram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_device_bus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_dpram__A9.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="obj_dir\Vemu_emu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -359,13 +407,25 @@
     <ClInclude Include="obj_dir\Vemu_keyboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_mapper_out.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_memory_bus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="obj_dir\Vemu_MSX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_nvram_backup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="obj_dir\Vemu_pll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_dir\Vemu_sd_bus_control.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="obj_dir\Vemu_sdram.h">
@@ -384,12 +444,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="obj_dir\Vemu_vdp18_col_pack.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="obj_dir\Vemu_mapper_out.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="obj_dir\Vemu_memory_bus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

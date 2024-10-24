@@ -74,8 +74,8 @@ const char* slotB[] = { "ROM","SCC","SCC +","FM - PAC","Empty" };
 const char* mapperA[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* mapperB[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* sramA[] = { "auto","1kB","2kB","4kB","8kB","16kB","32kB","none" };
-//int currentSlotA = 0;
-int currentSlotA = 3;
+int currentSlotA = 0;
+//int currentSlotA = 6;
 int currentSlotB = 0;
 int currentMapperA = 0;
 int currentMapperB = 0;
@@ -284,16 +284,17 @@ int verilate() {
 		}
 		*/
 		main_time++;
-		if (main_time == 17000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
-		//if (main_time == 34000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		//if (main_time == 16328900) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		//if (main_time == 60000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 44000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 73000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 83000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		
 		int ret = 1;
 		if (errors > 0) {
 			ret = 0;
 		}
-		
+		//if (main_time == 18000000) ret = 0; //Stop Trace
 		return ret;
 	}
 
@@ -432,7 +433,9 @@ int main(int argc, char** argv, char** env) {
 	//bus.QueueDownload("./rom/roms/10th Frame - Access Software [ASCII16].rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/Penguin Adventure - Yumetairiku Adventure - Konami [Konami] [RC-743] .rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/Gradius_2-Nemesis_2-Konami[KonamiSCC][RC-751].rom", 3, true, 0x30C00000, &DDR);
+	bus.QueueDownload("./rom/roms/ASCII16SRAM2/Hydlide 2 - Shine Of Darkness - T&ESOFT [ASCII16SRAM2].rom", 3, true, 0x30C00000, &DDR);
 	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
+	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8250.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, false);
