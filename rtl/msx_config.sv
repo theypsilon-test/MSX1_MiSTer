@@ -36,7 +36,7 @@ assign cart_conf[1].typ                = slot_B_select < CART_TYP_MFRSD ? cart_t
 assign msxConfig.typ = bios_config.MSX_typ;
 assign msxConfig.scandoubler = scandoubler;
 assign msxConfig.video_mode = video_mode_t'(bios_config.MSX_typ == MSX1 ? (HPS_status[12] ? 2'd2 : 2'd1) : HPS_status[14:13]);
-assign msxConfig.cas_audio_src = cas_audio_src_t'(HPS_status[8]);
+assign msxConfig.cas_audio_src = cas_audio_src_t'(HPS_status[40]);
 assign msxConfig.border = HPS_status[41];
 
 assign ROM_A_load_hide    = cart_conf[0].typ != CART_TYP_ROM;

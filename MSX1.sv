@@ -270,7 +270,7 @@ localparam CONF_STR = {
    "h1S5,DSK,Mount Drive A:;",
    "SC4,VHD,Load SD card;",
    "-;",
-   "O[8],Tape Input,File,ADC;",
+   "O[40],Tape Input,File,ADC;",
    "H0F5,CAS,Cas File,31600000;",
    "H0T9,Tape Rewind;",
    "-;",
@@ -278,9 +278,8 @@ localparam CONF_STR = {
    "h2P1O[14:13],Video mode,AUTO,PAL,NTSC;",
    "H2P1O[12],Video mode,PAL,NTSC;",
    "P1O[2:1],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
-   "P1O[5:3],Scandoubler Fx,None,HQ2x-320,HQ2x-160,CRT 25%,CRT 50%,CRT 75%;",
-   "P1O[7:6],Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer;",
-   "P1O[40],Vertical Crop,No,Yes;",
+   "P1O[5:3],Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+   "P1O[8:6],Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer,HV-Integer;",
    "P1O[41],Border,No,Yes;",
    "-;",
    "T[0],Reset;",
@@ -481,34 +480,14 @@ sd_card sd_card
 );
 
 /////////////////  VIDEO  /////////////////
-logic [11:0] vcrop;
-logic wide;
-wire  vcrop_en, vga_de;
-wire  [1:0] ar;
-
+wire  vga_de;
 assign CLK_VIDEO   = clock_bus.base_mp.clk;
-assign VGA_SL      = status[5:3] > 2 ? status[4:3] - 2'd2 : 2'd0;
-assign vcrop_en    = status[40];
-assign ar          = status[2:1];
-wire scandoubler = (status[5:3] != 0) || forced_scandoubler;
 
+wire [1:0] ar    = status[2:1];
+
+reg  en216p;
 always @(posedge CLK_VIDEO) begin
-	vcrop <= 0;
-	wide <= 0;
-	if(HDMI_WIDTH >= (HDMI_HEIGHT + HDMI_HEIGHT[11:1]) && !scandoubler) begin
-		if(HDMI_HEIGHT == 480)  vcrop <= 12'd240;
-		if(HDMI_HEIGHT == 600)  begin vcrop <= 12'd200; wide <= vcrop_en; end
-		if(HDMI_HEIGHT == 720)  vcrop <= 12'd240;
-		if(HDMI_HEIGHT == 768)  vcrop <= 12'd256; // NTSC mode has 250 visible lines only!
-		if(HDMI_HEIGHT == 800)  begin vcrop <= 200; wide <= vcrop_en; end
-		if(HDMI_HEIGHT == 1080) vcrop <= 12'd216;
-		if(HDMI_HEIGHT == 1200) vcrop <= 12'd240;
-	end
-	else if(HDMI_WIDTH >= 1440 && !scandoubler) begin
-		// 1920x1440 and 2048x1536 are 4:3 resolutions and won't fit in the previous if statement ( width > height * 1.5 )
-		if(HDMI_HEIGHT == 1440) vcrop <= 12'd240;
-		if(HDMI_HEIGHT == 1536) vcrop <= 12'd256;
-	end
+	en216p <= ((HDMI_WIDTH == 1920) && (HDMI_HEIGHT == 1080) && !forced_scandoubler && !scale);
 end
 
 video_freak video_freak
@@ -516,30 +495,35 @@ video_freak video_freak
 	.*,
 	.VGA_DE_IN(vga_de),
    .VGA_VS(video_bus.VS),
-	.ARX((ar != 0) ? (wide ? 12'd340 : 12'd400) : {10'b0, (ar - 1'd1)}),
-	.ARY((ar != 0) ? 12'd300 : 12'd0),
-	.CROP_SIZE(vcrop_en ? vcrop : 12'd0),
+	.ARX((ar == 0) ? 12'd4 : {10'b0, (ar - 1'd1)}),
+	.ARY((ar == 0) ? 12'd3 : 12'd0),
+	.CROP_SIZE(en216p ? 12'd216 : 12'd0),
 	.CROP_OFF(0),
-	.SCALE({1'b0,status[6:5]})
+	.SCALE(status[8:6])
 );
 
-video_mixer #(.GAMMA(0)) video_mixer
+wire [2:0] scale = status[5:3];
+wire [2:0] sl = scale ? scale - 1'd1 : 3'd0;
+
+assign VGA_SL = sl[1:0];
+
+video_mixer #(.GAMMA(1), .LINE_LENGTH(284)) video_mixer
 (
    .CLK_VIDEO(CLK_VIDEO),
-   .hq2x(~status[5] & (status[4] ^ status[3])),
-   .scandoubler(scandoubler),
+   .hq2x(scale==1),
+   .scandoubler(scale || forced_scandoubler),
    .gamma_bus(gamma_bus),
+   
    .ce_pix(video_bus.ce_pix),
    .R(video_bus.R),
    .G(video_bus.G),
    .B(video_bus.B),
    .HSync(video_bus.HS),
-   .VSync(video_bus.VS),
-   
+   .VSync(video_bus.VS), 
    .HBlank(video_bus.hblank),
    .VBlank(video_bus.vblank),
 
-   .HDMI_FREEZE(),
+   .HDMI_FREEZE(0),
    .freeze_sync(),
 
    .CE_PIXEL(CE_PIXEL),
