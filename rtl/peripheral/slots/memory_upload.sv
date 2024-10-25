@@ -241,11 +241,13 @@ module memory_upload
                 end
                 STATE_CHECK_CONF: begin
                     if ({conf[0], conf[1], conf[2]} == {"M", "S", "x"}) begin
-                        state               <= STATE_READ_CONF;
-                        next_state          <= STATE_LOAD_CONF;
-                        ddr3_request        <= '1;
-                        bios_config.MSX_typ <= conf[3][0] ? MSX2 : MSX1 ;
-                        $display("MSX CONFIG %x", conf[3][0]);
+                        state                  <= STATE_READ_CONF;
+                        next_state             <= STATE_LOAD_CONF;
+                        ddr3_request           <= '1;
+                        bios_config.MSX_typ    <= conf[3][0] ? MSX2 : MSX1 ;
+                        bios_config.video_mode <= video_mode_t'(conf[3][3:2]);
+                        $display("MSX CONFIG typ %x", conf[3][0]);
+                        $display("MSX CONFIG video %x", conf[3][3:2]);
                     end else begin
                         error <= ERR_BAD_MSX_CONF;
                         state <= STATE_IDLE;

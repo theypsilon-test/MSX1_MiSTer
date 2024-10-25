@@ -256,6 +256,7 @@ rtc rtc
 //  -----------------------------------------------------------------------------
 wire [7:0] d_to_cpu_vdp;
 wire       vdp_int_n;   
+
 vdp_mux vdp
 (
    .clock_bus(clock_bus),
@@ -266,7 +267,7 @@ vdp_mux vdp
    .data(d_to_cpu_vdp),
    .interrupt_n(vdp_int_n),
    .border(msxConfig.border),
-   .video_mode(msxConfig.video_mode)
+   .video_mode(msxConfig.video_mode == AUTO ? bios_config.video_mode : msxConfig.video_mode)
 );
 
 wire signed [15:0] device_sound;

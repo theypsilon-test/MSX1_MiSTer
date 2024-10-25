@@ -277,8 +277,7 @@ localparam CONF_STR = {
    "H0T9,Tape Rewind;",
    "-;",
    "P1,Video settings;",
-   "h2P1O[14:13],Video mode,AUTO,PAL,NTSC;",
-   "H2P1O[12],Video mode,PAL,NTSC;",
+   "P1O[14:13],Video mode,default,PAL,NTSC;",
    "P1O[2:1],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
    "P1O[5:3],Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
    "P1O[8:6],Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer,HV-Integer;",
@@ -294,7 +293,6 @@ wire [15:0] status_menumask;
 wire [1:0] sdram_size;
 assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
 assign status_menumask[1] = fdc_enabled;
-assign status_menumask[2] = bios_config.use_FDC;
 assign status_menumask[3] = ROM_A_load_hide;
 assign status_menumask[4] = ROM_B_load_hide;
 assign status_menumask[5] = '0;
@@ -344,7 +342,6 @@ msx_config msx_config
    .reset(clock_bus.base_mp.reset),
    .bios_config(bios_config),
    .HPS_status(status[63:0]),
-   .scandoubler(scandoubler),
    .sdram_size(sdram_size),
    .cart_conf(cart_conf),
    .reload(reload),
@@ -482,14 +479,17 @@ sd_card sd_card
 );
 
 /////////////////  VIDEO  /////////////////
-wire  vga_de;
-assign CLK_VIDEO   = clock_bus.base_mp.clk;
-
+wire       vga_de;
 wire [1:0] ar    = status[2:1];
+wire [2:0] scale = status[5:3];
+wire [2:0] sl    = scale != 0 ? scale - 1'd1 : 3'd0;
+
+assign VGA_SL = sl[1:0];
+assign CLK_VIDEO   = clock_bus.base_mp.clk;
 
 reg  en216p;
 always @(posedge CLK_VIDEO) begin
-	en216p <= ((HDMI_WIDTH == 1920) && (HDMI_HEIGHT == 1080) && !forced_scandoubler && !scale);
+	en216p <= ((HDMI_WIDTH == 1920) && (HDMI_HEIGHT == 1080) && !forced_scandoubler && scale != 0);
 end
 
 video_freak video_freak
@@ -504,16 +504,11 @@ video_freak video_freak
 	.SCALE(status[8:6])
 );
 
-wire [2:0] scale = status[5:3];
-wire [2:0] sl = scale ? scale - 1'd1 : 3'd0;
-
-assign VGA_SL = sl[1:0];
-
 video_mixer #(.GAMMA(1), .LINE_LENGTH(284)) video_mixer
 (
    .CLK_VIDEO(CLK_VIDEO),
    .hq2x(scale==1),
-   .scandoubler(scale || forced_scandoubler),
+   .scandoubler(scale != 0 || forced_scandoubler),
    .gamma_bus(gamma_bus),
    
    .ce_pix(video_bus.ce_pix),

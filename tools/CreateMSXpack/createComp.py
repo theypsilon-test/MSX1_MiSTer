@@ -87,16 +87,23 @@ def parse_msx_config(root):
 
     return results
 
-def create_msx_config_header(type, outfile):
+def create_msx_config_header(type, video_standard, outfile):
     """
     Writes the MSX configuration header to the output file.
     :param type: Type MSX computer
+    :param video_standard: Video standard PAL/NTSC
     :param outfile: Opened file object for writing.
     """
-    typ = 0
+    conf = 0
     if type == 'MSX2' :
-        typ = 1
-    data = struct.pack('BBBBBBBB', ord('M'), ord('S'), ord('x'), typ, 0, 0, 0, 0)
+        conf = 1
+    else :
+        if video_standard == 'PAL' : 
+            conf = conf + 4
+        if video_standard == 'NTSC' : 
+            conf = conf + 8
+
+    data = struct.pack('BBBBBBBB', ord('M'), ord('S'), ord('x'), conf, 0, 0, 0, 0)
     outfile.write(data)
 
 def add_block_type_to_file(address, typ, params, outfile, constants):
@@ -333,7 +340,7 @@ def create_msx_config(config, file_name, path, files_with_sha1, constants):
     file_path = os.path.join(file_path, file_name + '.msx')
     
     with open(file_path, "wb") as outfile:
-        create_msx_config_header(config.get('type', 'MSX1'), outfile)
+        create_msx_config_header(config.get('type', 'MSX1'), config.get('video_standard', 'PAL'), outfile)
         create_msx_config_primary(config.get('primary', {}), outfile, files_with_sha1, constants)
         create_msx_config_kbd_layout(config.get('kbd_layout', None), outfile, constants) 
              

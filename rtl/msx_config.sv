@@ -12,7 +12,6 @@ module msx_config
     input                     reset,
     input MSX::bios_config_t  bios_config,
     input              [63:0] HPS_status,
-    input                     scandoubler,
     input               [1:0] sdram_size,
     output MSX::config_cart_t cart_conf[2],
     output                    ROM_A_load_hide, //3 
@@ -34,8 +33,7 @@ assign cart_conf[0].typ                = typ_A;
 assign cart_conf[1].typ                = slot_B_select < CART_TYP_MFRSD ? cart_typ_t'(slot_B_select) : CART_TYP_EMPTY;
 
 assign msxConfig.typ = bios_config.MSX_typ;
-assign msxConfig.scandoubler = scandoubler;
-assign msxConfig.video_mode = video_mode_t'(bios_config.MSX_typ == MSX1 ? (HPS_status[12] ? 2'd2 : 2'd1) : HPS_status[14:13]);
+assign msxConfig.video_mode = video_mode_t'(HPS_status[14:13]);
 assign msxConfig.cas_audio_src = cas_audio_src_t'(HPS_status[40]);
 assign msxConfig.border = HPS_status[41];
 

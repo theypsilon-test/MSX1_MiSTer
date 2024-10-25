@@ -189,7 +189,6 @@ package MSX;
     
     typedef struct {
         MSX_typ_t       typ;
-        logic           scandoubler;
         logic           border;
         video_mode_t    video_mode;
         cas_audio_src_t cas_audio_src;
@@ -197,6 +196,7 @@ package MSX;
     
     typedef struct {
         logic     [3:0] slot_expander_en;   
+        video_mode_t    video_mode;
         MSX_typ_t       MSX_typ;
         logic     [7:0] ram_size;
         logic           use_FDC;
