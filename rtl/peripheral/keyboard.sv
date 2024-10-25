@@ -31,8 +31,8 @@ always @(posedge clk) begin
    end
 end
 
-assign row = map[7:4];
-assign pos = 8'b1 << map[3:0];
+assign row = map_key[7:4];
+assign pos = 8'b1 << map_key[3:0];
 
 always @(posedge clk) begin
    if (change) begin
@@ -40,13 +40,13 @@ always @(posedge clk) begin
    end
 end
 
-wire [7:0] map;
+wire [7:0] map_key;
 spram #(.addr_width(9), .mem_name("KBD"), .mem_init_file("kbd.mif")) kbd_ram 
 (
    .clock(clk),
    .address(kbd_request ? kbd_addr : key_decode),
    .data(kbd_din),
-   .q(map),
+   .q(map_key),
    .wren(kbd_we)
 );
 
