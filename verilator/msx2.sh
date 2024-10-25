@@ -3,6 +3,7 @@ verilator \
 -cc -exe --trace \
 --compiler msvc +define+SIMULATION=1 \
 -O3 --x-assign fast --x-initial fast --noassert \
+--public-depth 3 \
 -I../rtl/sound/jtopl/hdl/ \
 -I../rtl/sound/jt49/hdl/ \
 -I../rtl/video/vdp18v/ \

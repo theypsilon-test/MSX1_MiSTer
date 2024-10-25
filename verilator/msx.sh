@@ -2,6 +2,7 @@ rm obj_dir/*
 verilator \
 -cc -exe --trace \
 --compiler msvc +define+SIMULATION=1 \
+--public-depth 3 \
 -O3 --x-assign fast --x-initial fast --noassert \
 -I../rtl/sound/jtopl/hdl/ \
 -I../rtl/sound/jt49/hdl/ \

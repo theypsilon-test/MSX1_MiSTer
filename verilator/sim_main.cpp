@@ -124,8 +124,8 @@ float vga_scale = 1.5;
 // Memory
 
 #define systemRAM top->emu->systemRAM
-#define VRAMhi top->emu->MSX->vram_hi
-#define VRAMlo top->emu->MSX->vram_lo
+#define VRAMhi top->emu->MSX->vdp->vram_hi
+#define VRAMlo top->emu->MSX->vdp->vram_lo
 #define kbd top->emu->MSX->msx_key->kbd_ram
 
 //SimMemoryRam* systemRAM_mem;
@@ -245,9 +245,10 @@ int verilate() {
 				SDram.AfterEval();
 				DDR.AfterEval();
 				//	errors = debuger.AfterEval(main_time);
-				if (top->emu->MSX->ce_pix) {
-					uint32_t colour = 0xFF000000 | top->emu->MSX->B << 16 | top->emu->MSX->G << 8 | top->emu->MSX->R;
-					video.Clock(top->emu->MSX->hblank, top->emu->MSX->vblank, top->emu->MSX->HS, top->emu->MSX->VS, colour);
+				
+				if (top->emu->video_mixer__DOT__ce_pix) {
+					uint32_t colour = 0xFF000000 | top->emu->video_mixer__DOT__B << 16 | top->emu->video_mixer__DOT__G << 8 | top->emu->video_mixer__DOT__R;
+					video.Clock(top->emu->video_mixer__DOT__HBlank, top->emu->video_mixer__DOT__VBlank, top->emu->video_mixer__DOT__HSync, top->emu->video_mixer__DOT__VSync, colour);
 				}
 /*
 				if (top->emu->MSX->vdp_vdp18->ce_pix) {
@@ -433,7 +434,7 @@ int main(int argc, char** argv, char** env) {
 	//bus.QueueDownload("./rom/roms/10th Frame - Access Software [ASCII16].rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/Penguin Adventure - Yumetairiku Adventure - Konami [Konami] [RC-743] .rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/Gradius_2-Nemesis_2-Konami[KonamiSCC][RC-751].rom", 3, true, 0x30C00000, &DDR);
-	bus.QueueDownload("./rom/roms/ASCII16SRAM2/Hydlide 2 - Shine Of Darkness - T&ESOFT [ASCII16SRAM2].rom", 3, true, 0x30C00000, &DDR);
+	//bus.QueueDownload("./rom/roms/ASCII16SRAM2/Hydlide 2 - Shine Of Darkness - T&ESOFT [ASCII16SRAM2].rom", 3, true, 0x30C00000, &DDR);
 	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8250.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
