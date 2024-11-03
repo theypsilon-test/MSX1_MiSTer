@@ -24,9 +24,11 @@ module tape
 	input           ce_5m3,
 	input           play,
 	input           rewind,
-	output  [27:0]	ram_a,
+	input 			enable,
+	output  reg [27:0]	ram_a,
 	input   [7:0]   ram_di,
-	output          ram_rd,
+	input   [63:0]  ram_di64,
+	output  reg     ram_rd,
 	input           buff_mem_ready,
 	output          cas_out
 );
@@ -43,105 +45,92 @@ typedef enum
 
 player_state_t  state = STATE_SLLEP;
 
-wire[63:0] cas_sig = 64'h1FA6DEBACC137d74;
-wire[63:0] sig_pos  = cas_sig  >> (8'd56 - (ram_a[2:0]<<3));
-assign cas_out = output_bit & output_on;
+wire[63:0] cas_sig = 64'h747d13ccbadea61f;
 
-// signature check
-reg sig_ok;
-always @(posedge clk) begin
-	reg sig_temp_ok;
-	if (buff_mem_ready && ~ram_rd) begin
-		if (ram_a[2:0] == 0) begin
-			sig_temp_ok <= (sig_pos[7:0] == ram_di);
-			sig_ok <= 0;
-		end else begin
-			sig_ok <= 0;
-			if (~(sig_pos[7:0] == ram_di))
-				sig_temp_ok <= 0;
-			else
-				if (ram_a[2:0] == 3'h7)
-					sig_ok <= sig_temp_ok & (sig_pos[7:0] == ram_di);
-		end
-	end
-end
+wire sig = cas_sig == ram_di64;
+
+assign cas_out = output_bit & output_on;
 
 reg output_on = 0;
 reg header;
 reg [10:0] counter;
 always @(posedge clk) begin
-	if (buff_mem_ready)
-		ram_rd <= 0;
-	case (state)
-		STATE_SLLEP:	
-			begin
-			end
-		STATE_INIT:	
-			begin
-				if (buff_mem_ready && ~ram_rd) begin
-					ram_a <= 28'h1700000;
-					output_on <= 0;
-					state <= STATE_SEARCH;
-					ram_rd <= 1;
-				end
-			end	
-		STATE_SEARCH: 
-			begin
-				if (sig_ok) begin
-					state <= STATE_PLAY_SILLENT;
-					counter <= 1000;
-				end else if (buff_mem_ready && ~ram_rd) begin
-						ram_a <= ram_a + 1'd1;
-						ram_rd <= 1;
-					end
-			end
-		STATE_PLAY_SILLENT: 
-			begin
-				if (ce_baud) begin
-					counter <= counter - 1'b1;
-					if (counter == 0) begin
-						state <= STATE_PLAY_SYNC;
-						counter <= 1454;
-					end
-				end
-			end
-		STATE_PLAY_SYNC:
-			begin
-				if (counter == 0) begin
-					state <= STATE_PLAY_DATA;
-					header <= 0;
-				end else
-					header <= 1;
-					if (byte_pos == 0) begin
-						output_on <= 1;
-						counter <= counter - 1'b1;
-					end
-			end
-		STATE_PLAY_DATA:
-			begin
-				if (sig_ok) begin
-					state <= STATE_PLAY_SYNC;
-					counter <= 1454;
-					if (buff_mem_ready && ~ram_rd) begin
-						ram_a <= ram_a + 1'd1;
-						ram_rd <= 1;
-					end
-				end else if (byte_pos == 0) begin
-						if (buff_mem_ready && ~ram_rd) begin
-							ram_a <= ram_a + 1'd1;
-							ram_rd <= 1;
-						end
-					end
-			end
-	endcase
+	
+	ram_rd <= 0;
+
 	if (rewind) begin
 		state <= STATE_INIT;
+	end else begin	
+		case (state)
+			STATE_SLLEP:	
+				begin
+				end
+			STATE_INIT:	
+				begin
+					if (buff_mem_ready && ~ram_rd && enable) begin
+						ram_a <= 28'h1700000;
+						output_on <= 0;
+						state <= STATE_SEARCH;
+						ram_rd <= 1;
+					end
+				end	
+			STATE_SEARCH: 
+				begin
+					if (buff_mem_ready && ~ram_rd) begin					
+						if (sig) begin
+							state <= STATE_PLAY_SILLENT;
+							counter <= 1000;
+							ram_a <= ram_a + 28'd8;
+							ram_rd <= 1;
+						end else begin
+							state <= STATE_SLLEP;
+						end
+					end
+				end
+			STATE_PLAY_SILLENT: 
+				begin
+					if (ce_baud) begin
+						counter <= counter - 1'b1;
+						if (counter == 0) begin
+							state <= STATE_PLAY_SYNC;
+							counter <= 1454;
+						end
+					end
+				end
+			STATE_PLAY_SYNC:
+				begin
+					if (counter == 0) begin
+						state <= STATE_PLAY_DATA;
+						header <= 0;
+					end else
+						header <= 1;
+						if (byte_pos == 0) begin
+							output_on <= 1;
+							counter <= counter - 1'b1;
+						end
+				end
+			STATE_PLAY_DATA:
+				begin
+					if (byte_pos == 0) begin
+						if (buff_mem_ready && ~ram_rd) begin
+							if (sig) begin
+								state <= STATE_PLAY_SYNC;
+                    			counter <= 1454;
+								ram_a <= ram_a + 28'd8;
+								ram_rd <= 1;
+							end else begin
+								ram_a <= ram_a + 1'd1;
+								ram_rd <= 1;
+							end
+						end
+					end
+				end
+		endcase
 	end
 end
 
 // Send byte
 reg [3:0] byte_pos = 0;
-reg [7:0] send_byte;
 always @(posedge clk) begin
 reg [10:0] byte_out;
 	if (byte_pos == 0) begin

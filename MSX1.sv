@@ -377,10 +377,19 @@ wire        ram_rnw, sdram_ce, bram_ce;
 wire        sd_tx, sd_rx;
 wire  [7:0] d_to_sd, d_from_sd;
 
+wire [31:0] opcode;
+wire [1:0]  opcode_num;
+wire        opcode_out;
+wire [15:0] opcode_PC_start;
 msx MSX
 (
    .clock_bus(clock_bus.base_mp),
    .video_bus(video_bus),
+   .cpu_regs(cpu_regs),
+   .opcode(opcode),
+   .opcode_num(opcode_num),
+   .opcode_out(opcode_out),
+   .opcode_PC_start(opcode_PC_start),
    .cas_motor(motor),
    .cas_audio_in(msxConfig.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
    .rtc_time(rtc),
@@ -591,16 +600,27 @@ assign ddr3_addr = ddr3_request_download ? ddr3_addr_download : ddr3_addr_cas ;
 assign ddr3_rd   = ddr3_request_download ? ddr3_rd_download   : ddr3_rd_cas   ;
 assign DDRAM_CLK = clock_bus.base_mp.clk;
 
+
+logic [255:0] debug_data;
+logic [63:0] dout64;
+
+assign debug_data = {4'b0000, opcode_num, 2'b00, 8'b00000000, opcode_PC_start, opcode,
+                     cpu_regs.AF,  cpu_regs.BC,  cpu_regs.DE,  cpu_regs.HL,
+                     cpu_regs.AF2, cpu_regs.BC2, cpu_regs.DE2, cpu_regs.HL2,
+                     cpu_regs.IX, cpu_regs.IY, cpu_regs.SP, cpu_regs.PC};
 ddram buffer
 (
    .DDRAM_CLK(DDRAM_CLK),
    .addr(ddr3_addr),
    .dout(ddr3_dout),
+   .dout64(dout64),
    .din(),
    .we(),
    .rd(ddr3_rd),
    .ready(ddr3_ready),
    .reset(clock_bus.base_mp.reset),
+   .debug_data(debug_data),
+   .debug_wr(opcode_out),
    .*
 );
 
@@ -705,10 +725,12 @@ tape cass
    .cas_out(CAS_dout),
    .ram_a(ddr3_addr_cas),
    .ram_di(ddr3_dout),
+   .ram_di64(dout64),
    .ram_rd(ddr3_rd_cas),
    .buff_mem_ready(ddr3_ready),
    .play(play),
-   .rewind(rewind)
+   .rewind(rewind),
+   .enable(cas_load)
 );
 
 endmodule

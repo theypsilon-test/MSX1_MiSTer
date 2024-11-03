@@ -4,6 +4,12 @@
    clock_bus_if.base_mp     clock_bus,
    //Video
    video_bus                video_bus,
+   //debug
+   output MSX::cpu_regs_t   cpu_regs,
+   output  [31:0]           opcode,
+   output  [1:0]            opcode_num,
+   output                   opcode_out,
+   output logic [15:0]      opcode_PC_start,
    //I/O
    output            [15:0] audio,
    input  [           10:0] ps2_key,
@@ -76,6 +82,11 @@ wire [7:0] d_to_cpu;
 tv80n Z80
 (
    .cpu_bus(cpu_bus.cpu_mp),
+   .cpu_regs(cpu_regs),
+   .opcode(opcode),
+   .opcode_num(opcode_num),
+   .opcode_out(opcode_out),
+   .opcode_PC_start(opcode_PC_start),
    .wait_n(wait_n),
    .int_n(vdp_int_n),
    .nmi_n(1'b1),

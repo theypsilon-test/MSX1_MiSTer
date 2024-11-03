@@ -30,6 +30,14 @@
 module tv80n (/*AUTOARG*/
     // Outputs
     cpu_bus_if.cpu_mp cpu_bus,
+    
+    //debug
+    output  MSX::cpu_regs_t  cpu_regs,
+    output  [31:0]      opcode,
+    output  [1:0]       opcode_num,
+    output              opcode_out,
+    output logic [15:0] opcode_PC_start,
+
     output            busak_n,
     // Inputs
     input             wait_n, 
@@ -66,6 +74,8 @@ module tv80n (/*AUTOARG*/
   wire [6:0]    mcycle;
   wire [6:0]    tstate;
 
+  cpu_regs_if cpu_regs_int();
+
   tv80_core #(Mode, IOWait) i_tv80_core
     (
      .cen (1),
@@ -90,7 +100,8 @@ module tv80n (/*AUTOARG*/
      .dout (dout),
      .mc (mcycle),
      .ts (tstate),
-     .intcycle_n (intcycle_n)
+     .intcycle_n (intcycle_n),
+     .cpu_regs(cpu_regs_int)
      );  
 
   always @*
@@ -160,12 +171,12 @@ module tv80n (/*AUTOARG*/
     begin
       if (cpu_bus.reset)
         begin
-	  di_reg <= `TV80DELAY 0;
+	        di_reg <= `TV80DELAY 0;
         end
       else
         begin
-	  if (tstate[2] && wait_n == 1'b1)
-	    di_reg <= `TV80DELAY di;
+	        if (tstate[2] && wait_n == 1'b1)
+	          di_reg <= `TV80DELAY di;
 	end // else: !if(!reset_n)
     end // always @ (posedge clk)
 
@@ -193,6 +204,73 @@ module tv80n (/*AUTOARG*/
   assign cpu_bus.data = dout;
   assign cpu_bus.m1  = ~m1_n;
   assign cpu_bus.req = req;
+
+
+  logic [7:0]  ops_int[4] = '{0,0,0,0};
+  logic [7:0]  ops[4] = '{0,0,0,0};
+  logic [1:0]  ops_num = 0;
+  logic [1:0]  ops_num_last = 0;
+  logic [15:0] old_PC;
+  logic [15:0] start_PC = 0;
+  logic        change;
+  logic        detect;
+  logic        res;
+  logic        ready;
+
+  always @(posedge cpu_bus.clk) begin
+    change <= 1'b0;
+    if (tstate[2] && cpu_bus.clk_en) begin
+      if (m1_n == 1'b0) begin
+        cpu_regs.AF  <= cpu_regs_int.AF;
+        cpu_regs.BC  <= cpu_regs_int.BC;
+        cpu_regs.DE  <= cpu_regs_int.DE;
+        cpu_regs.HL  <= cpu_regs_int.HL;
+        cpu_regs.AF2 <= cpu_regs_int.AF2;
+        cpu_regs.BC2 <= cpu_regs_int.BC2;
+        cpu_regs.DE2 <= cpu_regs_int.DE2;
+        cpu_regs.HL2 <= cpu_regs_int.HL2;
+        cpu_regs.IX  <= cpu_regs_int.IX;
+        cpu_regs.IY  <= cpu_regs_int.IY;
+        cpu_regs.PC  <= cpu_regs_int.PC;
+        cpu_regs.SP  <= cpu_regs_int.SP;
+        change <= 1'b1;
+      end
+    end
+  end
+
+  always @(negedge cpu_bus.clk) begin
+    if (cpu_bus.reset) ready <= 0;
+    detect <= 1'b0;
+    res <= 1'b0;
+    if (cpu_bus.clk_en) begin
+      if (wait_n == 1'b1 && tstate[3] && cpu_regs_int.PC != old_PC) begin
+        detect <= 1'b1;
+        ops_int[ops_num] <= di;
+        ops_num <= ops_num + 1'd1;
+        old_PC <= cpu_regs_int.PC;
+      end 
+    end
+
+    if (change) begin
+      ops <= ops_int;
+      ops_int[0] <= 8'd0;
+		ops_int[1] <= 8'd0;
+		ops_int[2] <= 8'd0;
+		ops_int[3] <= 8'd0;
+      ops_num <= 0;
+      ops_num_last <= ops_num;
+      res <= ready;
+      start_PC <= cpu_regs.PC;
+      opcode_PC_start <= start_PC;
+      ready <= 1'b1;
+    end
+    if (cpu_bus.reset) ready <= 1'b0;
+  end
+
+  assign opcode          = {ops[0], ops[1], ops[2], ops[3]};
+  assign opcode_num      = ops_num_last;
+  assign opcode_out      = res && ready;
+    //assign cpu_regs.change  = change;
 
 endmodule // t80n
 

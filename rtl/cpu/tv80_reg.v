@@ -24,7 +24,7 @@
 
 module tv80_reg (/*AUTOARG*/
   // Outputs
-  DOBH, DOAL, DOCL, DOBL, DOCH, DOAH, 
+  DOBH, DOAL, DOCL, DOBL, DOCH, DOAH, cpu_regs,
   // Inputs
   AddrC, AddrA, AddrB, DIH, DIL, clk, CEN, WEH, WEL
   );
@@ -40,6 +40,7 @@ module tv80_reg (/*AUTOARG*/
     output [7:0] DOCH;
     output [7:0] DOAH;
     input  clk, CEN, WEH, WEL;
+    cpu_regs_if cpu_regs;
 
   reg [7:0] RegsH [0:7];
   reg [7:0] RegsL [0:7];
@@ -79,5 +80,14 @@ module tv80_reg (/*AUTOARG*/
   wire [15:0] IY = { RegsH[7], RegsL[7] };
 // synopsys translate_on
   
+    assign cpu_regs.BC  = {RegsH[0],RegsL[0]};
+    assign cpu_regs.DE  = {RegsH[1],RegsL[1]};
+    assign cpu_regs.HL  = {RegsH[2],RegsL[2]};
+    assign cpu_regs.IX  = {RegsH[3],RegsL[3]};
+    assign cpu_regs.BC2 = {RegsH[4],RegsL[4]};
+    assign cpu_regs.DE2 = {RegsH[5],RegsL[5]};
+    assign cpu_regs.HL2 = {RegsH[6],RegsL[6]};
+    assign cpu_regs.IY = {RegsH[7],RegsL[7]};
+    
 endmodule
 

@@ -33,6 +33,22 @@ parameter DEVs_MFRSD2         = dev_typ_t'(1 << 10);
 parameter DEVs_FLASH          = dev_typ_t'(1 << 11);
 parameter DEVs_PSG            = dev_typ_t'(1 << 12);
 
+interface cpu_regs_if();
+    wire [15:0] AF;
+    wire [15:0] BC;
+    wire [15:0] DE;
+    wire [15:0] HL;
+    wire [15:0] AF2;
+    wire [15:0] BC2;
+    wire [15:0] DE2;
+    wire [15:0] HL2;
+    wire [15:0] IX;
+    wire [15:0] IY;
+    wire [15:0] PC;
+    wire [15:0] SP;
+    wire change;
+endinterface
+
 interface clock_bus_if(
     input     clk,
     input     reset
@@ -187,6 +203,21 @@ endinterface
 
 package MSX;
     
+    typedef struct {
+        logic [15:0] AF;
+        logic [15:0] BC;
+        logic [15:0] DE;
+        logic [15:0] HL;
+        logic [15:0] AF2;
+        logic [15:0] BC2;
+        logic [15:0] DE2;
+        logic [15:0] HL2;
+        logic [15:0] IX;
+        logic [15:0] IY;
+        logic [15:0] PC;
+        logic [15:0] SP;
+    } cpu_regs_t; 
+
     typedef struct {
         MSX_typ_t       typ;
         logic           border;
