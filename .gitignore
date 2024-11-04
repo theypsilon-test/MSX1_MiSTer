@@ -56,3 +56,7 @@ tools/CreateMSXpack/__pycache__/
 *.log
 *.msx
 *.ROM
+tools/debugger/output.bin
+tools/debugger/traceViewer/output.bin
+tools/debugger/traceViewer/.vs/
+tools/debugger/traceViewer/Release/
