@@ -196,8 +196,8 @@ assign BUTTONS = 0;
 
 localparam VDNUM = 6;
 video_bus video_bus();
-clock_bus_if clock_bus(clk_core, RESET || status[0] || status[10] || reset_rq);
-
+clock_bus_if clock_bus(clk_core);
+MSX::cpu_regs_t    cpu_regs;
 MSX::user_config_t msxConfig;
 MSX::bios_config_t bios_config;
 MSX::config_cart_t cart_conf[2];
@@ -232,6 +232,7 @@ wire      [63:0] img_size;
 wire             img_readonly;
 wire      [15:0] sdram_sz;
 wire      [64:0] rtc;
+wire             reset;
 
 //[0]     RESET
 //[2:1]   Aspect ratio
@@ -289,6 +290,8 @@ localparam CONF_STR = {
    "V,v",`BUILD_DATE 
 };
 
+assign reset = RESET || status[0] || status[10] || reset_rq;
+
 wire [15:0] status_menumask;
 wire [1:0] sdram_size;
 assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
@@ -339,7 +342,7 @@ wire       reload, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
 msx_config msx_config 
 (
    .clk(clock_bus.base_mp.clk),
-   .reset(clock_bus.base_mp.reset),
+   .reset(reset),
    .bios_config(bios_config),
    .HPS_status(status[63:0]),
    .sdram_size(sdram_size),
@@ -352,18 +355,18 @@ msx_config msx_config
 );
 /////////////////   CLOCKS   /////////////////
 wire clk_core, clk_sdram, locked_sdram;
-// wire ce_10m7_p, ce_10m7_n, ce_5m39_p, ce_5m39_n, ce_3m58_p, ce_3m58_n, ce_10hz;
 pll pll
 (
    .refclk(CLK_50M),
-   .rst(0),
-   .outclk_0(clk_sdram), //85.909090
+   .rst(RESET),
+   .outclk_0(clk_sdram),   //85.909090
    .outclk_1(clk_core),    //21.477270
    .locked(locked_sdram)
 );
 
 clock clock
 (
+   .reset(RESET),
    .clock_bus(clock_bus.generator_mp)
 );
 
@@ -381,8 +384,10 @@ wire [31:0] opcode;
 wire [1:0]  opcode_num;
 wire        opcode_out;
 wire [15:0] opcode_PC_start;
+
 msx MSX
 (
+   .reset(reset),
    .clock_bus(clock_bus.base_mp),
    .video_bus(video_bus),
    .cpu_regs(cpu_regs),
@@ -466,7 +471,7 @@ spi_divmmc spi
 sd_card sd_card
 (
     .*,
-    .reset(clock_bus.base_mp.reset),
+    .reset(reset),
     .clk_sys(clock_bus.base_mp.clk),
     .img_mounted(img_mounted[4]),
     .img_size(img_size),
@@ -618,7 +623,7 @@ ddram buffer
    .we(),
    .rd(ddr3_rd),
    .ready(ddr3_ready),
-   .reset(clock_bus.base_mp.reset),
+   .reset(reset),
    .debug_data(debug_data),
    .debug_wr(opcode_out),
    .*
@@ -716,7 +721,7 @@ end
 
 assign play         = ~motor & cas_load;
 assign ioctl_isCAS  = ioctl_download & (ioctl_index[5:0] == 6'd5);
-assign rewind       = status[9] | ioctl_isCAS | clock_bus.base_mp.reset;
+assign rewind       = status[9] | ioctl_isCAS | reset;
 
 tape cass 
 (

@@ -50,8 +50,7 @@ interface cpu_regs_if();
 endinterface
 
 interface clock_bus_if(
-    input     clk,
-    input     reset
+    input     clk
 );
     wire     ce_10m7_p;
     wire     ce_10m7_n;
@@ -63,7 +62,6 @@ interface clock_bus_if(
 
     modport generator_mp (
         input   clk,
-        input   reset,
         output  ce_10m7_p,
         output  ce_10m7_n,
         output  ce_5m39_p,
@@ -75,7 +73,6 @@ interface clock_bus_if(
 
     modport base_mp (
         input   clk,
-        input   reset,
         input   ce_10m7_p,
         input   ce_10m7_n,
         input   ce_5m39_p,

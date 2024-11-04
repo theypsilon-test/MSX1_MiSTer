@@ -1,5 +1,6 @@
    module msx
 (
+   input                    reset,
    //Clock
    clock_bus_if.base_mp     clock_bus,
    //Video
@@ -61,7 +62,7 @@
 );
 
 device_bus device_bus();
-cpu_bus_if cpu_bus(clock_bus.clk, clock_bus.ce_3m58_n, clock_bus.reset);
+cpu_bus_if cpu_bus(clock_bus.clk, clock_bus.ce_3m58_n, reset);
 sd_bus sd_bus();
 sd_bus_control sd_bus_control();
 
@@ -121,8 +122,8 @@ logic map_valid = 0;
 wire ppi_en = ~ppi_n;
 wire [1:0] active_slot;
 
-always @(posedge clock_bus.reset, posedge clock_bus.clk) begin
-    if (clock_bus.reset)
+always @(posedge reset, posedge clock_bus.clk) begin
+    if (reset)
         map_valid = 0;
     else if (ppi_en)
         map_valid = 1;
@@ -151,7 +152,7 @@ wire keybeep = ppi_out_c[7];
 assign cas_motor =  ppi_out_c[4];
 jt8255 PPI
 (
-   .rst(clock_bus.reset),
+   .rst(reset),
    .clk(clock_bus.clk),
    .addr(cpu_bus.device_mp.addr[1:0]),
    .din(cpu_bus.device_mp.data),
@@ -184,7 +185,7 @@ assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
 wire [7:0] d_from_kb;
 keyboard msx_key
 (
-   .reset(clock_bus.reset),
+   .reset(reset),
    .clk(clock_bus.clk),
    .ps2_key(ps2_key),
    .kb_row(ppi_out_c[3:0]),
@@ -226,7 +227,7 @@ wire psg_bc   = !(cpu_bus.device_mp.addr[0] | psg_e);
 wire psg_bdir = !(cpu_bus.device_mp.addr[1] | psg_e);
 jt49_bus PSG
 (
-   .rst_n(~clock_bus.reset),
+   .rst_n(~reset),
    .clk(clock_bus.clk),
    .clk_en(clock_bus.ce_3m58_p),
    .bdir(psg_bdir),
@@ -251,8 +252,8 @@ wire [7:0] d_from_rtc;
 rtc rtc
 (
    .clk21m(clock_bus.clk),
-   .reset(clock_bus.reset),
-   .setup(clock_bus.reset),
+   .reset(reset),
+   .setup(reset),
    .rt(rtc_time),
    .clkena(clock_bus.ce_10hz),
    .req(cpu_bus.device_mp.req & rtc_en),

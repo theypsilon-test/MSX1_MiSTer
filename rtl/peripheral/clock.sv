@@ -1,5 +1,6 @@
 module clock
 (
+   input                     reset,
    clock_bus_if.generator_mp clock_bus
 );
 
@@ -7,15 +8,15 @@ reg  [1:0] clkdiv4 =  2'd1;
 reg  [2:0] clkdiv6 =  3'd5;
 reg [21:0] div     = 22'd2147727;
 
-always @(posedge clock_bus.clk, posedge clock_bus.reset) begin
-   if (clock_bus.reset) 
+always @(posedge clock_bus.clk, posedge reset) begin
+   if (reset) 
       clkdiv4 <= 2'd1;
    else
       clkdiv4 <= clkdiv4 + 1'd1;
 end
 
-always @(posedge clock_bus.clk, posedge clock_bus.reset) begin
-   if (clock_bus.reset) 
+always @(posedge clock_bus.clk, posedge reset) begin
+   if (reset) 
       clkdiv6 <= 3'd5;
    else    
       if (clkdiv6 == 3'd0) 
@@ -24,11 +25,14 @@ always @(posedge clock_bus.clk, posedge clock_bus.reset) begin
          clkdiv6 <= clkdiv6 - 1'b1;
 end
 
-always @(posedge clock_bus.clk) begin
-   if (div == 22'd0)
+always @(posedge clock_bus.clk, posedge reset) begin
+   if (reset)
       div <= 22'd2147727;
    else
-      div <= div - 1'd1; 
+      if (div == 22'd0)
+         div <= 22'd2147727;
+      else
+         div <= div - 1'd1; 
 end
 
 assign clock_bus.ce_10m7_p = clkdiv4[0];
