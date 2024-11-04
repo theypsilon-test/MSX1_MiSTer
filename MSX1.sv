@@ -236,24 +236,25 @@ wire             reset;
 
 //[0]     RESET
 //[2:1]   Aspect ratio
-//[4:3]   Scanlines
-//[6:5]   Scale
-//[7]     Vertical crop
-//[8]     Tape input
+//[5:3]   Scandoubler
+//[8:6]   Scale
 //[9]     Tape rewind
 //[10]    Reset & Detach
-//[11]    MSX type
-//[12]    MSX1 VideoMode 
-//[14:13] MSX2 VideoMode
-//[16:15] MSX2 RAM Size
+//[11]    RESERVA
+//[12]    RESERVA
+//[14:13] VideoMode
+//[16:15] RESERVA
 //[19:17] SLOT A CART TYPE
-//[23:20] ROM A TYPE MAPPER   UNUSED
+//[23:20] RESERVA
 //[25:24] RESERVA
-//[28:26] SRAM SIZE           UNUSED 
+//[28:26] RESERVA 
 //[31:29] SLOT B CART TYPE
-//[34:32] ROM B TYPE MAPPER   UNUSED
+//[34:32] RESERVA
 //[37:35] RESERVA
-//[38]    BORDER
+//[38]    SRAM SAVE
+//[39]    SRAM LOAD
+//[40]    Tape input
+//[41]    BORDER
 `include "build_id.v" 
 localparam CONF_STR = {
    "MSX1;",
@@ -274,7 +275,7 @@ localparam CONF_STR = {
    "SC4,VHD,Load SD card;",
    "-;",
    "O[40],Tape Input,File,ADC;",
-   "H0F5,CAS,Cas File,31600000;",
+   "H0F5,CAS,Cas File,31700000;",
    "H0T9,Tape Rewind;",
    "-;",
    "P1,Video settings;",
