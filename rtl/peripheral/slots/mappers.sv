@@ -125,6 +125,9 @@ module mappers (
         .data_to_mapper(data_to_mapper)
     );
     
+    //device_t none_mapper_typ;
+    //assign  none_mapper_typ = (block_info.typ == MAPPER_NONE) && cpu_bus.mreq ? block_info.device : DEV_NONE;
+
     // Data: Use the FM-PAC mapper's data output, assuming it has priority
     assign data = fm_pac_out.data;  // FM-PAC mapper has priority for data output
 
@@ -142,7 +145,8 @@ module mappers (
     assign memory_bus.sram_cs   = ascii8_out.sram_cs | ascii16_out.sram_cs | fm_pac_out.sram_cs | gm2_out.sram_cs;
 
     // Device control signals: Use the FM-PAC mapper's control signals
-    assign device_bus.typ = device_t'(fm_pac_device_out.typ | offset_device_out.typ | konami_SCC_device_out.typ | msx2_ram_device_out.typ);
+    //assign device_bus.typ = device_t'(none_mapper_typ | fm_pac_device_out.typ | offset_device_out.typ | konami_SCC_device_out.typ | msx2_ram_device_out.typ);
+    assign device_bus.typ = cpu_bus.mreq ? block_info.device : DEV_NONE;
     assign device_bus.we  = fm_pac_device_out.we;
     assign device_bus.en  = fm_pac_device_out.en | konami_SCC_device_out.en;
 
