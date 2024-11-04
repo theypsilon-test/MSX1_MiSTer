@@ -33,7 +33,7 @@ using namespace std;
 
 // Simulation control
 // ------------------
-int initialReset = 3;
+int initialReset = 30;
 bool run_enable = 0;
 int batchSize = 150000;
 bool single_step = 0;
@@ -233,6 +233,7 @@ int verilate() {
 				if (main_time > initialReset) {
 					bus.BeforeEval();
 				}
+				DDR.BeforeEval();
 				Rams.BeforeEval();
 				SDram.BeforeEval();
 			}
@@ -285,7 +286,7 @@ int verilate() {
 		}
 		*/
 		main_time++;
-		//if (main_time == 16328900) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		if (main_time == 13176901) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 60000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 44000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 73000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
@@ -363,6 +364,7 @@ int main(int argc, char** argv, char** env) {
 	
 	DDR.addr = &top->emu->buffer->addr;
 	DDR.dout = &top->emu->buffer->dout;
+	DDR.dout64 = &top->emu->buffer->dout64;
 	DDR.rd = &top->emu->buffer->rd;
 	DDR.ready = &top->emu->buffer->ready;
 
@@ -424,18 +426,25 @@ int main(int argc, char** argv, char** env) {
 	//31700000 CAS 
 	//40000000 Maximum					
 
-	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
+	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
 	bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
-	bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
+	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
+	
+	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
+	//bus.QueueDownload("./rom/cas/joycol.cas", 5, true, 0x31700000, &DDR);
+	
+	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
+	//bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
+	
 	//bus.QueueDownload("./rom/roms/R-Type - IREM [R-Type] .rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/1942-Capcom_[ASCII8].rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/Konami's Game Master 2 - Konami [GameMaster2] [RC-755] .rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/Genghis Khan - MSX1 Version - KOEI [KoeiSRAM32] .rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/10th Frame - Access Software [ASCII16].rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/Penguin Adventure - Yumetairiku Adventure - Konami [Konami] [RC-743] .rom", 3, true, 0x30C00000, &DDR);
-	//bus.QueueDownload("./rom/roms/Gradius_2-Nemesis_2-Konami[KonamiSCC][RC-751].rom", 3, true, 0x30C00000, &DDR);
+	bus.QueueDownload("./rom/roms/Gradius_2-Nemesis_2-Konami[KonamiSCC][RC-751].rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/ASCII16SRAM2/Hydlide 2 - Shine Of Darkness - T&ESOFT [ASCII16SRAM2].rom", 3, true, 0x30C00000, &DDR);
-	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
+	
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8250.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
@@ -570,6 +579,14 @@ int main(int argc, char** argv, char** env) {
 			fileData.mem = &DDR;
 			fileData.reset = true;
 			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "ROM B", ".rom", "./rom/roms/", 1, &fileData);
+		}
+		
+		if (ImGui::Button("Load CAS")) {
+			fileData.addr = 0x31700000;
+			fileData.ioctl_id = 5;
+			fileData.mem = &DDR;
+			fileData.reset = true;
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "CAS", ".cas", "./rom/cas/", 1, &fileData);
 		}
 
 		ImGui::PushItemWidth(180.0f);

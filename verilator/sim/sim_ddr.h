@@ -17,7 +17,7 @@ public:
 	CData* we;
 	CData* rd;
 	CData* ready;
-	
+	QData* dout64;
 	SimDDR(DebugConsole c);
 	~SimDDR();
 

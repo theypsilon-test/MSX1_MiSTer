@@ -1,4 +1,4 @@
-rm obj_dir/*
+#rm obj_dir/*
 verilator \
 -cc -exe --trace \
 --compiler msvc +define+SIMULATION=1 \
@@ -8,7 +8,6 @@ verilator \
 -I../rtl/video/vdp18v/ \
 -Wno-PINMISSING \
 --converge-limit 6000 \
---timescale-override 1ns/1ps \
 --top-module emu \
 ../rtl/package.sv \
 \
@@ -70,5 +69,5 @@ verilator \
 ./rtl/sound/jt49/hdl/jt49_bus.sv          \
 ./rtl/peripheral/spi_divmmc.sv            \
 ./rtl/sd_card.sv                          \
-./rtl/tape.sv                             \
+../rtl/tape.sv                             \
 ../rtl/nvram_backup.sv                     \

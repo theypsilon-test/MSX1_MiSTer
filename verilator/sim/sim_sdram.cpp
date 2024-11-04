@@ -119,7 +119,7 @@ void SimSDRAM::AfterEval(void) {
 		{
 			if (channels[i].rq)
 			{
-				mem_wait_cnt = 4;
+				mem_wait_cnt = 1;
 				mem_ready = false;
 				mem_curr_rq = i;
 				channels[i].rq = false;

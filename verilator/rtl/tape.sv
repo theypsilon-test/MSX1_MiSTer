@@ -6,9 +6,11 @@ module tape
 	input           rewind,
 	output  [27:0]	ram_a,
 	input   [7:0]   ram_di,
+	input   [63:0]  ram_di64,
 	output          ram_rd,
 	input           buff_mem_ready,
-	output          cas_out
+	output          cas_out,
+	input           enable
 );
 
 endmodule
