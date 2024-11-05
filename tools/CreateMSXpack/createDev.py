@@ -32,8 +32,11 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
     count = int(root.attrib.get("count", 4))
     offset = int(root.attrib.get("offset", -1))
     for element in root:
-        if element.tag in ['SHA1', 'filename', 'device', 'mapper', 'sram', 'pattern', 'ram', 'device_param']:
+        if element.tag in ['SHA1', 'filename', 'device', 'mapper', 'sram', 'ram', 'device_param']:
             block[element.tag] = get_int_or_string_value(element)
+            if element.tag == 'ram' :
+                pattern = 1;
+            
             if element.tag == 'device' :
                 device_port = convert_to_8bit(element.attrib.get('port'))
                 device_mask = convert_to_8bit(element.attrib.get('mask'))
@@ -53,6 +56,13 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
             result.append(create_block_entry(constants, 'ROM', address, sha1=block['SHA1']))
         else:
             logger.warning(f"Missing ROM. SHA1: {block['SHA1']}")
+    
+    if 'ram' in block:
+        size = convert_to_int(block['ram'])
+        if size :
+            result.append(create_block_entry(constants, 'RAM', address, param1=size//(1024 * 16), param2 = pattern)) # RAM v 16 kB blocích
+        else :
+            logger.warning("SRAM size not defined correctly")
 
     if 'mapper' in block:
         if block['mapper'] in constants['mapper']:
@@ -79,8 +89,6 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
             result.append(create_block_entry(constants, 'SRAM', address, param1=size//1024)) # SRAM v 1 kB
         else :
             logger.warning("SRAM size not defined correctly")
-
-    # Potential extensions for 'sram' and 'ram' blocks could be added here
 
     return result
 
