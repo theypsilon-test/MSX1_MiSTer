@@ -451,12 +451,12 @@ module memory_upload
                     state      <= STATE_FILL_RAM;
                 end
                 STATE_FILL_RAM: begin
-                    if (sdram_ready) begin                                   // RAM je připravená
+                    if (sdram_ready && ~ram_ce) begin                        // RAM je připravená
                         data_size <= data_size - 25'd1;                      // Snížíme velikost dat
                         ram_ce    <= 1'b1;
-                        if (pattern == PATTERN_DDR) ddr3_rd <= 1'b1;         // Připrav další byte z DDR, pokud je vzor DDR
-                        if (data_size == 25'd1) state <= STATE_SET_LAYOUT;   // Poslední byte
                     end
+                    if (pattern == PATTERN_DDR && ram_ce) ddr3_rd <= 1'b1;   // Připrav další byte z DDR, pokud je vzor DDR
+                    if (data_size == 25'd0) state <= STATE_SET_LAYOUT;       // Poslední byte
                 end
                 STATE_SET_LAYOUT: begin
                     if (size == 2'b00) begin                                 // Kontrola, zda jsme na konci
