@@ -125,9 +125,6 @@ module mappers (
         .data_to_mapper(data_to_mapper)
     );
     
-    //device_t none_mapper_typ;
-    //assign  none_mapper_typ = (block_info.typ == MAPPER_NONE) && cpu_bus.mreq ? block_info.device : DEV_NONE;
-
     // Data: Use the FM-PAC mapper's data output, assuming it has priority
     assign data = fm_pac_out.data;  // FM-PAC mapper has priority for data output
 
@@ -136,7 +133,7 @@ module mappers (
     assign memory_bus.addr  = ascii8_out.addr & ascii16_out.addr & offset_out.addr & fm_pac_out.addr & konami_out.addr & gm2_out.addr & konami_SCC_out.addr & msx2_ram_out.addr & crossBlaim_out.addr & generic_out.addr & harryFox_out.addr & zeimna80_out.addr & zemina90_out.addr;
 
     // Read/Write control: Combine read/write signals from all mappers using a bitwise AND operation
-    assign memory_bus.rnw   = ascii8_out.rnw & ascii16_out.rnw & offset_out.rnw & fm_pac_out.rnw & gm2_out.rnw & msx2_ram_out.rnw;
+    assign memory_bus.rnw   = ascii8_out.rnw & ascii16_out.rnw & offset_out.rnw & fm_pac_out.rnw & gm2_out.rnw & msx2_ram_out.rnw & konami_SCC_out.rnw;
 
     // RAM chip select: Combine RAM chip select signals using a bitwise OR operation
     assign memory_bus.ram_cs    = ascii8_out.ram_cs | ascii16_out.ram_cs | offset_out.ram_cs | fm_pac_out.ram_cs | konami_out.ram_cs | gm2_out.ram_cs | konami_SCC_out.ram_cs | msx2_ram_out.ram_cs | crossBlaim_out.ram_cs | generic_out.ram_cs | harryFox_out.ram_cs | zeimna80_out.ram_cs | zemina90_out.ram_cs;
@@ -149,5 +146,6 @@ module mappers (
     assign device_bus.typ = cpu_bus.mreq ? block_info.device : DEV_NONE;
     assign device_bus.we  = fm_pac_device_out.we;
     assign device_bus.en  = fm_pac_device_out.en | konami_SCC_device_out.en;
-
+    assign device_bus.mode = konami_SCC_device_out.mode;
+    assign device_bus.param = konami_SCC_device_out.param;
 endmodule

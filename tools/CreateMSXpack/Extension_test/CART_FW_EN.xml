@@ -62,6 +62,13 @@
       <mapper>KONAMI_SCC</mapper>   
     </block>
   </fw>
+  <fw name="SCC+">
+    <block>
+      <ram>131072</ram>
+      <mapper>KONAMI_SCC_PLUS</mapper>
+      <device>SCC</device>
+    </block>
+  </fw>
   <fw name="KonamiSCC+">
     <block>
       <device>SCC</device>
