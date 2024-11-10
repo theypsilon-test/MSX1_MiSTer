@@ -12,7 +12,7 @@ ROM_DIR = 'ROM_test'
 XML_DIR = 'Extension_test'
 DIR_SAVE = 'MSX_test'
 
-def create_block_entry(constants: dict, block_type: str, address: int, sha1: str = None, param1: int = 0, param2: int = 0, param3: int = 0) -> dict:
+def create_block_entry(constants: dict, block_type: str, address: int, sha1: str = None, param1: int = 0, param2: int = 0, param3: int = 0, file_skip_bytes: int = 0, file_size: int = 0) -> dict:
     block_entry = {
         "typ": constants['conf']['BLOCK'],
         "address": address,
@@ -23,6 +23,9 @@ def create_block_entry(constants: dict, block_type: str, address: int, sha1: str
     }
     if sha1:
         block_entry['SHA1'] = sha1
+        block_entry['file_size'] = file_size
+        block_entry['file_skip_bytes'] = file_skip_bytes
+        
     return block_entry
 
 def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, constants: dict) -> list:
@@ -31,6 +34,7 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
     start = int(root.attrib.get("start", 0))
     count = int(root.attrib.get("count", 4))
     offset = int(root.attrib.get("offset", -1))
+
     for element in root:
         if element.tag in ['SHA1', 'filename', 'device', 'mapper', 'sram', 'ram', 'device_param']:
             block[element.tag] = get_int_or_string_value(element)
@@ -40,9 +44,16 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
             if element.tag == 'device' :
                 device_port = convert_to_8bit(element.attrib.get('port'))
                 device_mask = convert_to_8bit(element.attrib.get('mask'))
+                device_param = convert_to_8bit(element.attrib.get('param','0'))
+
                 if device_port is not None:
                     if device_mask is None:
                         device_mask = 0xFF             #Defaultni hodnota
+
+            if element.tag == 'SHA1' :
+                file_skip_bytes = convert_to_int(element.attrib.get('skip',0))
+                file_size       = convert_to_int(element.attrib.get('size',0))
+
         else:
             logger.info(f"Tag name: {element.tag} SKIP. Not expected here")
 
@@ -53,7 +64,7 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
 
     if 'SHA1' in block:
         if block['SHA1'] in files_with_sha1:
-            result.append(create_block_entry(constants, 'ROM', address, sha1=block['SHA1']))
+            result.append(create_block_entry(constants, 'ROM', address, sha1=block['SHA1'], file_size=file_size, file_skip_bytes=file_skip_bytes))
         else:
             logger.warning(f"Missing ROM. SHA1: {block['SHA1']}")
     
@@ -79,7 +90,7 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
             device_id = constants['device'][block['device']]
             result.append(create_block_entry(constants, 'DEVICE', address, param1=device_id, param2 = param_dev))
             if device_port is not None:
-                result.append(create_block_entry(constants, 'IO_DEVICE', address, param1=device_port, param2 = device_mask))
+                result.append(create_block_entry(constants, 'IO_DEVICE', address, param1=device_port, param2 = device_mask, param3 = device_param))
         else:
             logger.warning(f"Unknown device type: {block['device']}")
     
@@ -137,19 +148,31 @@ def prepare_roms(config: dict, files_with_sha1: dict) -> dict:
             for key in config:
                 for block in config[key]:
                     if 'SHA1' in block:
+                        print (block)
                         if block['SHA1'] not in roms:
                             filename = files_with_sha1[block['SHA1']]
-                            file_size = os.path.getsize(filename)
+                            file_size = block["file_size"]
+                            file_skip_bytes = block["file_skip_bytes"]
+                            
+                            if file_size == 0 :
+                                file_size = os.path.getsize(filename)
+                            
                             file_blocks = (file_size + 16383) // 16384
                             with open(filename, 'rb') as source_file:
-                                data = source_file.read()
+                                
+                                if file_skip_bytes > 0:
+                                    source_file.seek(file_skip_bytes)
+
+                                data = source_file.read(file_size)
+
                                 rom_file.write(data)
                                 current_size = len(data)
                                 padding_needed = ((current_size + 16383) // 16384) * 16384 - current_size
                                 if padding_needed > 0:
                                     rom_file.write(b'\xff' * padding_needed)
 
-                            roms[block['SHA1']] = {"start": start, "blocks": file_blocks, "id": id}
+                            rom_name = f'{block["file_skip_bytes"]}#{block["file_size"]}#' + block['SHA1']
+                            roms[rom_name] = {"start": start, "blocks": file_blocks, "id": id}
                             id += 1
                             start += file_blocks * 16384
         return roms
@@ -188,14 +211,15 @@ def create_fw_config(config: dict, constants: dict, roms: dict) -> tuple:
             conf['param3'] = conf.get('param3', 0)
 
             if conf['typ'] == constants['conf']['BLOCK'] and conf['block_typ'] == constants['block']['ROM']:
-                if 'SHA1' in conf and conf['SHA1'] in roms:
-                    sha1_value = conf['SHA1']
-                    conf['param1'] = roms[sha1_value]['id']
-                    conf['param2'] = (roms[sha1_value]['blocks'] >> 8) & 0xff
-                    conf['param3'] = roms[sha1_value]['blocks'] & 0xff
-                else:
-                    logger.warning(f"Missing SHA1 in ROM configuration or SHA1 not found in ROMs: {conf}")
-                    continue
+                if 'SHA1' in conf :
+                    sha1_name = f'{conf["file_skip_bytes"]}#{conf["file_size"]}#' + conf['SHA1']
+                    if sha1_name in roms:
+                        conf['param1'] = roms[sha1_name]['id']
+                        conf['param2'] = (roms[sha1_name]['blocks'] >> 8) & 0xff
+                        conf['param3'] = roms[sha1_name]['blocks'] & 0xff
+                    else:
+                        logger.warning(f"Missing SHA1 in ROM configuration or SHA1 not found in ROMs: {conf}")
+                        continue
 
             # Formátování číselných parametrů pro logování
             param1_str = f"{conf['param1']:02X}" if isinstance(conf['param1'], int) else str(conf['param1'])
@@ -251,7 +275,6 @@ def create_fw_conf(file_name: str, path: str, files_with_sha1: dict, constants: 
         config = parse_fw_config(root, files_with_sha1, constants)
         roms = prepare_roms(config, files_with_sha1)
         table, data, rom_start_addr = create_fw_config(config, constants, roms)
-        logger.info(roms)
         save_fw_config(config, file_name, path, files_with_sha1, constants, roms, table, data, rom_start_addr)
 
     except (ET.ParseError, FileNotFoundError) as e:

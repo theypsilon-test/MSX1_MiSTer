@@ -11,7 +11,7 @@ typedef enum logic {MSX1,MSX2} MSX_typ_t;
 
 typedef enum logic [3:0] {DEVICE_NONE, DEVICE_ROM } device_typ_t;
 typedef enum logic [3:0] {DEV_NONE, DEV_OPL3, DEV_SCC, DEV_VY0010, DEV_MSX2_RAM, DEV_ZEMINA90 } device_t;
-typedef enum logic [4:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTYPE, MAPPER_ASCII8, MAPPER_KOEI, MAPPER_WIZARDY, MAPPER_KONAMI, MAPPER_FMPAC, MAPPER_GM2, VY0010, MAPPER_KONAMI_SCC, MAPPER_MSX2, MAPPER_GENERIC16KB, MAPPER_CROSS_BLAIM, MAPPER_GENERIC8KB, MAPPER_HARRY_FOX, MAPPER_ZEMINA_80, MAPPER_ZEMINA_90, MAPPER_KONAMI_SCC_PLUS, MAPPER_UNUSED} mapper_typ_t;
+typedef enum logic [4:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTYPE, MAPPER_ASCII8, MAPPER_KOEI, MAPPER_WIZARDY, MAPPER_KONAMI, MAPPER_FMPAC, MAPPER_GM2, VY0010, MAPPER_KONAMI_SCC, MAPPER_MSX2, MAPPER_GENERIC16KB, MAPPER_CROSS_BLAIM, MAPPER_GENERIC8KB, MAPPER_HARRY_FOX, MAPPER_ZEMINA_80, MAPPER_ZEMINA_90, MAPPER_KONAMI_SCC_PLUS, MAPPER_MFRSD3, MAPPER_MFRSD2, MAPPER_UNUSED} mapper_typ_t;
 typedef enum logic [3:0] {BLOCK_RAM, BLOCK_ROM, BLOCK_SRAM, BLOCK_DEVICE, BLOCK_MAPPER, BLOCK_CART, BLOCK_REF_MEM, BLOCK_REF_DEV, BLOCK_IO_DEVICE} block_t;
 typedef enum logic [2:0] {CONF_BLOCK, CONF_DEVICE, CONF_LAYOUT, CONF_CARTRIGE, CONF_BLOCK_FW, CONF_UNUSED5, CONF_UNUSED6, CONF_END} conf_t;
 typedef enum logic [2:0] {ERR_NONE, ERR_BAD_MSX_CONF, ERR_NOT_SUPPORTED_CONF, ERR_NOT_SUPPORTED_BLOCK, ERR_BAD_MSX_FW_CONF, ERR_NOT_FW_CONF, ERR_DEVICE_MISSING} error_t;
@@ -134,6 +134,57 @@ interface cpu_bus_if(
 
 endinterface
 
+interface ext_sd_card_if;
+    logic        rx;
+    logic        tx;
+    logic  [7:0] data_to_SD;
+    logic  [7:0] data_from_SD;
+    
+    modport SD_mp (
+        output  data_from_SD,
+        input   data_to_SD,
+        input   rx,
+        input   tx
+    );
+
+    modport device_mp (
+        input    data_from_SD,
+        output   data_to_SD,
+        output   rx,
+        output   tx
+    );
+endinterface
+
+interface flash_bus_if;
+    logic [22:0] base_addr;
+    logic [22:0] addr;
+    logic  [7:0] data_to_flash;
+    logic  [7:0] data_from_flash;
+    logic        data_valid;
+    logic        we;
+    logic        ce;
+
+    modport flash_mp (
+        input  base_addr,
+        input  addr,
+        input  data_to_flash,
+        output data_from_flash,
+        output data_valid,
+        input  we,
+        input  ce
+    );
+
+    modport device_mp (
+        output base_addr,
+        output addr,
+        output data_to_flash,
+        input  data_from_flash,
+        input  data_valid,
+        output we,
+        output ce
+    );
+endinterface
+
 interface video_bus;
     logic  [7:0] R;
     logic  [7:0] G;
@@ -174,6 +225,7 @@ interface block_info;
     logic [24:0] rom_size;
     logic [15:0] sram_size;
     logic  [1:0] offset_ram;
+    logic [26:0] base_ram;
     mapper_typ_t typ;
     device_t     device;
     logic        id;

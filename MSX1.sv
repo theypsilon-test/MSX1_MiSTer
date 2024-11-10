@@ -195,8 +195,12 @@ assign LED_DISK  = {1'b1, ~vsd_sel & sd_act};
 assign BUTTONS = 0;
 
 localparam VDNUM = 6;
+
 video_bus video_bus();
 clock_bus_if clock_bus(clk_core);
+ext_sd_card_if ext_SD_card_bus();
+flash_bus_if flash_bus();
+
 MSX::cpu_regs_t    cpu_regs;
 MSX::user_config_t msxConfig;
 MSX::bios_config_t bios_config;
@@ -291,7 +295,7 @@ localparam CONF_STR = {
    "V,v",`BUILD_DATE 
 };
 
-assign reset = RESET || status[0] || status[10] || reset_rq;
+assign reset = RESET || status[0] || status[10] || upload;
 
 wire [15:0] status_menumask;
 wire [1:0] sdram_size;
@@ -391,6 +395,8 @@ msx MSX
    .reset(reset),
    .clock_bus(clock_bus.base_mp),
    .video_bus(video_bus),
+   .ext_SD_card_bus(ext_SD_card_bus),
+   .flash_bus(flash_bus),
    .cpu_regs(cpu_regs),
    .opcode(opcode),
    .opcode_num(opcode_num),
@@ -457,10 +463,7 @@ end
 spi_divmmc spi
 (
    .clk_sys(clock_bus.base_mp.clk),
-   .tx(sd_tx),
-   .rx(sd_rx),
-   .din(d_to_sd),
-   .dout(d_from_sd),
+   .ext_SD_card_bus(ext_SD_card_bus),
    .ready(),
 
    .spi_ce(1'b1),
@@ -561,7 +564,7 @@ ltc2308_tape #(.ADC_RATE(120000), .CLK_RATE(21477272)) tape
 );
 
 /////////////////  LOAD PACK   /////////////////
-wire upload_ram_ce, upload_sdram_rq, upload_bram_rq, upload_ram_ready, reset_rq;
+wire upload_ram_ce, upload_sdram_rq, upload_bram_rq, upload;
 wire  [7:0] upload_ram_din, config_msx;
 wire [26:0] upload_ram_addr;
 wire  [7:0] kbd_din;
@@ -570,7 +573,7 @@ wire        kbd_request, kbd_we;
 wire        load_sram;
 memory_upload memory_upload(
     .clk(clock_bus.base_mp.clk),
-    .reset_rq(reset_rq),
+    .upload(upload),
     .ioctl_download(ioctl_download),
     .ioctl_index(ioctl_index),
     .ioctl_addr(ioctl_addr),
@@ -584,7 +587,7 @@ memory_upload memory_upload(
     .ram_addr(upload_ram_addr),
     .ram_din(upload_ram_din),
     .ram_ce(upload_ram_ce),
-    .sdram_ready(upload_ram_ready),
+    .sdram_ready(sdram_ready),
     .kbd_request(kbd_request),
     .kbd_addr(kbd_addr),
     .kbd_din(kbd_din),
@@ -598,6 +601,22 @@ memory_upload memory_upload(
     .dev_enable(dev_enable),
     .io_device(io_device)
 );
+
+wire  [26:0] flash_addr;
+wire   [7:0] flash_dout;
+wire         flash_req, flash_ready, flash_done;
+flash flash (
+   .clk(clock_bus.base_mp.clk),
+   .clk_sdram(clk_sdram),
+   .flash_bus(flash_bus),
+
+   .sdram_ready(flash_ready),
+   .sdram_done(flash_done),
+   .sdram_addr(flash_addr),
+   .sdram_din(flash_dout),
+   .sdram_req(flash_req)
+);
+
 wire [27:0] ddr3_addr, ddr3_addr_download, ddr3_addr_cas;
 wire  [7:0] ddr3_dout, ddr3_din_download;
 wire        ddr3_rd, ddr3_rd_download, ddr3_rd_cas, ddr3_wr_download, ddr3_ready, ddr3_request_download;
@@ -633,30 +652,31 @@ ddram buffer
 assign ram_dout = sdram_ce ? sdram_dout :
                              8'hFF;
 
-wire         sdram_ready, sdram_rnw, dw_sdram_we, dw_sdram_ready, flash_ready, flash_req, flash_done;
+wire         sdram_ready, sdram_rnw, dw_sdram_we, dw_sdram_ready;
 wire  [26:0] sdram_addr;
 wire  [24:0] dw_sdram_addr;
-wire  [26:0] flash_addr;
-wire   [7:0] sdram_dout, dw_sdram_din, flash_din;
+wire   [7:0] sdram_dout, dw_sdram_din;
 sdram sdram
 (
    .init(~locked_sdram),
    .clk(clk_sdram),
    .doRefresh(1'd0),
    
-   .ch1_dout(),
-   .ch1_din(upload_ram_din),
-   .ch1_addr(upload_ram_addr),
-   .ch1_req(upload_ram_ce),
-   .ch1_rnw(1'd0),
-   .ch1_ready(upload_ram_ready),   
-  
-   .ch2_dout(sdram_dout),
-   .ch2_din(ram_din),
-   .ch2_addr(ram_addr),
-   .ch2_req(sdram_ce),
-   .ch2_rnw(ram_rnw),
-   .ch2_ready(sdram_ready),
+   .ch1_dout(sdram_dout),
+   .ch1_din(upload ? upload_ram_din : ram_din),
+   .ch1_addr(upload ? upload_ram_addr : ram_addr),
+   .ch1_req(upload ? upload_ram_ce : sdram_ce),
+   .ch1_rnw(upload ? 1'd0 : ram_rnw),
+   .ch1_ready(sdram_ready),
+   
+   .ch2_dout(),
+   .ch2_din(flash_dout),
+   .ch2_addr(flash_addr),
+   .ch2_req(flash_req),
+   .ch2_rnw(0),
+   .ch2_ready(flash_ready),
+   .ch2_done(flash_done),
+
    .ch3_addr(backup_ram_addr),
    .ch3_dout(backup_ram_dout),
    .ch3_din(backup_ram_din),

@@ -1,7 +1,7 @@
 module memory_upload
 (
     input                       clk,
-    output                      reset_rq,
+    output                      upload,
     input                       ioctl_download,
     input                [15:0] ioctl_index,
     input                [26:0] ioctl_addr,
@@ -36,8 +36,8 @@ module memory_upload
     localparam DDR3_CRC32_TABLE_ADDR = 28'h1600000;
     localparam logic [2:0] CONF_SIZE = 7;           // Conf block size for computer 8 bytes - 1 byte
 
-    // Stavový signál, který indikuje, zda je modul resetován
-    assign reset_rq = state != STATE_IDLE;
+    // Stavový signál, který indikuje, že jsem v režimu upload. Resetujeme core a RAM přístup pro UPLOAD
+    assign upload = state != STATE_IDLE;
 
     // Řízení načítání dat
     logic [26:0] ioctl_size[5] = '{default: 27'd0};

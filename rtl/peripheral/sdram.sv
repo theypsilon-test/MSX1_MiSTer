@@ -50,6 +50,7 @@ module sdram
     input             ch2_req,
 	input             ch2_rnw,     // 1 - read, 0 - write
     output reg        ch2_ready,
+    output reg        ch2_done,
 
     input      [26:0] ch3_addr,
     output reg  [7:0] ch3_dout,
@@ -153,7 +154,8 @@ always @(posedge clk) begin
         ch3_addr_1 <= ch3_addr;
         ch3_din_1  <= ch3_din;
     end
-	if (~ch3_req) ch3_done <= 0;
+	if (~ch2_req) ch2_done <= 0;
+    if (~ch3_req) ch3_done <= 0;
 
     refresh_count <= refresh_count+1'b1;
 
@@ -290,7 +292,7 @@ always @(posedge clk) begin
                 command  <= CMD_WRITE;
                 SDRAM_DQ <= saved_data;
                 if(ch == 0) ch1_ready  <= 1;
-                if(ch == 1) ch2_ready  <= 1;
+                if(ch == 1) begin ch2_ready  <= 1; ch2_done   <= 1; end
                 if(ch == 2) begin ch3_ready  <= 1; ch3_done   <= 1; end
                 state <= STATE_IDLE_2;
             end

@@ -69,13 +69,6 @@
       <device>SCC</device>
     </block>
   </fw>
-  <fw name="KonamiSCC+">
-    <block>
-      <device>SCC</device>
-      <device_param>1</device_param>
-      <mapper>KONAMI</mapper>   
-    </block>
-  </fw>
   <fw name="RTYPE">
     <block>
       <mapper>RTYPE</mapper>   
@@ -157,14 +150,57 @@
       <device>VY0010</device>
     </block>
   </fw>
+  
   <fw name="MEGA_FLASH_ROM">
     <secondary slot="1">
-      <block start="2">
+      <block start="0" count="4">
         <filename>mfrsd.ROM</filename>
-        <SHA1>1621f623b834dc57cb2983f30b36bcc3ac56cafd</SHA1>
-      </block>  
+        <SHA1 size="16384">1621f623b834dc57cb2983f30b36bcc3ac56cafd</SHA1>
+      </block>
+      <block start="1" count="1" offset="0">
+        <mapper>OFFSET</mapper>
+      </block>
+      <block start="2" count="1" offset="0">
+        <mapper>OFFSET</mapper>
+      </block>
+      <block start="3" count="1" offset="0">
+        <mapper>OFFSET</mapper>
+      </block>
+    </secondary>
+    <secondary slot="2">
+      <block>
+        <mapper>MFRSD2</mapper>
+        <ram>524288</ram>
+        <device mask="0xFC" port="0xFC" param="32">MEM_MAPPER</device>
+      </block>
+    </secondary>  
+    <secondary slot="3">
+      <block>
+        <filename>mfrsd.ROM</filename>
+        <SHA1 size="1048576" skip="7340032">1621f623b834dc57cb2983f30b36bcc3ac56cafd</SHA1>
+        <mapper>MFRSD3</mapper>
+      </block>
+    </secondary>  
+  </fw>
+
+  <fws name="MEGA_FLASH_ROMs">
+    <secondary slot="0">
+      <block start="0" count="1" offset="0">
+        <filename>mfrsd.ROM</filename>
+        <SHA1 size="16384">1621f623b834dc57cb2983f30b36bcc3ac56cafd</SHA1>
+      </block>
+      <block start="1" count="1" offset="0">
+        <mapper>OFFSET</mapper>
+      </block>
+      <block start="2" count="1" offset="0">
+        <mapper>OFFSET</mapper>
+      </block>
+      <block start="3" count="1" offset="0">
+        <mapper>OFFSET</mapper>
+      </block>
+      
       <block start="3" count="1">
-        <filename>mfrsda.ROM</filename>
+        <filename>mfrsd.ROM</filename>
         <SHA1>1621f623b834dc57cb2983f30b36bcc3ac56cafd</SHA1>
       </block>
     </secondary>
@@ -174,5 +210,5 @@
         <SHA1>1621f623b834dc57cb2983f30b36bcc3ac56cafd</SHA1>
       </block>  
     </secondary>
-  </fw>
+  </fws>
 </fwConfig>

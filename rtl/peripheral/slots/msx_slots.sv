@@ -1,6 +1,8 @@
 module msx_slots (
     clock_bus_if.base_mp        clock_bus,        // Interface for clock
     cpu_bus_if.device_mp        cpu_bus,          // Interface for CPU communication
+    ext_sd_card_if.device_mp    ext_SD_card_bus,  // Interface Ext SD card
+    flash_bus_if.device_mp      flash_bus,        // Interface to emulate FLASH
     input                 [1:0] active_slot,      // Currently active slot
     output                [7:0] data,             // Data output
     output               [26:0] ram_addr,         // RAM address
@@ -29,9 +31,10 @@ module msx_slots (
     assign device_bus.num = active_block.device_num;
 
     // Assign mapper type based on the current slot configuration
-    assign block_info.typ = active_block.mapper;
-    assign block_info.device = active_block.device;
-    
+    assign block_info.typ      = active_block.mapper;
+    assign block_info.device   = active_block.device;
+    assign block_info.base_ram = active_RAM.addr;
+
     // Retrieve RAM and SRAM base addresses and sizes
     wire [26:0] base_ram   = active_RAM.addr;
     wire [15:0] ram_blocks = active_RAM.size;
@@ -69,6 +72,8 @@ module msx_slots (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .memory_bus(memory_bus),
+        .ext_SD_card_bus(ext_SD_card_bus),
+        .flash_bus(flash_bus),
         .block_info(block_info),
         .data(mapper_data),
         .data_to_mapper(data_to_mapper)

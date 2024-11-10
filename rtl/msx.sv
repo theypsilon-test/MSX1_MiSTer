@@ -5,6 +5,10 @@
    clock_bus_if.base_mp     clock_bus,
    //Video
    video_bus                video_bus,
+   //Ext SD card
+   ext_sd_card_if.device_mp ext_SD_card_bus,
+   //Flash acces to SDRAM
+   flash_bus_if.device_mp   flash_bus,
    //debug
    output MSX::cpu_regs_t   cpu_regs,
    output  [31:0]           opcode,
@@ -347,6 +351,8 @@ msx_slots msx_slots
    .clock_bus(clock_bus),
    .cpu_bus(cpu_bus.device_mp),
    .device_bus(device_bus),
+   .ext_SD_card_bus(ext_SD_card_bus),
+   .flash_bus(flash_bus),
    .data(d_from_slots),  
    .ram_addr(ram_addr),
    .ram_din(ram_din),
