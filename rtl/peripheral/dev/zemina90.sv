@@ -8,7 +8,6 @@ module zemina90 (
 
     // Signals
     logic [2:0] mapper_io;
-    logic [7:0] size;
     logic [7:0] data_out[0:2], data_to_mapper_ar[0:2];
     wire       io_en = cpu_bus.iorq && ~cpu_bus.m1;
 
@@ -17,7 +16,7 @@ module zemina90 (
         .cpu_addr(cpu_bus.addr[7:0]),
         .io_device(io_device),
         .enable(mapper_io),
-        .param(size)
+        .params()
     );
 
     // Generate request and output signals

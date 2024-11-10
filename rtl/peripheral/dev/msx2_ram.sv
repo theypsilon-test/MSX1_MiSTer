@@ -11,7 +11,7 @@ module msx2_ram (
 
     // Signals
     logic [2:0] mapper_io;
-    logic [7:0] size;
+    logic [7:0] sizes[3];
     logic [7:0] data_out[0:2], data_to_mapper_ar[0:2];
     wire       io_en = cpu_bus.iorq && ~cpu_bus.m1;
 
@@ -20,7 +20,7 @@ module msx2_ram (
         .cpu_addr(cpu_bus.addr[7:0]),
         .io_device(io_device),
         .enable(mapper_io),
-        .param(size)
+        .params(sizes)
     );
 
     // Generate request and output signals
@@ -39,7 +39,7 @@ module msx2_ram (
                 .addr(cpu_bus.addr),
                 .oe(mapper_io[i] && io_en && cpu_bus.rd),  // IO read
                 .wr(mapper_io[i] && io_en && cpu_bus.wr),  // IO write
-                .size(size),
+                .size(sizes[i]),
                 .q(data_out[i]),
                 .data_to_mapper(data_to_mapper_ar[i])
             );
