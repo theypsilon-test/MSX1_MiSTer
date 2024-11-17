@@ -1,8 +1,5 @@
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) msx_slots.sv                       ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) memory_upload.sv                   ]
-set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) fdc.sv                             ]
-set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) opll.sv                            ]
-set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) scc_sound.sv                       ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) psg.sv                             ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) kanji.sv                           ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) halnote.sv                         ]

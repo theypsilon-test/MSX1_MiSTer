@@ -20,5 +20,7 @@
   "ZEMINA90" : 18,
   "KONAMI_SCC_PLUS" : 19,
   "MFRSD3" : 20,
-  "MFRSD2" : 21
+  "MFRSD2" : 21,
+  "MFRSD1" : 22,
+  "MFRSD0" : 23
 }

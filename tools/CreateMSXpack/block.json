@@ -7,5 +7,6 @@
   "SLOT": 5,
   "REF_MEM": 6,
   "REF_DEV": 7,
-  "IO_DEVICE": 8
+  "IO_DEVICE": 8,
+  "EXPANDER" : 9
 }

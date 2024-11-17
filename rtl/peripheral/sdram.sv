@@ -248,7 +248,7 @@ always @(posedge clk) begin
                 ch1_ready  <= 0;
             end
             else if(ch2_rq) begin
-				if (ch1_rnw)
+				if (ch2_rnw)
                     {cas_addr[12:9],SDRAM_BA,SDRAM_A,cas_addr[8:0]} <= {2'b00, 1'b1, ch2_addr_1[25:1]};
                 else
                     {cas_addr[12:9],SDRAM_BA,SDRAM_A,cas_addr[8:0]} <= {~ch2_addr_1[0],ch2_addr_1[0], 1'b1, ch2_addr_1[25:1]};

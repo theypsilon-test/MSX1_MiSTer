@@ -33,7 +33,7 @@
       <block start="0">
         <memory size="131072" pattern="4">RAM</memory>
         <mapper>MSX2_RAM</mapper>
-        <device mask="0xFC" port="0xFC" param="8" >MEM_MAPPER</device>
+        <device mask="0xFC" port="0xFC" param="8">MEM_MAPPER</device>
       </block>
     </secondary>
     <secondary slot="3">

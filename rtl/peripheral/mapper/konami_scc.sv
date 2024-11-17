@@ -93,8 +93,8 @@ module mapper_konami_scc (
     assign out.ram_cs = oe;                           // RAM chip select signal
     assign out.rnw    = ~(cpu_bus.wr && is_ram_segment && ~sccModeRegAccess);
 
-    assign device_out.mode = soundMode[block_info.id];
-    assign device_out.en   = cs && scc_area;
-    assign device_out.param = sccType;
+    assign device_out.mode  = cs ? soundMode[block_info.id] : 1'b1;
+    assign device_out.en    = cs && scc_area;
+    assign device_out.param = cs ? sccType : 1'b1;
 
 endmodule

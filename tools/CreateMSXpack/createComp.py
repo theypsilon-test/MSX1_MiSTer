@@ -57,15 +57,33 @@ def parse_msx_primary(root):
     :return: Dictionary containing parsed blocks and secondary slots.
     """
     results = {}
+    expander = 0
     for element in root:
         if element.tag == 'secondary':
             slot = convert_to_int_or_string(element.attrib["slot"])
+            if slot > 0 : 
+                expander = 1
             results.setdefault('secondary', {})[slot] = parse_msx_secondary(element)
         elif element.tag == 'block':
             results.setdefault('block', []).append(parse_msx_block(element))
         else:
             print(f"Processing unknown element: {element.tag}")
-
+    
+    if root.tag == 'primary':
+        expander_en = convert_to_int(root.attrib.get("expander",'0'))
+        expander_wo = convert_to_int(root.attrib.get("expander_wo",'0'))
+        if expander > 0:
+            expander_en = 1
+        if expander_en > 0:
+            expander = expander_wo << 1 | expander_en
+            if 'secondary' in results: 
+                for slot, slot_data in results['secondary'].items():
+                    if 'block' in slot_data :
+                        slot_data['block'].append({'expander': (expander, {})})
+                        break
+            else :
+                results['block'].append({'expander': (expander, {})})
+            
     return results
 
 def parse_msx_config(root):
@@ -79,7 +97,11 @@ def parse_msx_config(root):
     for element in root:
         if element.tag == 'primary':
             slot = convert_to_int_or_string(element.attrib["slot"])
+            expander_en = convert_to_int(element.attrib.get("expander",'0'))
+            expander_wo = convert_to_int(element.attrib.get("expander_wo",'0'))
+            #(primary, expander) = parse_msx_primary(element)
             results.setdefault('primary', {})[slot] = parse_msx_primary(element)
+            #print(results)
         else:
             value = get_int_or_string_value(element)
             if value:
@@ -137,8 +159,15 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
     :param constants: Dictionary with configuration constants.
     """
     for block in blocks:
-        address = ((slot & 3) << 6) | ((subslot & 3) << 4) | ((block['block_start'] & 3) << 2) | ((block['block_count'] - 1) & 3)
         params = [0] * 5
+
+        if 'expander' in block:
+            address = (slot & 3) << 6
+            (params[0], dummy) = block['expander']
+            add_block_type_to_file(address, 'EXPANDER', params, outfile, constants)
+            continue
+
+        address = ((slot & 3) << 6) | ((subslot & 3) << 4) | ((block['block_start'] & 3) << 2) | ((block['block_count'] - 1) & 3)
         if 'memory' in block:
             (typ, attributes) = block.pop('memory', (None, None)) 
             if typ == 'ROM' :

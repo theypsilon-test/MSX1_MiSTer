@@ -209,6 +209,7 @@ MSX::block_t       slot_layout[64];
 MSX::lookup_RAM_t  lookup_RAM[16];
 MSX::lookup_SRAM_t lookup_SRAM[4];
 MSX::io_device_t   io_device[16];
+MSX::slot_expander_t slot_expander[4];
 wire       [2:0] dev_enable[0:(1 << $bits(device_t))-1];
 
 wire             forced_scandoubler;
@@ -419,6 +420,7 @@ msx MSX
    .sd_buff_dout(sd_buff_dout),
    .sd_buff_din(sd_buff_din[5]),
    .sd_buff_wr(sd_buff_wr),
+   .slot_expander(slot_expander),
    .slot_layout(slot_layout),
    .dev_enable(dev_enable),
    .lookup_RAM(lookup_RAM),
@@ -592,6 +594,7 @@ memory_upload memory_upload(
     .kbd_addr(kbd_addr),
     .kbd_din(kbd_din),
     .kbd_we(kbd_we),
+    .slot_expander(slot_expander),
     .slot_layout(slot_layout),
     .lookup_RAM(lookup_RAM),
     .lookup_SRAM(lookup_SRAM),

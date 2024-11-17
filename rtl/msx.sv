@@ -42,6 +42,7 @@
    output                   bram_ce,
    input              [7:0] ram_dout,
    input              [1:0] sdram_size,
+   input MSX::slot_expander_t slot_expander[4],
    input MSX::block_t       slot_layout[64],
    input MSX::lookup_RAM_t  lookup_RAM[16],
    input MSX::lookup_SRAM_t lookup_SRAM[4],
@@ -180,7 +181,6 @@ assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
                   rtc_en                  ? d_from_rtc      :
                   ~psg_n                  ? d_from_psg      :
                   ~ppi_n                  ? d_from_8255     :
-                  mapper_subslot_rq       ? mapper_subslot_data :
                   device_output_rq        ? device_data     :
                                             ram_dout & d_from_slots;
 //  -----------------------------------------------------------------------------
@@ -310,7 +310,7 @@ wire [7:0] data_to_mapper;
 devices devices
 (
    .clock_bus(clock_bus),
-   .cpu_bus(cpu_bus.device_mp),
+   .cpu_bus(cpu_bus),
    .device_bus(device_bus),
    .sd_bus(sd_bus),
    .sd_bus_control(sd_bus_control),
@@ -325,34 +325,17 @@ devices devices
 
 wire         [7:0] d_from_slots;
 
-wire [1:0] active_subslot;
-wire [7:0] mapper_subslot_data;
-wire mapper_subslot_rq;
-subslot subslot_inst 
-(
-   .cpu_bus(cpu_bus.device_mp),
-   .expander_enable(bios_config.slot_expander_en),
-   .data(mapper_subslot_data),
-   .active_subslot(active_subslot),
-   .output_rq(mapper_subslot_rq),
-   .active_slot(active_slot)
-);
-
-wire [5:0] layout_id = {active_slot, active_subslot, cpu_bus.device_mp.addr[15:14]};
-MSX::block_t active_block;
-MSX::lookup_RAM_t active_RAM;
-MSX::lookup_SRAM_t active_SRAM;
-
-assign active_block = slot_layout[layout_id];
-assign active_RAM = lookup_RAM[active_block.ref_ram];
-assign active_SRAM = lookup_SRAM[active_block.ref_sram];
 msx_slots msx_slots
 (
    .clock_bus(clock_bus),
-   .cpu_bus(cpu_bus.device_mp),
+   .cpu_bus(cpu_bus),
    .device_bus(device_bus),
    .ext_SD_card_bus(ext_SD_card_bus),
    .flash_bus(flash_bus),
+   .slot_expander(slot_expander),
+   .slot_layout(slot_layout),
+   .lookup_RAM(lookup_RAM),
+   .lookup_SRAM(lookup_SRAM),
    .data(d_from_slots),  
    .ram_addr(ram_addr),
    .ram_din(ram_din),
@@ -361,10 +344,7 @@ msx_slots msx_slots
    .sdram_ce(sdram_ce),
    .bram_ce(bram_ce),
    .sdram_size(sdram_size),
-   .active_block(active_block),
    .active_slot(active_slot),
-   .active_RAM(active_RAM),
-   .active_SRAM(active_SRAM),
    .bios_config(bios_config),
    .data_to_mapper(data_to_mapper)
 );

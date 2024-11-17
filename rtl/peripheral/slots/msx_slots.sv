@@ -3,6 +3,10 @@ module msx_slots (
     cpu_bus_if.device_mp        cpu_bus,          // Interface for CPU communication
     ext_sd_card_if.device_mp    ext_SD_card_bus,  // Interface Ext SD card
     flash_bus_if.device_mp      flash_bus,        // Interface to emulate FLASH
+    input MSX::slot_expander_t  slot_expander[4],
+    input MSX::block_t          slot_layout[64],
+    input MSX::lookup_RAM_t     lookup_RAM[16],
+    input MSX::lookup_SRAM_t    lookup_SRAM[4],
     input                 [1:0] active_slot,      // Currently active slot
     output                [7:0] data,             // Data output
     output               [26:0] ram_addr,         // RAM address
@@ -12,10 +16,7 @@ module msx_slots (
     output                      sdram_ce,         // SDRAM chip enable
     output                      bram_ce,          // BRAM chip enable
     input                 [1:0] sdram_size,       // SDRAM size
-    input  MSX::block_t         active_block,     // Slot layout configuration
-    input  MSX::lookup_RAM_t    active_RAM,       // RAM lookup table
-    input  MSX::lookup_SRAM_t   active_SRAM,      // SRAM lookup table
-    input  MSX::bios_config_t   bios_config,      // BIOS configuration
+    input MSX::bios_config_t    bios_config,      // BIOS configuration
     device_bus                  device_bus,       // Interface for device control
     input                 [7:0] data_to_mapper
 );
@@ -23,6 +24,39 @@ module msx_slots (
     block_info block_info();
     memory_bus memory_bus();
 
+    // Subslot 
+    wire       slot_expander_en, slot_expander_wo;
+    wire [1:0] active_subslot;
+    wire       subslot_output_rq;
+    wire [7:0] subslot_data;
+    
+    
+    //TODO zjistit jak zápis a čtení ovlivňuje ostatní. Paměť, atd. dle  MFRSD nedojde k zápisu do RAM a čtení z RAM. (Write není blokováno v MFRSD)
+    subslot subslot 
+    (
+        .cpu_bus(cpu_bus),
+        .expander_enable(slot_expander_en),
+        .expander_wo(slot_expander_wo),
+        .data(subslot_data),
+        .active_subslot(active_subslot),
+        .output_rq(subslot_output_rq),
+        .active_slot(active_slot)
+    );
+
+    wire [5:0] layout_id = {active_slot, active_subslot, cpu_bus.addr[15:14]};
+    MSX::block_t active_block;
+    MSX::lookup_RAM_t active_RAM;
+    MSX::lookup_SRAM_t active_SRAM;
+    
+    assign active_block = slot_layout[layout_id];
+    assign active_RAM = lookup_RAM[active_block.ref_ram];
+    assign active_SRAM = lookup_SRAM[active_block.ref_sram];
+    
+    
+    assign slot_expander_en = slot_expander[active_slot].en | slot_expander_force_en;
+    assign slot_expander_wo = slot_expander[active_slot].wo;
+  
+    
     // Retrieve configuration for the current slot
     wire [1:0] offset_ram = active_block.offset_ram;
     wire       cart_num   = active_block.cart_num;
@@ -43,14 +77,14 @@ module msx_slots (
     wire [15:0] sram_size  = active_SRAM.size;
 
     // Data selection between subslot and mapper
-    assign data = mapper_data;
+    assign data = subslot_output_rq ? subslot_data : mapper_data;
 
     // RAM data input from CPU bus
     assign ram_din = cpu_bus.data;
 
     // Chip enable signals for BRAM and SDRAM
     assign bram_ce = '0;  // Assuming BRAM is not used in this context, hence inactive
-    assign sdram_ce = memory_bus.ram_cs || memory_bus.sram_cs;
+    assign sdram_ce = ~subslot_output_rq && (memory_bus.ram_cs || memory_bus.sram_cs);
 
     // RAM read/write control signal
     assign ram_rnw = memory_bus.rnw | (memory_bus.ram_cs & ram_ro);
@@ -66,7 +100,7 @@ module msx_slots (
 
     // Mappers module instantiation for handling different mappers
     wire [7:0] mapper_data;
-
+    wire slot_expander_force_en;
     mappers mappers_inst (
         .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
@@ -76,7 +110,8 @@ module msx_slots (
         .flash_bus(flash_bus),
         .block_info(block_info),
         .data(mapper_data),
-        .data_to_mapper(data_to_mapper)
+        .data_to_mapper(data_to_mapper),
+        .slot_expander_force_en(slot_expander_force_en)
     );
 
 endmodule

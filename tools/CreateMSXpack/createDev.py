@@ -120,6 +120,14 @@ def parse_fw(name: str, root: ET.Element, files_with_sha1: dict, constants: dict
             results.extend(parse_fw_block(element, 0, files_with_sha1, constants))
         elif element.tag == 'io_device':
             pass  # Placeholder for future extensions
+        elif element.tag == 'expander':
+            if element.text == 'expander_wo' :
+                expander = 3
+            else :
+                expander = 1
+            result = []
+            result.append(create_block_entry(constants, 'EXPANDER', 0, param1=expander))
+            results.extend(result)
         else:
             logger.info(f"Tag name: {element.tag} SKIP. Not expected here")
 

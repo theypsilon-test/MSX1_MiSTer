@@ -19,6 +19,7 @@ module memory_upload
     output logic          [8:0] kbd_addr,
     output logic          [7:0] kbd_din,
     output logic                kbd_we,
+    output MSX::slot_expander_t slot_expander[4],
     output MSX::block_t         slot_layout[64],
     output MSX::lookup_RAM_t    lookup_RAM[16],
     output MSX::lookup_SRAM_t   lookup_SRAM[4],
@@ -185,7 +186,8 @@ module memory_upload
                     slot_layout[block_num].ref_sram   <= '0;
                     slot_layout[block_num].external   <= '0;
                     lookup_SRAM[block_num[1:0]].size  <= '0;
-                    bios_config.slot_expander_en      <= '0;
+                    slot_expander[block_num & 3].en   <= '0;
+                    slot_expander[block_num & 3].wo   <= '1;
                     io_device[block_num[3:0]].port    <= '1;
                     io_device[block_num[3:0]].mask    <= '0;
                     io_device[block_num[3:0]].id      <= DEV_NONE;
@@ -205,7 +207,7 @@ module memory_upload
                             state      <= STATE_READ_CONF;
                             next_state <= STATE_CHECK_FW_CONF;
                             ddr3_addr  <= DDR3_BASE_FW_ADDR;
-                            fw_space   <= '1;                         // Čtení firmware oblasti
+                            fw_space   <= '1;                           // Čtení firmware oblasti
                         end
                     end
                 end
@@ -220,7 +222,7 @@ module memory_upload
                             head_addr <= head_addr + 1'b1;
                         end
                     end else begin
-                        $display("FINISH: EXPANDER SLOTS:%x", bios_config.slot_expander_en);
+//                        $display("FINISH: EXPANDER SLOTS:%x", bios_config.slot_expander_en);
                         state     <= STATE_IDLE;
                         load_sram <= '1;
                     end
@@ -437,6 +439,13 @@ module memory_upload
                             state       <= STATE_SET_LAYOUT;
                             ref_dev_mem <= 1'b1;
                         end
+                        BLOCK_EXPANDER: begin
+                            $display("BLOCK_EXPANDER slot: %d enabled: %d wo: %d", slot, conf[3][0], conf[3][1]);
+                            slot_expander[slot].en <= conf[3][0];
+                            slot_expander[slot].wo <= conf[3][1];
+                            next_state             <= STATE_LOAD_CONF;
+                            state                  <= STATE_READ_CONF;
+                        end
                         default: begin
                             $display("BLOCK UNKNOWN");
                             error <= ERR_NOT_SUPPORTED_BLOCK;
@@ -524,10 +533,12 @@ module memory_upload
                         $display("BLOCK slot:%x subslot:%x block:%x < mapper:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].mapper);
                     end
 
+/*
                     if (subslot != 2'b00) begin
                         bios_config.slot_expander_en[slot]             <= 1'b1;
                         $display("BLOCK expander enable slot:%x", slot);
                     end
+*/                    
                 end
                 STATE_SEARCH_CRC32_INIT: begin
                     // TODO: Pokud není k dispozici CRC32 DB, nastav mapper offset a pokračuj. Nezapomeň na obnovení ddr3_addr.

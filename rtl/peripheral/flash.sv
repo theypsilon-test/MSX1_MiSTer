@@ -51,7 +51,10 @@ module flash (
 			index <= index + 1'b1;
 			if (int_valid5) begin
 				index <= 0;
-				if (flash_bus.data_to_flash == 8'h30) begin erase_block <= 1; erase_block_num <= (flash_bus.addr > 23'hFFFF ? {1'b0,flash_bus.addr[22:16]} : {5'd0,flash_bus.addr[15:13]} ); end
+				if (flash_bus.data_to_flash == 8'h30) begin 
+					erase_block <= 1; 
+					erase_block_num <= (flash_bus.addr > 23'hFFFF ? {1'b0,flash_bus.addr[22:16]} : {5'd0,flash_bus.addr[15:13]} ); 
+				end
 				//if (din == 8'h10) erase_chip  <= 1;
 			end
 			if (flash_bus.addr[11:1] != (index == 3'd1 | index == 3'd4 ? 11'h2aa : 11'h555) & ~(flash_bus.data_to_flash == 8'hF0 & index == 0) ) begin
@@ -127,7 +130,7 @@ module flash (
 			erase <= 1;
 		end else 
 		if ((quadrupleProgram || doubleProgram || byteProgram || write_cnt > 0) & flash_bus.we & ~old_we & flash_bus.ce ) begin
-			//Zkontrolovat zda je writable sector num1 a num2 vypocet
+			//TODO Zkontrolovat zda je writable sector num1 a num2 vypocet
 			sdram_addr <= 27'(flash_bus.addr) - sdram_offset;
 			sdram_din <= flash_bus.data_to_flash;
 			if (sdram_ready) begin

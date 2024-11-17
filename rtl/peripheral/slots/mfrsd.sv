@@ -159,7 +159,7 @@ end
 wire  [2:0] page      =  mapperReg[7:6] == 2'b01 ? 3'(cpu_addr[15:14]) : cpu_addr[15:13] - 3'd2;
 wire [15:0] bankValue = configReg[4] & page[1:0] == 2'b00 & bank[page[1:0]] == 8'd0 ? 16'h3FA :
                         configReg[4] & page[1:0] == 2'b01 & bank[page[1:0]] == 8'd1 ? 16'h3FB :
-                                                                                      16'(bank[page[1:0]]) + 16'(offsetReg);
+                                                         16'(bank[page[1:0]]) + 16'(offsetReg);
 wire flashAddrValid   = page < 3'd4;
 assign flash_addr     = 23'h010000 + 23'(mapperReg[7:6] == 2'b01 ? {bankValue, cpu_addr[13:0]} : {1'b0,bankValue, cpu_addr[12:0]});
 assign flash_rq       = cs & flashAddrValid;
