@@ -293,6 +293,7 @@ localparam CONF_STR = {
    "T[0],Reset;",
    "R[10],Reset & Detach ROM Cartridge;",					
    "R[0],Reset and close OSD;",
+   "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING;",
    "V,v",`BUILD_DATE 
 };
 
@@ -300,6 +301,9 @@ assign reset = RESET || status[0] || status[10] || upload;
 
 wire [15:0] status_menumask;
 wire [1:0] sdram_size;
+wire [7:0] info;
+wire info_req;
+
 assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
 assign status_menumask[1] = fdc_enabled;
 assign status_menumask[3] = ROM_A_load_hide;
@@ -308,6 +312,10 @@ assign status_menumask[5] = '0;
 assign status_menumask[6] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
 assign status_menumask[15:7] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
+
+assign info_req = error != ERR_NONE;
+assign info     = 8'(error);
+
 hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 (
    .clk_sys(clock_bus.base_mp.clk),
@@ -339,7 +347,9 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
    .sd_buff_din(sd_buff_din),
    .sd_buff_wr(sd_buff_wr),
    .sdram_sz(sdram_sz),
-   .RTC(rtc)
+   .RTC(rtc),
+   .info_req(info_req),
+   .info(info)
 );
 
 /////////////////   CONFIG   /////////////////
@@ -373,7 +383,7 @@ pll pll
 clock clock
 (
    .reset(RESET),
-   .clock_bus(clock_bus.generator_mp)
+   .clock_bus(clock_bus)
 );
 
 ///////////////// Computer /////////////////
@@ -573,6 +583,7 @@ wire  [7:0] kbd_din;
 wire  [8:0] kbd_addr;
 wire        kbd_request, kbd_we;
 wire        load_sram;
+error_t     error;
 memory_upload memory_upload(
     .clk(clock_bus.base_mp.clk),
     .upload(upload),
@@ -602,7 +613,8 @@ memory_upload memory_upload(
     .cart_conf(cart_conf),
     .load_sram(load_sram),
     .dev_enable(dev_enable),
-    .io_device(io_device)
+    .io_device(io_device),
+    .error(error)
 );
 
 wire  [26:0] flash_addr;
