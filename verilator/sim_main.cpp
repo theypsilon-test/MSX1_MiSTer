@@ -74,8 +74,8 @@ const char* slotB[] = { "ROM","SCC","SCC +","FM - PAC","Empty" };
 const char* mapperA[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* mapperB[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* sramA[] = { "auto","1kB","2kB","4kB","8kB","16kB","32kB","none" };
-int currentSlotA = 0;
-//int currentSlotA = 6;
+int currentSlotA = 4;
+//int currentSlotA = 0;
 int currentSlotB = 0;
 int currentMapperA = 0;
 int currentMapperB = 0;
@@ -286,7 +286,7 @@ int verilate() {
 		}
 		*/
 		main_time++;
-		if (main_time == 13176901) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		//if (main_time == 13176901) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 60000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 44000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 73000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
@@ -428,12 +428,13 @@ int main(int argc, char** argv, char** env) {
 
 	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
 	bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
-	bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
-	
+	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-20.msx", 1, true, 0x30000000, &DDR);
+	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-20.msx", 1, true, 0x30000000, &DDR);
+	bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
 	//bus.QueueDownload("./rom/cas/joycol.cas", 5, true, 0x31700000, &DDR);
 	
-	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
+	bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
 	//bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
 	
 	//bus.QueueDownload("./rom/roms/R-Type - IREM [R-Type] .rom", 3, true, 0x30C00000, &DDR);
@@ -442,7 +443,7 @@ int main(int argc, char** argv, char** env) {
 	//bus.QueueDownload("./rom/roms/Genghis Khan - MSX1 Version - KOEI [KoeiSRAM32] .rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/10th Frame - Access Software [ASCII16].rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/Penguin Adventure - Yumetairiku Adventure - Konami [Konami] [RC-743] .rom", 3, true, 0x30C00000, &DDR);
-	bus.QueueDownload("./rom/roms/Gradius_2-Nemesis_2-Konami[KonamiSCC][RC-751].rom", 3, true, 0x30C00000, &DDR);
+	//bus.QueueDownload("./rom/roms/Gradius_2-Nemesis_2-Konami[KonamiSCC][RC-751].rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/roms/ASCII16SRAM2/Hydlide 2 - Shine Of Darkness - T&ESOFT [ASCII16SRAM2].rom", 3, true, 0x30C00000, &DDR);
 	
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8250.msx", 1, true, 0x30000000, &DDR);

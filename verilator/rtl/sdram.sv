@@ -30,6 +30,7 @@ module sdram
     input             ch2_req /* verilator public */,
 	input             ch2_rnw /* verilator public */,     // 1 - read, 0 - write
     output reg        ch2_ready /* verilator public */,
+    output reg        ch2_done /* verilator public */,
 
     input      [26:0] ch3_addr /* verilator public */,
     output reg  [7:0] ch3_dout /* verilator public */,

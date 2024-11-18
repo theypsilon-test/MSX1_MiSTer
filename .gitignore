@@ -60,3 +60,7 @@ tools/debugger/output.bin
 tools/debugger/traceViewer/output.bin
 tools/debugger/traceViewer/.vs/
 tools/debugger/traceViewer/Release/
+verilator_modules/.vs/
+verilator_modules/obj_dir/
+*.obj
+verilator_modules/x64/

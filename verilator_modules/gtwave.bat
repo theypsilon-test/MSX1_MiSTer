@@ -1,0 +1,1 @@
+c:\Project\FPGA\SW\gtkwave64\bin\gtkwave.exe --optimize -g  .\sim.vcd

@@ -2,13 +2,11 @@ module mapper_msx2_ram (
     cpu_bus_if.device_mp    cpu_bus,         // Interface for CPU communication
     block_info              block_info,      // Struct containing mapper configuration and parameters
     mapper_out              out,             // Interface for mapper output
-    device_bus              device_out,      // Interface for device control
     input             [7:0] data_to_mapper
 );
     assign out.ram_cs = '0;
     assign out.addr = {27{1'b1}};
     assign out.rnw = '1;
-    assign device_out.typ = DEV_NONE;
 endmodule
 
 module msx2_ram (

@@ -3,12 +3,12 @@ verilator \
 -cc -exe --trace \
 --compiler msvc +define+SIMULATION=1 \
 -O3 --x-assign fast --x-initial fast --noassert \
---public-depth 3 \
 -I../rtl/sound/jtopl/hdl/ \
 -I../rtl/sound/jt49/hdl/ \
--I../rtl/video/vdp18v/ \
+-I../rtl/video/VDPv/ \
 -Wno-PINMISSING \
 --converge-limit 6000 \
+--timescale-override 1ns/1ps \
 --top-module emu \
 ../rtl/package.sv \
 \
@@ -41,6 +41,8 @@ verilator \
 ../rtl/peripheral/slots/mappers.sv         \
 ../rtl/peripheral/slots/devices.sv         \
 ../rtl/peripheral/mapper/offset.sv         \
+../rtl/peripheral/mapper/none.sv           \
+../rtl/video/vdp_mux.sv                    \
 \
 ./rtl/video/vdp18v/vdp18_pack-p.sv        \
 ./rtl/video/vdp18v/vdp18_col_pack-p.sv    \
@@ -65,7 +67,6 @@ verilator \
 ../rtl/video/VDPv/vdp_vga.sv               \
 ../rtl/video/VDPv/vdp_wait_control.sv      \
 ../rtl/video/VDPv/vdp_ram.sv               \
-../rtl/video/vdp_mux.sv                    \
 \
 ./rtl/peripheral/mapper/crossBlaim.sv     \
 ./rtl/peripheral/mapper/generic.sv        \
@@ -79,14 +80,17 @@ verilator \
 ./rtl/peripheral/mapper/konami_scc.sv     \
 ./rtl/peripheral/mapper/gamemaster2.sv    \
 ./rtl/peripheral/mapper/msx2_ram.sv       \
+../rtl/peripheral/mapper/mfrsd.sv          \
 ./rtl/peripheral/dev/zemina90.sv          \
 ./rtl/peripheral/dev/opl3.sv              \
 ./rtl/peripheral/dev/scc.sv               \
 ./rtl/sound/scc_wave.sv                   \
 ./rtl/peripheral/dev/vy-0010.sv           \
+./rtl/wd1793.sv                           \
 \
 ./rtl/sound/jt49/hdl/jt49_bus.sv          \
 ./rtl/peripheral/spi_divmmc.sv            \
+./rtl/peripheral/flash.sv                 \
 ./rtl/sd_card.sv                          \
 ./rtl/tape.sv                             \
 ./rtl/nvram_backup.sv                     \

@@ -15,6 +15,8 @@
     <ProjectGuid>{A2A39241-8334-40A2-8D63-53A6CAEAEA05}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ReplaceWildcardsInProjectItems>true</ReplaceWildcardsInProjectItems>
+    <ReadOnlyProject>true</ReadOnlyProject>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -64,90 +66,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="obj_dir\Vemu.cpp" />
-    <ClCompile Include="obj_dir\Vemu_clock_bus_if__DepSet_h9d8720a7__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_clock_bus_if__DepSet_h9d8720a7__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_clock_bus_if__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_cpu_bus_if__DepSet_hb9d1dc7d__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_cpu_bus_if__DepSet_hb9d1dc7d__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_cpu_bus_if__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_cpu_regs_if__DepSet_h77ea8bdb__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_cpu_regs_if__DepSet_h77ea8bdb__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_cpu_regs_if__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_ddram__DepSet_h0981623a__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_ddram__DepSet_h16a6b7ce__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_ddram__DepSet_h16a6b7ce__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_ddram__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_device_bus__DepSet_h47325e6d__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_device_bus__DepSet_h47325e6d__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_device_bus__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_dpram__A9__DepSet_ha4ff9884__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_dpram__A9__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_emu__DepSet_h60dc175e__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_emu__DepSet_h60dc175e__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_emu__DepSet_h97221f7f__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_emu__DepSet_h97221f7f__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_emu__DepSet_hd7d7c3aa__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_emu__DepSet_hd7d7c3aa__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_emu__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_hps_io__Cz1_V6__DepSet_hcd782af7__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_hps_io__Cz1_V6__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_h7a01e6cc__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_hecfdb33c__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_keyboard__DepSet_hecfdb33c__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_keyboard__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_mapper_out__DepSet_h190177b8__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_mapper_out__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_memory_bus__DepSet_h59ecdfcf__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_memory_bus__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_MSX__DepSet_h8aa69a26__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_MSX__DepSet_h8aa69a26__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_MSX__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h55edc9f1__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_h55edc9f1__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_hc8c990d7__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__DepSet_hc8c990d7__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_nvram_backup__DepSet_h183b15f9__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_nvram_backup__DepSet_h183b15f9__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_nvram_backup__DepSet_h2540450f__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_nvram_backup__DepSet_h5c8e32ac__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_nvram_backup__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_pll__DepSet_hc0a77e1e__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_pll__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_sdram__DepSet_hb780563e__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_sdram__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_sd_bus_control__DepSet_he1e20d63__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_sd_bus_control__DepSet_he1e20d63__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_sd_bus_control__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_spram__A10_M56524132__DepSet_h377701ec__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_spram__A10_M56524132__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_spram__A10_M56524133__DepSet_he586788a__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_spram__A10_M56524133__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_spram__A9_Mz2_MBz3__DepSet_h6ae187dc__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_spram__A9_Mz2_MBz3__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__DepSet_h368a78f1__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp18_col_pack__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp_mux__DepSet_h65aa256a__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp_mux__DepSet_h65aa256a__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp_mux__DepSet_hd885f45e__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp_mux__DepSet_hd885f45e__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu_vdp_mux__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu__ConstPool_0.cpp" />
-    <ClCompile Include="obj_dir\Vemu__Dpi.cpp" />
-    <ClCompile Include="obj_dir\Vemu__Syms.cpp" />
-    <ClCompile Include="obj_dir\Vemu__TraceDecls__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu__Trace__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu__Trace__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu___024root__DepSet_h6ca272dd__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu___024root__DepSet_h6ca272dd__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu___024root__DepSet_hf9c9a7eb__0.cpp" />
-    <ClCompile Include="obj_dir\Vemu___024root__DepSet_hf9c9a7eb__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu___024root__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu___024unit__DepSet_h5b805688__0__Slow.cpp" />
-    <ClCompile Include="obj_dir\Vemu___024unit__Slow.cpp" />
+    <ClCompile Include="obj_dir\Vemu*.cpp" />
     <ClCompile Include="sim\imgui\imgui_widgets.cpp" />
     <ClCompile Include="sim\imgui\imgui_tables.cpp" />
     <ClCompile Include="sim\imgui\imgui_impl_win32.cpp" />
@@ -174,34 +93,7 @@
     <ClCompile Include="sim_main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="obj_dir\Vemu.h" />
-    <ClInclude Include="obj_dir\Vemu_clock_bus_if.h" />
-    <ClInclude Include="obj_dir\Vemu_cpu_bus_if.h" />
-    <ClInclude Include="obj_dir\Vemu_cpu_regs_if.h" />
-    <ClInclude Include="obj_dir\Vemu_ddram.h" />
-    <ClInclude Include="obj_dir\Vemu_device_bus.h" />
-    <ClInclude Include="obj_dir\Vemu_dpram__A9.h" />
-    <ClInclude Include="obj_dir\Vemu_emu.h" />
-    <ClInclude Include="obj_dir\Vemu_hps_io__Cz1_V6.h" />
-    <ClInclude Include="obj_dir\Vemu_keyboard.h" />
-    <ClInclude Include="obj_dir\Vemu_mapper_out.h" />
-    <ClInclude Include="obj_dir\Vemu_memory_bus.h" />
-    <ClInclude Include="obj_dir\Vemu_MSX.h" />
-    <ClInclude Include="obj_dir\Vemu_msx__Vphshbdv8cxcBjFwMc5BQMCzDpxvhkbJp1xvY0D2hpSFR.h" />
-    <ClInclude Include="obj_dir\Vemu_nvram_backup.h" />
-    <ClInclude Include="obj_dir\Vemu_pll.h" />
-    <ClInclude Include="obj_dir\Vemu_sdram.h" />
-    <ClInclude Include="obj_dir\Vemu_sd_bus_control.h" />
-    <ClInclude Include="obj_dir\Vemu_spram__A10_M56524132.h" />
-    <ClInclude Include="obj_dir\Vemu_spram__A10_M56524133.h" />
-    <ClInclude Include="obj_dir\Vemu_spram__A9_Mz2_MBz3.h" />
-    <ClInclude Include="obj_dir\Vemu_vdp18_col_pack.h" />
-    <ClInclude Include="obj_dir\Vemu_vdp_mux.h" />
-    <ClInclude Include="obj_dir\Vemu__Dpi.h" />
-    <ClInclude Include="obj_dir\Vemu__pch.h" />
-    <ClInclude Include="obj_dir\Vemu__Syms.h" />
-    <ClInclude Include="obj_dir\Vemu___024root.h" />
-    <ClInclude Include="obj_dir\Vemu___024unit.h" />
+    <ClInclude Include="obj_dir\Vemu*.h" />
     <ClInclude Include="sim\imgui\imconfig.h" />
     <ClInclude Include="sim\imgui\imgui_impl_dx11.h" />
     <ClInclude Include="sim\imgui\imgui_impl_win32.h" />
@@ -224,7 +116,7 @@
     <ClInclude Include="sim\vinc\verilated_heavy.h" />
     <ClInclude Include="sim\vinc\verilated_threads.h" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"  />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

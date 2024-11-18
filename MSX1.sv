@@ -15,7 +15,7 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 //============================================================================
-
+/*verilator tracing_off*/
 module emu
 (
    //Master input clock
@@ -400,7 +400,7 @@ wire [31:0] opcode;
 wire [1:0]  opcode_num;
 wire        opcode_out;
 wire [15:0] opcode_PC_start;
-
+/*verilator tracing_on*/
 msx MSX
 (
    .reset(reset),
@@ -441,6 +441,7 @@ msx MSX
    .joy1(joy1[5:0]),
    .*
 );
+/*verilator tracing_off*/
 //////////////////   SD   ///////////////////
 wire sdclk;
 wire sdmosi;
@@ -584,6 +585,7 @@ wire  [8:0] kbd_addr;
 wire        kbd_request, kbd_we;
 wire        load_sram;
 error_t     error;
+/*verilator tracing_on*/
 memory_upload memory_upload(
     .clk(clock_bus.base_mp.clk),
     .upload(upload),
@@ -616,7 +618,7 @@ memory_upload memory_upload(
     .io_device(io_device),
     .error(error)
 );
-
+/*verilator tracing_off*/
 wire  [26:0] flash_addr;
 wire   [7:0] flash_dout;
 wire         flash_req, flash_ready, flash_done;
