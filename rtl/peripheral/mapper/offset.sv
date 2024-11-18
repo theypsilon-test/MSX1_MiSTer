@@ -1,8 +1,7 @@
 module mapper_offset (
     cpu_bus_if.device_mp    cpu_bus,       // Interface for CPU communication
     block_info              block_info,    // Struct containing mapper configuration and parameters
-    mapper_out              out,           // Interface for mapper output
-    device_bus              device_out     // Interface for device output
+    mapper_out              out            // Interface for mapper output
 );
     // Chip select is valid if the mapper type is OFFSET and memory request (mreq) is active
     wire cs = (block_info.typ == MAPPER_OFFSET) & cpu_bus.mreq;
@@ -21,7 +20,5 @@ module mapper_offset (
 
     // Generate the Read/Not Write (rnw) signal based on the chip select and write signal
     assign out.rnw    = ~(ram_valid && cpu_bus.wr);
-
-    assign device_out.typ = cs ? block_info.device : DEV_NONE;
 
 endmodule

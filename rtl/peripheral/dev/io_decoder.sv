@@ -8,8 +8,6 @@ module io_decoder (
 
     // Internal registers to accumulate values
     logic [2:0] temp_enable;
-    logic [7:0] temp_param;
-    
     always_comb begin
         // Initialize to zero
         temp_enable = 3'b000;
