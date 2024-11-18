@@ -239,7 +239,9 @@ module tv80n (/*AUTOARG*/
   end
 
   always @(negedge cpu_bus.clk) begin
-    if (cpu_bus.reset) ready <= 0;
+    if (cpu_bus.reset) begin
+      ready <= 0;
+    end
     detect <= 1'b0;
     res <= 1'b0;
     if (cpu_bus.clk_en) begin
@@ -270,6 +272,18 @@ module tv80n (/*AUTOARG*/
   assign opcode          = {ops[0], ops[1], ops[2], ops[3]};
   assign opcode_num      = ops_num_last;
   assign opcode_out      = res && ready;
+
+  logic [18:0] inst_counter;
+  always @(posedge cpu_bus.clk) begin
+    if (cpu_bus.reset) begin
+      inst_counter <= 0;
+    end else begin
+      if (opcode_out) begin
+        inst_counter <= inst_counter + 1'b1;
+      end
+    end
+  end
+
     //assign cpu_regs.change  = change;
 
 endmodule // t80n
