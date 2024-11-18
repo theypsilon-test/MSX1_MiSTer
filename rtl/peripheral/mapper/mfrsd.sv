@@ -31,8 +31,6 @@ module mapper_mfrsd1 (
     logic [9:0] offset_reg;
 
     wire cs = ((block_info.typ == MAPPER_MFRSD1) || ~config_reg.isSlotExpanderEnabled) && cpu_bus.mreq;
-    wire c1 = block_info.typ == MAPPER_MFRSD1;
-    wire c2 = config_reg.isSlotExpanderEnabled;
 
     always @(posedge cpu_bus.clk) begin
         if (cpu_bus.reset) begin
