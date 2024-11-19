@@ -125,15 +125,14 @@ module mappers (
         .out(zeimna80_out)
     );
 
-    // Instantiate the MSX2 RAM mapper
+    // Instantiate the Zemina90in1 mapper
     mapper_zemina90 mapper_zemina90 (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(zemina90_out),
         .data_to_mapper(data_to_mapper)
     );
-    
-    
+      
     mapper_mfrsd  mapper_mfrsd (
         .cpu_bus(cpu_bus),
         .ext_SD_card_bus(ext_SD_card_bus),

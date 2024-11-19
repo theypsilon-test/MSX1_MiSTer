@@ -117,7 +117,7 @@
   <fw name="Zemina90">
     <block>
       <mapper>ZEMINA90</mapper>
-      <device mask="0xFF" port="0x77">ZEMINA90</device>
+      <device mask="0xFF" port="0x77">LATCH_PORT</device>
     </block>
   </fw>
   <fw name="FM_PAC">
