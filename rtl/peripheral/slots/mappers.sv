@@ -22,7 +22,8 @@ module mappers (
     mapper_out gm2_out();               // Outputs from Konami GameMaster mapper
     mapper_out msx2_ram_out();          // Outputs from MSX2_RAM mapper
     mapper_out crossBlaim_out();        // Outputs from crossBlaim mapper
-    mapper_out generic_out();           // Outputs from generic mapper
+    mapper_out generic8k_out();         // Outputs from generic 8k mapper
+    mapper_out generic16k_out();        // Outputs from generic 16k mapper
     mapper_out harryFox_out();          // Outputs from Harry Fox mapper
     mapper_out zeimna80_out();          // Outputs from Zemina 80 in 1 mapper
     mapper_out zemina90_out();          // Outputs from Zemina 90 in 1 mapper
@@ -105,12 +106,20 @@ module mappers (
         .out(crossBlaim_out)
     );
 
-    // Instantiate the Generic mapper
-    mapper_generic mapper_generic (
+    // Instantiate the Generic 8k mapper
+    mapper_generic8k mapper_generic8k (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
-        .out(generic_out)
+        .out(generic8k_out)
     );
+    
+    // Instantiate the Generic 16k mapper
+    mapper_generic16k mapper_generic16k (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(generic16k_out)
+    );
+
     // Instantiate the Harry Fox mapper
     mapper_harryFox mapper_harryFox (
         .cpu_bus(cpu_bus),
@@ -161,11 +170,12 @@ module mappers (
                             & konami_SCC_out.addr 
                             & msx2_ram_out.addr 
                             & crossBlaim_out.addr 
-                            & generic_out.addr 
+                            & generic8k_out.addr 
+                            & generic16k_out.addr
                             & harryFox_out.addr 
                             & zeimna80_out.addr 
                             & zemina90_out.addr 
-                            & mfrsd_out.addr;  
+                            & mfrsd_out.addr;
 
     // Read/Write control: Combine read/write signals from all mappers using a bitwise AND operation
     assign memory_bus.rnw   = ascii8_out.rnw 
@@ -187,7 +197,8 @@ module mappers (
                                 | konami_SCC_out.ram_cs 
                                 | msx2_ram_out.ram_cs 
                                 | crossBlaim_out.ram_cs 
-                                | generic_out.ram_cs 
+                                | generic8k_out.ram_cs 
+                                | generic16k_out.ram_cs
                                 | harryFox_out.ram_cs 
                                 | zeimna80_out.ram_cs 
                                 | zemina90_out.ram_cs 
