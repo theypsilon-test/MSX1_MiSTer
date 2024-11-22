@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<msxConfig>
+  <type>MSX2</type>
+  <kbd_layout>/yX/cWdlZv//ZP//cHMh////YP9hRgH///9XUCZUAv//MFUxMgQD//+AUzNRRwX//0MnNTRWBv///0I3UgcQ//8iQDZEABH//yMkQRdFEv///yD/FRP//2Ngdxb/FP//////////df///////////////////3L/dv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Yv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////hIH///+Cg4b/h4X///////90//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8=</kbd_layout>
+  <primary slot="0">
+    <secondary slot="0">
+      <block count="2">
+        <memory SHA1="b034764e6a8978db60b1d652917f5e24a66a7925" filename="8280fbios.rom">ROM</memory>
+      </block>
+    </secondary>
+  </primary>
+   <primary slot="1">
+    <secondary slot="0">
+      <block>
+        <cart>A</cart>
+      </block>
+    </secondary>
+  </primary>
+  <primary slot="2">
+    <secondary slot="0">
+      <block>
+        <cart>B</cart>
+      </block>
+    </secondary>
+  </primary>
+  <primary slot="3">
+    <secondary slot="0">
+      <block count="1">
+        <memory SHA1="fd4bcc81a8160a1dea06036c5f79d200f948f4d6" filename="nms8250-19_msx2sub.rom">ROM</memory>
+      </block>
+    </secondary>
+    <secondary slot="2">
+      <block>
+        <memory size="131072" pattern="4">RAM</memory>
+        <mapper>MSX2_RAM</mapper>
+        <device mask="0xFC" port="0xFC" param="8">MEM_MAPPER</device>
+      </block>
+    </secondary>
+    <secondary slot="3">
+      <block start="1" count="1">
+        <memory SHA1="959060445e92eb980ddd9df3ef9cfefcae2de1d0" filename="vg8235-39_disk.rom">ROM</memory>
+        <device>VY0010</device>
+      </block>
+      <block start="2" count="1">
+        <ref to_block="1">DEVICE</ref>
+      </block>
+    </secondary>
+  </primary>
+</msxConfig>
