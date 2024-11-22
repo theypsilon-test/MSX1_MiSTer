@@ -4,7 +4,7 @@ import struct
 import base64
 from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_int, convert_to_8bit
 
-ROM_DIR = 'ROM_test'
+ROM_DIR = 'ROM'
 XML_DIR_COMP = 'Computer_test'
 DIR_SAVE = 'MSX_test'
 
@@ -140,7 +140,7 @@ def add_block_type_to_file(address, typ, params, outfile, constants):
     """
     block_type = constants['block'][typ]
     data = struct.pack('BBBBBBBB', constants['conf']['BLOCK'], address, block_type, params[0], params[1], params[2], params[3], params[4])
-    print(f"BLOCK: {constants['conf']['BLOCK']} {address:02X} {block_type:02X} {params[0]:02X} {params[1]:02X} {params[2]:02X} {params[3]:02X} {params[4]:02X} {address >> 6}/{(address >> 4) & 3}/{(address >> 2) & 3} block_count: {((address&3)+1)} {typ}({block_type})")
+    #print(f"BLOCK: {constants['conf']['BLOCK']} {address:02X} {block_type:02X} {params[0]:02X} {params[1]:02X} {params[2]:02X} {params[3]:02X} {params[4]:02X} {address >> 6}/{(address >> 4) & 3}/{(address >> 2) & 3} block_count: {((address&3)+1)} {typ}({block_type})")
     outfile.write(data)
     
     for i in range(len(params)):
@@ -178,11 +178,20 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
                 else :
                     filename = files_with_sha1[attributes['SHA1']]
                     file_size = os.path.getsize(filename)
+                    file_skip_bytes = 0
+                    if 'skip' in attributes:
+                        file_skip_bytes = convert_to_int(attributes['skip'])
+                    if 'size' in attributes:
+                        file_size = convert_to_int(attributes['size'])
+                    
                     params[0] = (file_size + 16383) // 16384
                     add_block_type_to_file(address, typ, params, outfile, constants)
                     if filename:
                         with open(filename, 'rb') as source_file:
-                            data = source_file.read()
+                            if file_skip_bytes > 0:
+                                source_file.seek(file_skip_bytes)
+
+                            data = source_file.read(file_size)
                             outfile.write(data)
                             current_size = len(data)
                             padding_needed = ((current_size + 16383) // 16384) * 16384 - current_size

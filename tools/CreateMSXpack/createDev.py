@@ -5,7 +5,7 @@ import logging
 from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_8bit, convert_to_int
 
 # Nastavení logování
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 ROM_DIR = 'ROM_test'
@@ -55,7 +55,7 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
                 file_size       = convert_to_int(element.attrib.get('size',0))
 
         else:
-            logger.info(f"Tag name: {element.tag} SKIP. Not expected here")
+            logger.error(f"Tag name: {element.tag} SKIP. Not expected here")
 
     if count > 4 - start:
         count = 4 - start
@@ -129,7 +129,7 @@ def parse_fw(name: str, root: ET.Element, files_with_sha1: dict, constants: dict
             result.append(create_block_entry(constants, 'EXPANDER', 0, param1=expander))
             results.extend(result)
         else:
-            logger.info(f"Tag name: {element.tag} SKIP. Not expected here")
+            logger.warning(f"Tag name: {element.tag} SKIP. Not expected here")
 
     return results
 
@@ -139,11 +139,11 @@ def parse_fw_config(root: ET.Element, files_with_sha1: dict, constants: dict) ->
         if element.tag == 'fw':
             name = element.attrib["name"]
             if name not in constants['cart_dev']:
-                logger.info(f"FW name: {name} SKIP. Not in cart_device.json")
+                logger.warning(f"FW name: {name} SKIP. Not in cart_device.json")
                 continue
             results[name] = parse_fw(name, element, files_with_sha1, constants)
         else:
-            logger.info(f"Unknown tag: {element.tag} SKIP.")
+            logger.warning(f"Unknown tag: {element.tag} SKIP.")
             continue
     return results
 
@@ -156,7 +156,6 @@ def prepare_roms(config: dict, files_with_sha1: dict) -> dict:
             for key in config:
                 for block in config[key]:
                     if 'SHA1' in block:
-                        print (block)
                         if block['SHA1'] not in roms:
                             filename = files_with_sha1[block['SHA1']]
                             file_size = block["file_size"]
