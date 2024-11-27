@@ -39,7 +39,7 @@
     <secondary slot="3">
       <block start="1" count="1">
         <memory SHA1="7ce255ab63ba79f81d8b83d66f1108062d0b61f1" filename="vg8235-00_disk.rom">ROM</memory>
-        <device>VY0010</device>
+        <device style="Philips">WD2793</device>
       </block>
       <block start="2" count="1">
         <ref to_block="1">DEVICE</ref>

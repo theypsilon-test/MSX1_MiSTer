@@ -5,18 +5,21 @@ module devices (
     sd_bus                  sd_bus,                                 // SD bus interface
     sd_bus_control          sd_bus_control,                         // SD bus control interface
     image_info              image_info,                             // Image information
-    input [2:0]             dev_enable[0:(1 << $bits(device_t))-1], // Enable signals
+    input             [2:0] dev_enable[0:(1 << $bits(device_t))-1], // Enable signals
+    input             [7:0] dev_params[0:(1 << $bits(device_t))-1][3], //Params devices
     input MSX::io_device_t  io_device[16],                          // Array of IO devices
     output    signed [15:0] sound,                                  // Combined audio output
     output            [7:0] data,                                   // Combined data output
-    output                  output_rq,                              // Combined output request
-    output            [7:0] data_to_mapper                          // Data output to mapper
+    output                  data_oe_rq,                             // Priorite data
+    output            [7:0] data_to_mapper,                         // Data output to mapper
+    output           [26:0] ram_addr,
+    output                  ram_cs
 );
 
     // Výstupy kombinující jednotlivé zařízení
     assign sound = opl3_sound + scc_sound;
-    assign data = scc_data & vy0010_data & msx2_ram_data;
-    assign output_rq = scc_output_rq | vy0010_output_rq | msx2_ram_output_rq;
+    assign data = scc_data & wd2793_data & msx2_ram_data;
+    assign data_oe_rq = wd2793_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
 
     // Definice instancí zařízení s výstupy pro propojení
@@ -38,20 +41,17 @@ module devices (
         .dev_enable(dev_enable),
         .io_device(io_device),
         .sound(scc_sound),
-        .data(scc_data),
-        .output_rq(scc_output_rq)
+        .data(scc_data)
     );
 
     wire [7:0] msx2_ram_data_to_mapper;
     wire [7:0] msx2_ram_data;
-    wire       msx2_ram_output_rq;
     msx2_ram msx2_ram (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .dev_enable(dev_enable),
         .io_device(io_device),
         .data(msx2_ram_data),
-        .output_rq(msx2_ram_output_rq),
         .data_to_mapper(msx2_ram_data_to_mapper)
     );
 
@@ -64,16 +64,18 @@ module devices (
         .data_to_mapper(latch_port_data_to_mapper)
     );
 
-    wire [7:0] vy0010_data;
-    wire       vy0010_output_rq;
-    vy0010 vy0010 (
+    wire [7:0] wd2793_data;
+    wire wd2793_data_oe_rq;
+    WD2793 WD2793 (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .sd_bus(sd_bus),
         .sd_bus_control(sd_bus_control),
         .image_info(image_info),
-        .data(vy0010_data),
-        .output_rq(vy0010_output_rq)
+        .data(wd2793_data),
+        .data_oe_rq(wd2793_data_oe_rq),
+        .param(dev_params[DEV_WD2793][0])
+    );
     );
 
 endmodule

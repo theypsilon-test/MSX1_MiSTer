@@ -29,7 +29,8 @@
    input MSX::user_config_t msxConfig,
    input                    sram_save,
    input                    sram_load,
-   input              [2:0] dev_enable[0:(1 << $bits(device_t))-1], 
+   input              [2:0] dev_enable[0:(1 << $bits(device_t))-1],
+   input              [7:0] dev_params[0:(1 << $bits(device_t))-1][3],
    //IOCTL
    input                    ioctl_download,
    input             [15:0] ioctl_index,
@@ -181,8 +182,9 @@ assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
                   rtc_en                  ? d_from_rtc      :
                   ~psg_n                  ? d_from_psg      :
                   ~ppi_n                  ? d_from_8255     :
-                  device_output_rq        ? device_data     :
-                                            ram_dout & d_from_slots;
+                  data_oe_rq              ? device_data     :                       // Prioritní data.
+                  slot_oe_rq              ? d_from_slots    :                       // Prioritní data.
+                                            device_data & ram_dout & d_from_slots;
 //  -----------------------------------------------------------------------------
 //  -- Keyboard decoder
 //  -----------------------------------------------------------------------------
@@ -298,15 +300,20 @@ assign sd_wr  = sd_bus_control.wr;
 assign sd_lba = sd_bus_control.sd_lba;
 assign sd_buff_din = sd_bus_control.buff_data;
 
+assign ram_addr = slots_ram_addr & device_ram_addr;
+assign sdram_ce = slots_ram_ce   | device_ram_ce;
+
 image_info image_info();
 
 assign image_info.mounted = img_mounted;
 assign image_info.size = img_size;
 assign image_info.readonly = img_readonly;
 
-wire       device_output_rq;
-wire [7:0] device_data;
-wire [7:0] data_to_mapper;
+wire  [7:0] device_data;
+wire  [7:0] data_to_mapper;
+wire [26:0] device_ram_addr;
+wire        device_ram_ce;
+wire        data_oe_rq;
 devices devices
 (
    .clock_bus(clock_bus),
@@ -315,16 +322,21 @@ devices devices
    .sd_bus(sd_bus),
    .sd_bus_control(sd_bus_control),
    .image_info(image_info),
-   .dev_enable(dev_enable),               //Konfigurace zařízení z load. Povoluje jednotlivé zařízení
+   .dev_enable(dev_enable),               // Konfigurace zařízení z load. Povoluje jednotlivé zařízení
+   .dev_params(dev_params),               // Parametry device
    .io_device(io_device),
    .sound(device_sound),
    .data(device_data),
-   .output_rq(device_output_rq),
-   .data_to_mapper(data_to_mapper)
+   .data_oe_rq(data_oe_rq),
+   .data_to_mapper(data_to_mapper),
+   .ram_cs(device_ram_ce),
+   .ram_addr(device_ram_addr)
 );
 
-wire         [7:0] d_from_slots;
-
+wire  [7:0] d_from_slots;
+wire [26:0] slots_ram_addr;
+wire        slots_ram_ce;
+wire        slot_oe_rq;
 msx_slots msx_slots
 (
    .clock_bus(clock_bus),
@@ -336,12 +348,13 @@ msx_slots msx_slots
    .slot_layout(slot_layout),
    .lookup_RAM(lookup_RAM),
    .lookup_SRAM(lookup_SRAM),
-   .data(d_from_slots),  
-   .ram_addr(ram_addr),
+   .data(d_from_slots),
+   .data_oe_rq(slot_oe_rq),
+   .ram_addr(slots_ram_addr),
    .ram_din(ram_din),
    .ram_rnw(ram_rnw),
    .ram_dout(ram_dout),
-   .sdram_ce(sdram_ce),
+   .sdram_ce(slots_ram_ce),
    .bram_ce(bram_ce),
    .sdram_size(sdram_size),
    .active_slot(active_slot),

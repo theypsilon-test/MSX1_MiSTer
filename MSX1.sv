@@ -211,6 +211,7 @@ MSX::lookup_SRAM_t lookup_SRAM[4];
 MSX::io_device_t   io_device[16];
 MSX::slot_expander_t slot_expander[4];
 wire       [2:0] dev_enable[0:(1 << $bits(device_t))-1];
+wire       [7:0] dev_params[0:(1 << $bits(device_t))-1][3];
 
 wire             forced_scandoubler;
 wire      [21:0] gamma_bus;
@@ -305,7 +306,8 @@ wire [7:0] info;
 wire info_req;
 
 assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
-assign status_menumask[1] = fdc_enabled;
+assign status_menumask[1] = bios_config.fdc_en;
+assign status_menumask[2] = bios_config.fdc_internal;
 assign status_menumask[3] = ROM_A_load_hide;
 assign status_menumask[4] = ROM_B_load_hide;
 assign status_menumask[5] = '0;
@@ -354,7 +356,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 
 /////////////////   CONFIG   /////////////////
 wire [5:0] mapper_A, mapper_B;
-wire       reload, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
+wire       reload, ROM_A_load_hide, ROM_B_load_hide;
 msx_config msx_config 
 (
    .clk(clock_bus.base_mp.clk),
@@ -366,7 +368,6 @@ msx_config msx_config
    .reload(reload),
    .ROM_A_load_hide(ROM_A_load_hide),
    .ROM_B_load_hide(ROM_B_load_hide),
-   .fdc_enabled(fdc_enabled),
    .msxConfig(msxConfig)
 );
 /////////////////   CLOCKS   /////////////////
@@ -433,6 +434,7 @@ msx MSX
    .slot_expander(slot_expander),
    .slot_layout(slot_layout),
    .dev_enable(dev_enable),
+   .dev_params(dev_params),
    .lookup_RAM(lookup_RAM),
    .lookup_SRAM(lookup_SRAM),
    .bios_config(bios_config),
@@ -615,6 +617,7 @@ memory_upload memory_upload(
     .cart_conf(cart_conf),
     .load_sram(load_sram),
     .dev_enable(dev_enable),
+    .dev_params(dev_params),
     .io_device(io_device),
     .error(error)
 );

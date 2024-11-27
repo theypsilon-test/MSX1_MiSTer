@@ -29,6 +29,7 @@ module memory_upload
     input                       sdram_ready,
     output logic                load_sram,
     output logic          [2:0] dev_enable[0:(1 << $bits(device_t))-1],
+    output logic          [7:0] dev_params[0:(1 << $bits(device_t))-1][3],
     output error_t              error
 );
 
@@ -74,6 +75,9 @@ module memory_upload
     initial begin
         for (int i = 0; i < (1 << $bits(device_t)); i++) begin
             dev_enable[i] = 3'b000;
+            dev_params[i][0] = 8'd0;
+            dev_params[i][1] = 8'd0;
+            dev_params[i][2] = 8'd0;
         end
     end
 
@@ -177,6 +181,8 @@ module memory_upload
                 STATE_CLEAN: begin
                     error <= ERR_NONE;
                     ddr3_request <= '1;
+                    bios_config.fdc_en       <= '0;
+                    bios_config.fdc_internal <= '0;
                     slot_layout[block_num].mapper     <= MAPPER_NONE;
                     slot_layout[block_num].device     <= DEV_NONE;
                     slot_layout[block_num].device_num <= '0;
@@ -193,8 +199,12 @@ module memory_upload
                     io_device[block_num[3:0]].id      <= DEV_NONE;
                     io_device[block_num[3:0]].num     <= '0;
                     io_device[block_num[3:0]].param   <= '0;
+                    io_device[block_num[3:0]].memory  <= '0;
                     dev_enable[device_t'(block_num)]  <= '0;
-                    block_num                         <= block_num + 1'd1;
+                    dev_params[device_t'(block_num)][0] <= 8'd0;
+                    dev_params[device_t'(block_num)][1] <= 8'd0;
+                    dev_params[device_t'(block_num)][2] <= 8'd0;
+                    block_num                           <= block_num + 1'd1;
                     if (block_num == 63) begin
                         state      <= STATE_READ_CONF;
                         next_state <= STATE_CHECK_CONF;
@@ -270,6 +280,21 @@ module memory_upload
                             kbd_addr    <= '0;
                             kbd_request <= '1;
                             state       <= STATE_LOAD_KBD_LAYOUT;
+                        end
+                        CONF_DEVICE:  begin
+                            $display("LOAD DEVICE  ref_IO:%x port:%x mask %x param %x size %x addr: %x device.id %x (DDR addr %x)", ref_device_io, conf[2], conf[3], conf[4], {3'b0, conf[5],14'd0} , ram_addr, conf[1], ddr3_addr);
+                            io_device[ref_device_io].port        <= conf[2];
+                            io_device[ref_device_io].mask        <= conf[3];
+                            io_device[ref_device_io].id          <= device_t'(conf[1]);
+                            io_device[ref_device_io].num         <= 0;
+                            io_device[ref_device_io].param       <= conf[4];
+                            io_device[ref_device_io].memory_size <= conf[5];
+                            io_device[ref_device_io].memory      <= ram_addr;
+                            ref_device_io                        <= ref_device_io + 1'd1;          //TODO pohlídej jestli nejsme na konci
+                            pattern                              <= PATTERN_DDR;
+                            data_size                            <= {3'b0, conf[5],14'd0};
+                            state                                <= STATE_FILL_RAM;
+                            next_state                           <= STATE_READ_CONF;
                         end
                         CONF_END: begin
                             ddr3_addr  <= save_addr;
@@ -401,16 +426,19 @@ module memory_upload
                             device <= device_t'(conf[3]);
                             if (~dev_enable[device_t'(conf[3])][0]) begin
                                 dev_enable[device_t'(conf[3])][0] <= '1;
+                                dev_params[device_t'(conf[3])][0] <= conf[4];
                                 device_num                        <= 'd0;
-                                $display("DEVICE NUM: %d ENABLE", 1);
+                                $display("DEVICE NUM: %d ENABLE PARAM: %x", 1, conf[4]);
                             end else if (~dev_enable[device_t'(conf[3])][1]) begin
                                 dev_enable[device_t'(conf[3])][1] <= '1;
+                                dev_params[device_t'(conf[3])][1] <= conf[4];
                                 device_num                        <= 'd1;
-                                $display("DEVICE NUM: %d ENABLE", 2);
+                                $display("DEVICE NUM: %d ENABLE PARAM: %x", 2, conf[4]);
                             end else if (~dev_enable[device_t'(conf[3])][2]) begin
                                 dev_enable[device_t'(conf[3])][2] <= '1;
+                                dev_params[device_t'(conf[3])][2] <= conf[4];
                                 device_num                        <= 'd2;;
-                                $display("DEVICE NUM: %d ENABLE", 3);
+                                $display("DEVICE NUM: %d ENABLE PARAM: %x", 3, conf[4]);
                             end else begin
                                 error                             <= ERR_DEVICE_MISSING;                  // DEVICE JIZ NENI K DISPOZICI
                                 state                             <= STATE_IDLE;
@@ -503,7 +531,7 @@ module memory_upload
                         $display("BLOCK slot:%x subslot:%x block:%x < mapper:%x", slot, subslot, block, mapper );
                     end
 
-                    if (block_t'(conf[2]) == BLOCK_CART)  begin
+                    if (conf_t'(conf[0]) == CONF_BLOCK && block_t'(conf[2]) == BLOCK_CART)  begin
                         slot_layout[{slot, subslot, block}].cart_num   <= conf[3][0];
                         $display("BLOCK slot:%x subslot:%x block:%x < cart_num:%x", slot, subslot, block, conf[3][0] );
                     end
@@ -517,6 +545,11 @@ module memory_upload
                         slot_layout[{slot, subslot, block}].device_num <= device_num;
                         slot_layout[{slot, subslot, block}].device     <= device;
                         $display("BLOCK slot:%x subslot:%x block:%x < device:%x(id:%d) ", slot, subslot, block, device, device_num );
+                        if (device == DEV_WD2793) begin
+                            $display("ENABLE FDC MENU");
+                            bios_config.fdc_en       <= '1;
+                            bios_config.fdc_internal <= ~fw_space;
+                        end
                     end
 
                     if (ref_dev_block) begin

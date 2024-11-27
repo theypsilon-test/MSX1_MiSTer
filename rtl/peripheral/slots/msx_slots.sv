@@ -9,6 +9,7 @@ module msx_slots (
     input MSX::lookup_SRAM_t    lookup_SRAM[4],
     input                 [1:0] active_slot,      // Currently active slot
     output                [7:0] data,             // Data output
+    output                      data_oe_rq,       // Priority output
     output               [26:0] ram_addr,         // RAM address
     output                [7:0] ram_din,          // Data input to RAM
     input                 [7:0] ram_dout,         // Data output from RAM
@@ -77,8 +78,9 @@ module msx_slots (
     wire [15:0] sram_size  = active_SRAM.size;
 
     // Data selection between subslot and mapper
-    assign data = subslot_output_rq ? subslot_data : mapper_data;
-
+    assign data       = subslot_output_rq ? subslot_data : mapper_data;
+    assign data_oe_rq = subslot_output_rq;
+    
     // RAM data input from CPU bus
     assign ram_din = cpu_bus.data;
 

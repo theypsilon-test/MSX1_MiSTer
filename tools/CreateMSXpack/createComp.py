@@ -94,18 +94,21 @@ def parse_msx_config(root):
     :return: Dictionary with parsed configuration.
     """
     results = {}
+    devices = []
     for element in root:
         if element.tag == 'primary':
             slot = convert_to_int_or_string(element.attrib["slot"])
-            expander_en = convert_to_int(element.attrib.get("expander",'0'))
-            expander_wo = convert_to_int(element.attrib.get("expander_wo",'0'))
-            #(primary, expander) = parse_msx_primary(element)
             results.setdefault('primary', {})[slot] = parse_msx_primary(element)
-            #print(results)
         else:
             value = get_int_or_string_value(element)
             if value:
-                results[element.tag] = value
+                if element.tag == 'device' :
+                    devices.append((value, element.attrib))
+                else :
+                    results[element.tag] = (value, element.attrib)
+
+    if len(devices) > 0:
+        results['devices'] = devices
 
     return results
 
@@ -117,12 +120,12 @@ def create_msx_config_header(type, video_standard, outfile):
     :param outfile: Opened file object for writing.
     """
     conf = 0
-    if type == 'MSX2' :
+    if type[0] == 'MSX2' :
         conf = 1
     else :
-        if video_standard == 'PAL' : 
+        if video_standard[0] == 'PAL' : 
             conf = conf + 4
-        if video_standard == 'NTSC' : 
+        if video_standard[0] == 'NTSC' : 
             conf = conf + 8
 
     data = struct.pack('BBBBBBBB', ord('M'), ord('S'), ord('x'), conf, 0, 0, 0, 0)
@@ -146,7 +149,6 @@ def add_block_type_to_file(address, typ, params, outfile, constants):
     for i in range(len(params)):
         params[i] = 0
     
-
 def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, constants):
     """
     Writes a block configuration to the output file, including any ROM data if applicable.
@@ -244,6 +246,15 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
             (typ, attributes) = block.pop('device', (None, None))
             if typ in constants['device']:
                 params[0] = constants['device'][typ]
+                if (typ == "WD2793") :
+                    parameter = 0
+                    if "style" in attributes:
+                        if attributes["style"] == "Philips" :
+                            parameter = 0
+                        elif attributes["style"] == "National" :
+                            parameter = 1
+                    params[1] = parameter
+
                 if "param" in attributes:
                     params[1] = convert_to_8bit(attributes['param'])
                 
@@ -358,10 +369,52 @@ def create_msx_config_kbd_layout(layout, outfile, constants):
     :param outfile: Opened file object for writing.
     :param constants: Dictionary with configuration constants.
     """
-    if layout:
+    if layout and layout[0]:
         data = struct.pack('BBBBBBBB', constants['conf']['KEYBOARD_LAYOUT'], 0, 0, 0, 0, 0, 0, 0)
         outfile.write(data)
-        outfile.write(base64.b64decode(layout))
+        outfile.write(base64.b64decode(layout[0]))
+
+def create_msx_config_device(device, outfile, files_with_sha1, constants):
+    for (device, parameters) in device :
+        port = 0
+        port_mask = 0
+        rom_data = 0
+        rom_size = 0
+        rom_skip = 0
+        param = 0
+
+        
+        if 'ROM_SHA1' in parameters : 
+            filename = files_with_sha1[parameters['ROM_SHA1']]
+            if filename:
+                if 'rom_skip' in parameters : rom_skip  = convert_to_int(parameters['rom_skip'])
+                rom_size = os.path.getsize(filename) - rom_skip
+                if 'rom_size' in parameters : rom_size  = convert_to_int(parameters['rom_size'])
+
+        if 'mask'     in parameters : port_mask = convert_to_8bit(parameters['mask'])
+        if 'port'     in parameters : port      = convert_to_8bit(parameters['port'])
+        
+        size = (rom_size + 16383) // 16384
+        
+        if device not in constants['device'] :
+            print(f"Device '{device}' nenalezeno. Zkontroluj device.json")
+            continue       
+        
+        data = struct.pack('BBBBBBBB', constants['conf']['DEVICE'], constants['device'][device], port, port_mask, param, size, 0, 0)
+        print(f"DEVIC: {constants['conf']['DEVICE']} {constants['device'][device]:02X} {port:02X} {port_mask:02X} {param:02X} {size:02X} {0:02X} {0:02X}")
+        outfile.write(data)
+        if filename:
+            with open(filename, 'rb') as source_file:
+                if rom_skip > 0:
+                    source_file.seek(rom_skip)
+
+                data = source_file.read(rom_size)
+                outfile.write(data)
+                current_size = len(data)
+                padding_needed = ((current_size + 16383) // 16384) * 16384 - current_size
+                if padding_needed > 0:
+                    outfile.write(b'\xff' * padding_needed)
+        
 
 def create_msx_config(config, file_name, path, files_with_sha1, constants):
     """

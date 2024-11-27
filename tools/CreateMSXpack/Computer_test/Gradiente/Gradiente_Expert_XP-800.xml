@@ -1,49 +1,34 @@
 <?xml version="1.0" ?>
 <msxConfig>
-  <type>MSX2</type>
+  <type>MSX1</type>
+  <video_standard>NTSC</video_standard>
   <kbd_layout>/yX/cWdlZv//ZP//cHMh////YP9hRgH///9XUCZUAv//MFUxMgQD//+AUzNRRwX//0MnNTRWBv///0I3UgcQ//8iQDZEABH//yMkQRdFEv///yD/FRP//2Ngdxb/FP//////////df///////////////////3L/dv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Yv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////hIH///+Cg4b/h4X///////90//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8=</kbd_layout>
   <primary slot="0">
     <secondary slot="0">
-      <block start="0" count="2">
-        <memory SHA1="6103b39f1e38d1aa2d84b1c3219c44f1abb5436e" filename="nms8245_basic-bios2.rom">ROM</memory>
+      <block count="2"> <!-- MSX BIOS with BASIC ROM -->
+        <memory SHA1="ef3e010eb57e4476700a3bbff9d2119ab3acdf62" filename = "expert_1.0_basic-bios1.rom">ROM</memory>
       </block>
     </secondary>
   </primary>
   <primary slot="1">
     <secondary slot="0">
-      <block start="0">
+      <block>
         <cart>A</cart>
       </block>
     </secondary>
   </primary>
   <primary slot="2">
     <secondary slot="0">
-      <block start="0">
-        <cart>B</cart>
+      <block>
+        <memory pattern="1">RAM</memory>
       </block>
     </secondary>
   </primary>
   <primary slot="3">
     <secondary slot="0">
-      <block start="0" count="1">
-        <memory SHA1="e7905d16d2ccd57a013c122dc432106cd59ef52c" filename="nms8245_msx2sub.rom">ROM</memory>
+      <block>
+        <cart>B</cart>
       </block>
     </secondary>
-    <secondary slot="2">
-      <block start="0">
-        <memory size="131072" pattern="4">RAM</memory>
-        <mapper>MSX2_RAM</mapper>
-        <device mask="0xFC" port="0xFC" param="8">MEM_MAPPER</device>
-      </block>
-    </secondary>
-    <secondary slot="3">
-      <block start="1" count="1">
-        <memory SHA1="c3f3ca454d66a0bc791f1d4b60e6857b44eb8755" filename="nms8245_disk.rom">ROM</memory>
-        <device style="Panasonic">WD2793</device>
-      </block>
-      <block start="2" count="1">
-        <ref to_block="1">DEVICE</ref>
-      </block>
-    </secondary>
-  </primary>
+  </primary> 
 </msxConfig>

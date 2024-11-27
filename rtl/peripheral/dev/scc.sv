@@ -4,8 +4,7 @@ module scc (
     input            [2:0] dev_enable[0:(1 << $bits(device_t))-1],  // Enable signals for each device
     input MSX::io_device_t io_device[16],                           // Array of IO devices with port and mask info
     output   signed [15:0] sound,                                   // Combined sound output from SCC devices
-    output           [7:0] data,                                    // Data output from SCC device
-    output                 output_rq                                // Output request signal
+    output           [7:0] data                                     // Data output from SCC device
 );
 
     // Combine sound output from two SCC channels if enabled
@@ -35,7 +34,7 @@ module scc (
     wire cs = device_bus.typ == DEV_SCC && device_bus.en;
 
     // Data output and request signal: output data only if the device is selected and read is requested
-    assign {output_rq, data} = cs && cpu_bus.rd ? {1'b1, data_SCC[device_bus.num[0]]} : 9'h0FF;
+    assign data = cs && cpu_bus.rd ? data_SCC[device_bus.num[0]] : 8'hFF;
 
     // Generate SCC instances for two channels
     genvar i;

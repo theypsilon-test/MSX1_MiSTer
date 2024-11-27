@@ -16,7 +16,6 @@ module msx_config
     output MSX::config_cart_t cart_conf[2],
     output                    ROM_A_load_hide, //3 
     output                    ROM_B_load_hide, //4
-    output                    fdc_enabled,
     output MSX::user_config_t msxConfig,
     output                    reload
 );
@@ -25,7 +24,7 @@ wire [2:0] slot_B_select   = HPS_status[31:29];
 
 cart_typ_t typ_A;
 assign typ_A = cart_typ_t'(slot_A_select < CART_TYP_FDC  ? slot_A_select   :
-                           bios_config.use_FDC           ? CART_TYP_EMPTY  :
+                           bios_config.fdc_internal      ? CART_TYP_EMPTY  :
                            slot_A_select == CART_TYP_FDC ? CART_TYP_FDC    :
                                                            CART_TYP_EMPTY );
 
@@ -39,8 +38,6 @@ assign msxConfig.border = HPS_status[41];
 
 assign ROM_A_load_hide    = cart_conf[0].typ != CART_TYP_ROM;
 assign ROM_B_load_hide    = cart_conf[1].typ != CART_TYP_ROM;
-assign fdc_enabled = bios_config.MSX_typ != MSX1 || cart_conf[0].typ == CART_TYP_FDC;
-
 
 logic  [5:0] lastConfig;
 wire [5:0] act_config = {cart_conf[1].typ, cart_conf[0].typ};
