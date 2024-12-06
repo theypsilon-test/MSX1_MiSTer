@@ -31,6 +31,7 @@ module mappers (
     device_bus fm_pac_device_out();     // Device bus output for FM-PAC mapper
     device_bus konami_SCC_device_out(); // Device bus output for SCC mapper
     device_bus mfrsd_device_out();      // Device bus output for MFRSD1 mapper
+    mapper_out national_out();          // Outputs from NATIONAL mapper
     
     
     //Instantiate the LINEAR mapper
@@ -153,11 +154,18 @@ module mappers (
         .slot_expander_force_en(slot_expander_force_en)
     );
 
+    // Instantiate the National mapper
+    mapper_national national (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(national_out)
+    );
+
     // Assign 
     //assign slot_expander_en = slot_expander_en;
 
     // Data: Use the FM-PAC mapper's data output, assuming it has priority
-    assign data = fm_pac_out.data & mfrsd_out.data;
+    assign data = fm_pac_out.data & mfrsd_out.data & national_out.data;
 
     // Combine outputs from the mappers
     // Address: Combine addresses from all mappers using a bitwise AND operation
@@ -175,7 +183,8 @@ module mappers (
                             & harryFox_out.addr 
                             & zeimna80_out.addr 
                             & zemina90_out.addr 
-                            & mfrsd_out.addr;
+                            & mfrsd_out.addr
+                            & national_out.addr;
 
     // Read/Write control: Combine read/write signals from all mappers using a bitwise AND operation
     assign memory_bus.rnw   = ascii8_out.rnw 
@@ -185,7 +194,8 @@ module mappers (
                             & gm2_out.rnw 
                             & msx2_ram_out.rnw 
                             & konami_SCC_out.rnw
-                            & mfrsd_out.rnw;
+                            & mfrsd_out.rnw
+                            & national_out.rnw;
 
     // RAM chip select: Combine RAM chip select signals using a bitwise OR operation
     assign memory_bus.ram_cs    = ascii8_out.ram_cs 
@@ -202,13 +212,15 @@ module mappers (
                                 | harryFox_out.ram_cs 
                                 | zeimna80_out.ram_cs 
                                 | zemina90_out.ram_cs 
-                                | mfrsd_out.ram_cs;
+                                | mfrsd_out.ram_cs
+                                | national_out.ram_cs;
 
     // SRAM chip select: Combine SRAM chip select signals using a bitwise OR operation
     assign memory_bus.sram_cs   = ascii8_out.sram_cs 
                                 | ascii16_out.sram_cs 
                                 | fm_pac_out.sram_cs 
-                                | gm2_out.sram_cs;
+                                | gm2_out.sram_cs
+                                | national_out.sram_cs;
 
     // Device control signals: Use the FM-PAC mapper's control signals
     assign device_bus.typ   = cpu_bus.mreq ? block_info.device : DEV_NONE;

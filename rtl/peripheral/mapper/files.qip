@@ -13,3 +13,4 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) h
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) zemina80.sv                        ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) zemina90.sv                        ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) mfrsd.sv                           ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) national.sv                        ]

@@ -22,5 +22,6 @@
   "MFRSD3" : 20,
   "MFRSD2" : 21,
   "MFRSD1" : 22,
-  "MFRSD0" : 23
+  "MFRSD0" : 23,
+  "NATIONAL" : 24
 }
