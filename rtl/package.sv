@@ -320,6 +320,8 @@ package MSX;
         logic [7:0] port;
         logic [1:0] num;
         logic [7:0] param;
+        logic [26:0] memory;
+        logic [7:0] memory_size;
         device_t    id;
     } io_device_t;
 

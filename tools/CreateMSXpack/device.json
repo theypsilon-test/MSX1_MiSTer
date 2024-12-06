@@ -4,5 +4,6 @@
   "SCC": 2,
   "WD2793": 3,
   "MEM_MAPPER": 4,
-  "LATCH_PORT": 5
+  "LATCH_PORT": 5,
+  "KANJI": 6
 }
