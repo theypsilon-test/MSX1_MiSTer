@@ -4,7 +4,7 @@
   "FM_PAC": 3,
   "MEGA_FLASH_ROM": 4,
   "GM2": 5,
-  "VY0010": 6,
+  "WD2793": 6,
   "RTYPE": 10,
   "ASCII8": 11,
   "ASCII16": 12,
@@ -25,7 +25,5 @@
   "ASCII16SRAM2": 33,
   "ASCII16SRAM8": 34,
   "ASCII8SRAM2": 35,
-  "ASCII8SRAM8": 36,
-  "KonamiSCC+s": 99,
-  "MEGA_FLASH_ROMs": 99
+  "ASCII8SRAM8": 36
 }

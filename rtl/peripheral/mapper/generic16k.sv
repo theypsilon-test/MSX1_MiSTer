@@ -10,7 +10,7 @@ module mapper_generic16k (
     // Mapped if address is not in the lower or upper 16KB
     wire mapped  = ^cpu_bus.addr[15:14]; //0000-3fff & c000-ffff unmaped
 
-    // Mapper is enabled if type is KONAMI and there is a memory request
+    // Mapper is enabled if type is GENERIC16kb and there is a memory request
     assign cs = block_info.typ == MAPPER_GENERIC16KB && cpu_bus.mreq && mapped;
 
 

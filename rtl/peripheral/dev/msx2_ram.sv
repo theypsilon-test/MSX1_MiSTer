@@ -3,7 +3,6 @@ module msx2_ram (
     device_bus              device_bus,      // Interface for device control
     input  [2:0]            dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
     input  MSX::io_device_t io_device[16],   // Array of IO devices with port and mask info
-    output                  output_rq,
     output            [7:0] data,
     output            [7:0] data_to_mapper
 );
@@ -23,7 +22,6 @@ module msx2_ram (
     );
 
     // Generate request and output signals
-    assign output_rq = io_en && cpu_bus.rd && |mapper_io;
     assign data      = data_out[0] & data_out[1] & data_out[2];
     assign data_to_mapper = device_bus.typ == DEV_MSX2_RAM ? data_to_mapper_ar[device_bus.num] : 8'hFF;
 

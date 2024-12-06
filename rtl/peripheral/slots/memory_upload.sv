@@ -556,6 +556,7 @@ module memory_upload
                         slot_layout[{slot, subslot, block}].device_num <= slot_layout[{slot, subslot, conf[3][1:0]}].device_num;
                         slot_layout[{slot, subslot, block}].device     <= slot_layout[{slot, subslot, conf[3][1:0]}].device;
                         $display("BLOCK slot:%x subslot:%x block:%x < device:%x(id:%d) ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].device, slot_layout[{slot, subslot, conf[3][1:0]}].device_num );
+                        ref_dev_block <= '0;
                     end
                     if (ref_dev_mem) begin
                         slot_layout[{slot, subslot, block}].ref_ram    <= slot_layout[{slot, subslot, conf[3][1:0]}].ref_ram;
@@ -564,6 +565,7 @@ module memory_upload
                         $display("BLOCK slot:%x subslot:%x block:%x < reference:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].ref_ram);
                         $display("BLOCK slot:%x subslot:%x block:%x < offset:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].offset_ram);
                         $display("BLOCK slot:%x subslot:%x block:%x < mapper:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].mapper);
+                        ref_dev_mem <= '0;
                     end
 
 /*
