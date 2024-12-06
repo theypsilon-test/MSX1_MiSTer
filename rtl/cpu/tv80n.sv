@@ -75,7 +75,7 @@ module tv80n (/*AUTOARG*/
   wire [6:0]    tstate;
 
   cpu_regs_if cpu_regs_int();
-
+  wire alternate_regs, last_mcycle;
   tv80_core #(Mode, IOWait) i_tv80_core
     (
      .cen (1),
@@ -101,7 +101,9 @@ module tv80n (/*AUTOARG*/
      .mc (mcycle),
      .ts (tstate),
      .intcycle_n (intcycle_n),
-     .cpu_regs(cpu_regs_int)
+     .cpu_regs(cpu_regs_int),
+     .alternate_regs(alternate_regs),
+     .last_mcycle(last_mcycle)
      );  
 
   always @*
@@ -222,13 +224,13 @@ module tv80n (/*AUTOARG*/
     if (tstate[2] && cpu_bus.clk_en) begin
       if (m1_n == 1'b0) begin
         cpu_regs.AF  <= cpu_regs_int.AF;
-        cpu_regs.BC  <= cpu_regs_int.BC;
-        cpu_regs.DE  <= cpu_regs_int.DE;
-        cpu_regs.HL  <= cpu_regs_int.HL;
+        cpu_regs.BC  <= alternate_regs ? cpu_regs_int.BC2 : cpu_regs_int.BC;
+        cpu_regs.DE  <= alternate_regs ? cpu_regs_int.DE2 : cpu_regs_int.DE;
+        cpu_regs.HL  <= alternate_regs ? cpu_regs_int.HL2 : cpu_regs_int.HL;
         cpu_regs.AF2 <= cpu_regs_int.AF2;
-        cpu_regs.BC2 <= cpu_regs_int.BC2;
-        cpu_regs.DE2 <= cpu_regs_int.DE2;
-        cpu_regs.HL2 <= cpu_regs_int.HL2;
+        cpu_regs.BC2 <= alternate_regs ? cpu_regs_int.BC : cpu_regs_int.BC2;
+        cpu_regs.DE2 <= alternate_regs ? cpu_regs_int.DE : cpu_regs_int.DE2;
+        cpu_regs.HL2 <= alternate_regs ? cpu_regs_int.HL : cpu_regs_int.HL2;
         cpu_regs.IX  <= cpu_regs_int.IX;
         cpu_regs.IY  <= cpu_regs_int.IY;
         cpu_regs.PC  <= cpu_regs_int.PC;
