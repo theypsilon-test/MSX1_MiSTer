@@ -122,6 +122,8 @@ def create_msx_config_header(type, video_standard, outfile):
     conf = 0
     if type[0] == 'MSX2' :
         conf = 1
+    if type[0] == 'OCM' :
+        conf = 3  
     else :
         if video_standard[0] == 'PAL' : 
             conf = conf + 4
@@ -143,7 +145,7 @@ def add_block_type_to_file(address, typ, params, outfile, constants):
     """
     block_type = constants['block'][typ]
     data = struct.pack('BBBBBBBB', constants['conf']['BLOCK'], address, block_type, params[0], params[1], params[2], params[3], params[4])
-    #print(f"BLOCK: {constants['conf']['BLOCK']} {address:02X} {block_type:02X} {params[0]:02X} {params[1]:02X} {params[2]:02X} {params[3]:02X} {params[4]:02X} {address >> 6}/{(address >> 4) & 3}/{(address >> 2) & 3} block_count: {((address&3)+1)} {typ}({block_type})")
+    print(f"BLOCK: {constants['conf']['BLOCK']} {address:02X} {block_type:02X} {params[0]:02X} {params[1]:02X} {params[2]:02X} {params[3]:02X} {params[4]:02X} {address >> 6}/{(address >> 4) & 3}/{(address >> 2) & 3} block_count: {((address&3)+1)} {typ}({block_type})")
     outfile.write(data)
     
     for i in range(len(params)):
@@ -204,7 +206,7 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
                 if "size" in attributes :
                     value = convert_to_int(attributes["size"])
                     if value :
-                        params[0] = value // 16384
+                        params[0] = (value // 16384) & 0xFF
                     else :
                         print(f"RAM size not integer : {attributes['size']} in slot {slot}/{subslot}")
                 else :
@@ -221,6 +223,50 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
             else :
                 print(f"memory type {typ} unknown in slot {slot}/{subslot}") 
         
+        if 'shared_memory' in block:
+            (typ, attributes) = block.pop('shared_memory', (None, None))
+            if typ == 'ROM' :
+                ro = 1
+            else:
+                ro = 0
+
+            if "offset" in attributes :
+                offset = convert_to_int(attributes["offset"])
+            else :
+                offset = 0
+
+            if "size" in attributes :
+                size = convert_to_int(attributes["size"])
+            else :
+                print(f"Error: missing attribut 'size' in shared_memory '{typ}' in slot {slot}/{subslot}") 
+                return
+            
+            ref = 0
+
+            if "slot" in attributes :
+                ref = (convert_to_int(attributes["slot"]) & 3) << 4
+            else :
+                print(f"Error: missing attribut 'slot' in shared_memory '{typ}' in slot {slot}/{subslot}") 
+                return
+            
+            if "subslot" in attributes :
+                ref = ref | ((convert_to_int(attributes["subslot"]) & 3) << 2)
+            else :
+                print(f"Error: missing attribut 'subslot' in shared_memory '{typ}' in slot {slot}/{subslot}") 
+                return
+            
+            if "block" in attributes :
+                ref = ref | (convert_to_int(attributes["block"]) & 3)
+            else :
+                print(f"Error: missing attribut 'block' in shared_memory  '{typ}' in slot {slot}/{subslot}") 
+                return
+
+            params[0] = ref
+            params[1] = (offset // 16384) & 0xFF
+            params[2] = (size // 16384) & 0xFF
+            params[3] = ro
+            add_block_type_to_file(address, "SHARED_MEM", params, outfile, constants)
+
         if 'mapper' in block:
             (typ, attributes) = block.pop('mapper', (None, None))
             if typ in constants['mapper'] :

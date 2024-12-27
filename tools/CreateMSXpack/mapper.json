@@ -23,5 +23,6 @@
   "MFRSD2" : 21,
   "MFRSD1" : 22,
   "MFRSD0" : 23,
-  "NATIONAL" : 24
+  "NATIONAL" : 24,
+  "ESE_RAM" : 25
 }

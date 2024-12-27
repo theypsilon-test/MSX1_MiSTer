@@ -10,22 +10,31 @@ module io_decoder (
 
     // Internal registers to accumulate values
     logic [2:0] temp_enable;
-    /* verilator lint_off LATCH */
+    logic [7:0] temp_params[3];
+    logic [26:0] temp_memory[3];
+    logic [7:0] temp_memory_size[3];
+
     always_comb begin
         // Initialize to zero
         temp_enable = 3'b000;
+        temp_params = '{default: 8'b0};
+        temp_memory = '{default: 27'b0};
+        temp_memory_size = '{default: 8'b0};
 
         // Iterate over each IO device
         for (int i = 0; i < 16; i++) begin
             if ((cpu_addr & io_device[i].mask) == io_device[i].port && io_device[i].id == DEV_NAME) begin
-                params[io_device[i].num] = io_device[i].param;
-                memory[io_device[i].num] = io_device[i].memory;
-                memory_size[io_device[i].num] = io_device[i].memory_size;
+                temp_params[io_device[i].num] = io_device[i].param;
+                temp_memory[io_device[i].num] = io_device[i].memory;
+                temp_memory_size[io_device[i].num] = io_device[i].memory_size;
                 temp_enable |= (3'b001 << io_device[i].num);         // Accumulate enable signals
             end
         end
-        
-        // Assign the accumulated values to the outputs
-        enable = temp_enable;
     end
+
+    // Assign the accumulated values to the outputs
+    assign enable = temp_enable;
+    assign params = temp_params;
+    assign memory = temp_memory;
+    assign memory_size = temp_memory_size;
 endmodule

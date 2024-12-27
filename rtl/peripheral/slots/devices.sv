@@ -22,8 +22,8 @@ module devices (
     assign data_oe_rq = wd2793_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
 
-    assign ram_cs = kanji_ram_cs;
-    assign ram_addr = kanji_ram_addr;
+    assign ram_cs = kanji_ram_cs | ocm_ram_cs;
+    assign ram_addr = kanji_ram_addr & ocm_ram_addr;
 
     // Definice instancí zařízení s výstupy pro propojení
     wire signed [15:0] opl3_sound;
@@ -89,4 +89,13 @@ module devices (
         .ram_addr(kanji_ram_addr)
     );
 
+    wire [26:0] ocm_ram_addr;
+    wire        ocm_ram_cs;
+    wire        ocm_data_oe_rq;
+    ocm ocm (
+        .cpu_bus(cpu_bus),
+        .io_device(io_device),
+        .ram_cs(ocm_ram_cs),
+        .ram_addr(ocm_ram_addr)
+    );
 endmodule

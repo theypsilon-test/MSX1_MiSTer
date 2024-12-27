@@ -5,7 +5,8 @@ module subslot (
     input                   expander_wo,    // Expander write only
     output            [7:0] data,           // Data output
     output            [1:0] active_subslot, // Currently active subslot
-    output                  output_rq       // Chip select signal
+    output                  output_rq,      // Chip select signal
+    input MSX::bios_config_t bios_config    // BIOS configuration
 );
 
     // Array to store mapper slot data for 4 slots
@@ -27,7 +28,10 @@ module subslot (
             mapper_slot[0] <= 8'h00;
             mapper_slot[1] <= 8'h00;
             mapper_slot[2] <= 8'h00;
-            mapper_slot[3] <= 8'h00;
+            if (bios_config.MSX_typ == OCM) 
+                mapper_slot[3] <= 8'b00101011;
+            else
+                mapper_slot[3] <= 8'h00;
         end else if (mapper_wr) begin
             // Write to the currently active slot
             mapper_slot[active_slot] <= cpu_bus.data;

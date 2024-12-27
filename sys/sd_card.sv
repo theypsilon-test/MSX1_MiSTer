@@ -172,6 +172,7 @@ reg  [6:0] sbuf;
 reg  [2:0] bit_cnt;
 
 wire       last_bit = &bit_cnt || OCTAL;
+/* verilator lint_off WIDTHEXPAND */
 wire [7:0] ibuf = OCTAL ? mosi : {sbuf,mosi[0]};
 
 always @(posedge clk_spi) begin

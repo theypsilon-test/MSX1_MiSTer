@@ -3,6 +3,7 @@ module mappers (
     cpu_bus_if.device_mp        cpu_bus,            // Interface for CPU communication
     ext_sd_card_if.device_mp    ext_SD_card_bus,    // Interface Ext SD card
     flash_bus_if.device_mp      flash_bus,          // Interface to emulate FLASH
+    spi_if                      ese_spi,
     block_info                  block_info,         // Struct containing block configuration and parameters
     device_bus                  device_bus,         // Interface for device control
     memory_bus                  memory_bus,         // Interface for memory control
@@ -28,6 +29,7 @@ module mappers (
     mapper_out zeimna80_out();          // Outputs from Zemina 80 in 1 mapper
     mapper_out zemina90_out();          // Outputs from Zemina 90 in 1 mapper
     mapper_out mfrsd_out();             // Outputs from MFRSD3 mapper
+    mapper_out ese_ram_out();           // Outputs from ESE RAM mapper
     device_bus fm_pac_device_out();     // Device bus output for FM-PAC mapper
     device_bus konami_SCC_device_out(); // Device bus output for SCC mapper
     device_bus mfrsd_device_out();      // Device bus output for MFRSD1 mapper
@@ -160,12 +162,21 @@ module mappers (
         .block_info(block_info),
         .out(national_out)
     );
+    
+    // Instantiate the National mapper
+    mapper_eseRam ese_ram (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(ese_ram_out),
+        .spi(ese_spi)
+    );
+
 
     // Assign 
     //assign slot_expander_en = slot_expander_en;
 
     // Data: Use the FM-PAC mapper's data output, assuming it has priority
-    assign data = fm_pac_out.data & mfrsd_out.data & national_out.data;
+    assign data = fm_pac_out.data & mfrsd_out.data & national_out.data & ese_ram_out.data;
 
     // Combine outputs from the mappers
     // Address: Combine addresses from all mappers using a bitwise AND operation
@@ -184,7 +195,8 @@ module mappers (
                             & zeimna80_out.addr 
                             & zemina90_out.addr 
                             & mfrsd_out.addr
-                            & national_out.addr;
+                            & national_out.addr
+                            & ese_ram_out.addr;
 
     // Read/Write control: Combine read/write signals from all mappers using a bitwise AND operation
     assign memory_bus.rnw   = ascii8_out.rnw 
@@ -195,7 +207,8 @@ module mappers (
                             & msx2_ram_out.rnw 
                             & konami_SCC_out.rnw
                             & mfrsd_out.rnw
-                            & national_out.rnw;
+                            & national_out.rnw
+                            & ese_ram_out.rnw;
 
     // RAM chip select: Combine RAM chip select signals using a bitwise OR operation
     assign memory_bus.ram_cs    = ascii8_out.ram_cs 
@@ -213,7 +226,8 @@ module mappers (
                                 | zeimna80_out.ram_cs 
                                 | zemina90_out.ram_cs 
                                 | mfrsd_out.ram_cs
-                                | national_out.ram_cs;
+                                | national_out.ram_cs
+                                | ese_ram_out.ram_cs;
 
     // SRAM chip select: Combine SRAM chip select signals using a bitwise OR operation
     assign memory_bus.sram_cs   = ascii8_out.sram_cs 

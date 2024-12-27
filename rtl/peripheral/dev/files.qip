@@ -5,3 +5,4 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) w
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) msx2_ram.sv                        ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) latch_port.sv                      ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) kanji.sv                           ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ocm.sv                             ]

@@ -21,7 +21,7 @@ MAPPER_TYPES = ["MAPPER_UNUSED" , "MAPPER_RAM"    , "MAPPER_AUTO"  , "MAPPER_NON
                 "MAPPER_KOEI"   , "MAPPER_LINEAR" , "MAPPER_RTYPE" , "MAPPER_WIZARDY"   , 
                 "MAPPER_FMPAC"  , "MAPPER_OFFSET" , "MAPPER_MFRSD1", "MAPPER_MFRSD2"    , 
                 "MAPPER_MFRSD3" , "MAPPER_GM2"    , "MAPPER_HALNOTE"                     ]
-MSX_TYPES    = ["MSX1", "MSX2"]
+MSX_TYPES    = ["MSX1", "MSX2", "MSXx", "OCM"]
 
 BLOCK_TYPES = {"NONE"       : {"MEMORY": "NONE", "DEVICE" : "NONE" , "MAPPER" : "MAPPER_UNUSED" , "CONFIG" : "NONE"         , "SRAM": 0  },
                "RAM"        : {"MEMORY": "RAM" , "DEVICE" : "NONE" , "MAPPER" : "MAPPER_NONE"   , "CONFIG" : "SLOT_INTERNAL", "SRAM": 0  },

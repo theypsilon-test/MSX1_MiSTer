@@ -30,7 +30,8 @@ module memory_upload
     output logic                load_sram,
     output logic          [2:0] dev_enable[0:(1 << $bits(device_t))-1],
     output logic          [7:0] dev_params[0:(1 << $bits(device_t))-1][3],
-    output error_t              error
+    output error_t              error,
+    output logic                reset
 );
 
     // Parametry
@@ -117,7 +118,8 @@ module memory_upload
         STATE_SEARCH_CRC32,
         STATE_GET_FW_ADDR,
         STATE_LOAD_KBD_LAYOUT,
-        STATE_STOP
+        STATE_STOP,
+        STATE_RESET
     } state_t;
 
     state_t state = STATE_IDLE;
@@ -142,6 +144,7 @@ module memory_upload
 
         if (load) begin
             state <= STATE_CLEAN;
+            $display("DO STATE_CLEAN");
         end
 
         // Automatické inkrementace pro DDR3, RAM a klávesnici
@@ -177,9 +180,15 @@ module memory_upload
                     ref_dev_mem       <= '0;
                     set_offset        <= '0;
                     load_sram         <= '0;
+                    reset             <= '0;
+                end
+                STATE_RESET: begin
+                    reset      <= '1;
+                    state      <= STATE_IDLE;
                 end
                 STATE_CLEAN: begin
                     error <= ERR_NONE;
+                    reset <= '1;
                     ddr3_request <= '1;
                     bios_config.fdc_en       <= '0;
                     bios_config.fdc_internal <= '0;
@@ -212,6 +221,7 @@ module memory_upload
                         ddr3_addr  <= '0;
                         ddr3_rd    <= '1;
                         head_addr  <= '0;
+                        ram_addr   <= '0;
                         read_cnt   <= CONF_SIZE;
                         if (ioctl_size[1] > 0) begin
                             state      <= STATE_READ_CONF;
@@ -232,9 +242,11 @@ module memory_upload
                             head_addr <= head_addr + 1'b1;
                         end
                     end else begin
-//                        $display("FINISH: EXPANDER SLOTS:%x", bios_config.slot_expander_en);
-                        state     <= STATE_IDLE;
+                        
+                        state     <= STATE_RESET;
                         load_sram <= '1;
+                        reset     <= '0;
+                        $display("CONFIG LOAD END %d", $time);
                     end
                     kbd_request <= '0;
                 end
@@ -256,9 +268,9 @@ module memory_upload
                         state                  <= STATE_READ_CONF;
                         next_state             <= STATE_LOAD_CONF;
                         ddr3_request           <= '1;
-                        bios_config.MSX_typ    <= conf[3][0] ? MSX2 : MSX1 ;
+                        bios_config.MSX_typ    <= MSX_typ_t'(conf[3][1:0]);
                         bios_config.video_mode <= video_mode_t'(conf[3][3:2]);
-                        $display("MSX CONFIG typ %x", conf[3][0]);
+                        $display("MSX CONFIG typ %x", conf[3][1:0]);
                         $display("MSX CONFIG video %x", conf[3][3:2]);
                     end else begin
                         error <= ERR_BAD_MSX_CONF;
@@ -317,8 +329,34 @@ module memory_upload
                     ref_dev_mem   <= '0;
                     next_state    <= STATE_READ_CONF;
                     case(block_t'(conf[2]))
+                        BLOCK_REF_SHARED_MEM: begin
+                            //conf 3 source_block
+                            //conf 4 offset
+                            //conf 5 size
+                            //conf 6 bit 0 ro 
+
+                            $display("BLOCK SHARED MEMORY source(%d/%d/%d) source reference: %d base RAM %x - ref_RAM:%x addr:%x size %d "
+                                                                                      , conf[3][5:4]
+                                                                                      , conf[3][3:2]
+                                                                                      , conf[3][1:0]
+                                                                                      , slot_layout[conf[3][5:0]].ref_ram
+                                                                                      , lookup_RAM[slot_layout[conf[3][5:0]].ref_ram].addr
+                                                                                      , ref_ram
+                                                                                      , lookup_RAM[slot_layout[conf[3][5:0]].ref_ram].addr + {4'b0000, conf[4] == 8'd0, conf[4],14'd0}
+                                                                                      , {conf[5] == 8'd0, conf[5],14'd0});
+
+                            lookup_RAM[ref_ram].addr <= lookup_RAM[slot_layout[conf[3][5:0]].ref_ram].addr + {4'b0000, conf[4] == 8'd0, conf[4],14'd0};      // Copy reference + offset
+                            lookup_RAM[ref_ram].size <= {8'd0, conf[5]};                                                                            // Uložíme velikost RAM
+                            lookup_RAM[ref_ram].ro   <= conf[6][0];                                                                                 // Vypneme ochranu paměti RAM                                                   
+
+                            mapper                   <= MAPPER_OFFSET;
+                            offset                   <= '0;                        // Offset posunu RAM
+                            set_offset               <= '1;                        // Nastav offset
+                            ref_add                  <= '1;                        // Bude potřeba zvednout referenci
+                            state                    <= STATE_SET_LAYOUT;
+                        end
                         BLOCK_RAM: begin
-                            $display("BLOCK RAM ref_RAM:%x addr:%x size %d ", ref_ram, ram_addr, {conf[3],14'd0});
+                            $display("BLOCK RAM ref_RAM:%x addr:%x size %d ", ref_ram, ram_addr, {conf[3] == 8'd0, conf[3],14'd0});
                             lookup_RAM[ref_ram].addr <= ram_addr;                  // Uložíme adresu RAM
                             lookup_RAM[ref_ram].size <= {8'd0, conf[3]};           // Uložíme velikost RAM
                             lookup_RAM[ref_ram].ro   <= '0;                        // Vypneme ochranu paměti RAM
@@ -326,7 +364,7 @@ module memory_upload
                             offset                   <= '0;                        // Offset posunu RAM
                             set_offset               <= '1;                        // Nastav offset
                             ref_add                  <= '1;                        // Bude potřeba zvednout referenci
-                            data_size                <= {3'b0, conf[3],14'd0};     // Velikost nahrávaných dat
+                            data_size                <= {2'b0, conf[3] == 8'd0, conf[3],14'd0};     // Velikost nahrávaných dat
                             pattern                  <= pattern_t'(conf[4]);
                             state                    <= STATE_FILL_RAM;
                         end
@@ -508,6 +546,7 @@ module memory_upload
                         ref_add      <= '0;
                         ref_sram_add <= '0;
                         set_offset   <= '0;
+                        mapper       <= MAPPER_NONE;
                         state        <= next_state;
                         next_state   <= STATE_LOAD_CONF;
                     end
