@@ -440,3 +440,9 @@ int main(int argc, char** argv, char** env) {
 		top->modules->io_device[_id].__PVT__num = num;
 		top->modules->io_device[_id].__PVT__param = param;
 	}
+
+	void setBlockDevice(uint8_t num, uint8_t param, Device device)
+	{
+		top->modules->dev_enable[device] = num & 3;
+		top->modules->dev_params[device][num & 3] = param;
+	}

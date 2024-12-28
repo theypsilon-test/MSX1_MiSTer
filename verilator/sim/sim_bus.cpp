@@ -7,6 +7,8 @@
 #include "sim_console.h"
 #include "verilated.h"
 
+//#define SIM_SD_CARD
+
 #ifndef _MSC_VER
 #else
 #define WIN32
@@ -32,7 +34,30 @@ CData* ioctl_wr = NULL;
 CData* ioctl_dout = NULL;
 CData* ioctl_din = NULL;
 
-std::queue<SimBus_DownloadChunk> downloadQueue;
+//std::queue<SimBus_DownloadChunk> downloadQueue;
+//
+
+void SimBus::MountImage(std::string file, int index) {
+
+	FILE *ioctl_file = fopen(file.c_str(), "rb");
+	if (!ioctl_file) {
+		console.AddLog("Cannot open file for image %s\n", file.c_str());
+		return;
+	}
+
+	images[index].filename = file;
+	images[index].handle = ioctl_file;
+
+	struct stat fileStat;
+	stat(file.c_str(), &fileStat);
+	images[index].size = fileStat.st_size;
+
+	console.AddLog("Mounted image: %s velikost: %d", images[index].filename.c_str(), images[index].size);
+
+	*img_size = images[index].size;
+	*img_readonly = 0;
+	*img_mounted = 0x10;
+}
 
 void SimBus::QueueDownload(std::string file, int index) {
 	SimBus_DownloadChunk chunk = SimBus_DownloadChunk(file, index);
@@ -58,6 +83,8 @@ int recovery_wait = 0;
 int wr_delay_cnt = 0;
 bool next_wr = false;
 bool next_rd = false;
+int active_block = -1;
+SData buff_addr;
 
 void SimBus::BeforeEval()
 {
@@ -151,6 +178,37 @@ void SimBus::BeforeEval()
 			}
 		}
 	}
+#ifdef SIM_SD_CARD
+	if (active_block == -1) {
+		if (*sd_rd > 0) {
+			// Pozadavek na cteni
+			for (int i = 0; i < 7; i++) {
+				if (( * sd_rd & (1 << i)) != 0) {
+					if (images[i].handle != NULL) {
+						active_block = i;
+						*sd_ack = *sd_ack | (1 << i);
+						uint32_t lba = (*sd_lba)[i];
+						fseek(images[i].handle, lba * 512, SEEK_SET);
+						*sd_buff_addr = 0;
+						*sd_buff_dout = fgetc(images[i].handle);
+						*sd_buff_wr = 1;
+					}
+				}
+			}
+		}
+	}
+	else {
+		*sd_buff_addr = *sd_buff_addr + 1;
+		if (*sd_buff_addr == 512) {
+			*sd_buff_wr = 0;
+			*sd_ack = 0;
+			active_block = -1;
+		}
+		else {
+			*sd_buff_dout = fgetc(images[active_block].handle);
+		}
+	}
+#endif
 }
 
 bool SimBus::AfterEval()
@@ -173,10 +231,15 @@ bool SimBus::AfterEval()
 				*ioctl_wr = 0;
 				recovery_wait = RECOVERY_WAIT;
 				console.AddLog("ioctl_download complete %d", ioctl_next_addr);
-				if (currentDownload.index == 1) 
+				if (downloadQueue.size() == 0)
 				{
 					ret = true;
 				}
+				/*
+				if (currentDownload.index == 1) 
+				{
+					ret = true;
+				}*/
 			}
 		}
 	}
@@ -194,6 +257,22 @@ SimBus::SimBus(DebugConsole c) {
 	ioctl_wr = NULL;
 	ioctl_dout = NULL;
 	ioctl_din = NULL;
+
+	img_mounted = NULL;
+	img_readonly = NULL;
+	img_size = NULL;
+	sd_rd = NULL;
+	sd_wr = NULL;
+	sd_ack = NULL;
+	sd_buff_addr = NULL;
+	sd_buff_dout = NULL;
+	sd_buff_wr = NULL;
+	sd_lba = NULL;
+	sd_blk_cnt = NULL;
+	sd_buff_din = NULL;
+	for (int i = 0; i < 6; ++i) {
+		images.push_back({ "", 0, NULL });
+	}
 }
 
 SimBus::~SimBus() {

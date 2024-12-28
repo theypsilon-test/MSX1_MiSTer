@@ -33,7 +33,6 @@ verilator \
 ../rtl/cpu/tv80n.sv \
 ../rtl/peripheral/jt8255.v \
 ../rtl/peripheral/keyboard.sv \
-../rtl/peripheral/dev/io_decoder.sv        \
 ../rtl/peripheral/slots/memory_upload.sv   \
 ../rtl/peripheral/slots/crc32.sv           \
 ../rtl/peripheral/slots/msx_slots.sv       \

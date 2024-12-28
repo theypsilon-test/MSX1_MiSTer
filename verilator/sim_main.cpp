@@ -1,3 +1,8 @@
+//#define SIM_AUDIO
+//#define SIM_INPUT
+//#define SIM_DEBUG_PLAY
+//#define SIM_SD_CARD
+
 #include <verilated.h>
 #include "Vemu__Syms.h"
 
@@ -39,6 +44,7 @@ int batchSize = 150000;
 bool single_step = 0;
 bool multi_step = 0;
 int multi_step_amount = 1024;
+int pix_ratio = 0;
 
 // Debug GUI 
 // ---------
@@ -74,8 +80,8 @@ const char* slotB[] = { "ROM","SCC","SCC +","FM - PAC","Empty" };
 const char* mapperA[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* mapperB[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* sramA[] = { "auto","1kB","2kB","4kB","8kB","16kB","32kB","none" };
-int currentSlotA = 4;
-//int currentSlotA = 0;
+//int currentSlotA = 4;
+int currentSlotA = 0;
 int currentSlotB = 0;
 int currentMapperA = 0;
 int currentMapperB = 0;
@@ -127,11 +133,13 @@ float vga_scale = 1.5;
 #define VRAMhi top->emu->MSX->vdp->vram_hi
 #define VRAMlo top->emu->MSX->vdp->vram_lo
 #define kbd top->emu->MSX->msx_key->kbd_ram
+#define SD_RAM top->emu->sd_card->sdbuf
 
 //SimMemoryRam* systemRAM_mem;
 SimMemoryRam* vdp_mem_hi;
 SimMemoryRam* vdp_mem_lo;
 SimMemoryRam* kbd_map;
+SimMemoryRam* sd_buf;
 
 SimSDRAM SDram(console);
 SimDDR DDR(console);
@@ -141,21 +149,28 @@ SimDebugPlayer debuger(console,"trace.log");
 // Verilog module
 // --------------
 Vemu* top = NULL;
+bool Trace = 0;
 
 vluint64_t main_time = 0;	// Current simulation time.
 double sc_time_stamp() {	// Called by $time in Verilog.
+	/*
+	if (main_time > 20000000)
+		Trace = true;
+	;
+	*/
 	return main_time;
 }
 
 
-int clk_sys_freq = 42954545;
-SimClock clk_sys(1);  // 42.954545mhz
-SimClock ce_11(3); // 10.75mhz
+int clk_sys_freq = 85909090;
+SimClock clk_sdram(1);  // 85.909090mhz
+SimClock clk_sys(5);  // 21.477270mhz
+SimClock ce_11(6); // 10.75mhz
 
 // VCD trace logging
 // -----------------
 VerilatedVcdC* tfp = new VerilatedVcdC; //Trace
-bool Trace = 0;
+
 char Trace_Deep[3] = "99";
 char Trace_File[30] = "sim.vcd";
 char Trace_Deep_tmp[3] = "99";
@@ -201,7 +216,9 @@ void resetSim() {
 	main_time = 0;
 	top->RESET = 1;
 	clk_sys.Reset();
+	clk_sdram.Reset();
 }
+
 
 int verilate() {
 	int errors = 0;
@@ -212,44 +229,69 @@ int verilate() {
 			top->RESET = 1;
 		}
 		// Deassert reset after startup
-		if (main_time == initialReset) { top->RESET = 0; }
+		if (main_time == initialReset) { 
+			top->RESET = 0; 
+		}
+
+#ifdef SIM_SD_CARD
+		if (main_time == 63010000)
+		{
+			bus.MountImage("c:/Project/_OBSAH/boot.vhd",4);
+		}
+#endif
 
 		// Clock dividers
 		clk_sys.Tick();
+		clk_sdram.Tick();
 		ce_11.Tick();
 
 		// Set clocks in core
+		
+		top->emu->pll->outclk_0 = clk_sdram.clk;
 		top->emu->pll->outclk_1 = clk_sys.clk;
 		top->emu->hps_io->status = status;
 		// Simulate both edges of fastest clock
-		if (clk_sys.clk != clk_sys.old) {
+		if (clk_sdram.clk != clk_sdram.old) {
 
 			// System clock simulates HPS functions
+#ifdef SIM_INPUT
 			if (ce_11.clk) {
 				input.BeforeEval();
+			}
+#endif			
+			if (clk_sdram.IsRising()) {
+				DDR.BeforeEval();
 			}
 
 			if (clk_sys.IsRising()) {
 				if (main_time > initialReset) {
 					bus.BeforeEval();
 				}
-				DDR.BeforeEval();
 				Rams.BeforeEval();
 				SDram.BeforeEval();
 			}
 			
 			top->eval();
-			
+
+			if (clk_sdram.IsRising()) {
+				SDram.AfterEval();
+			}
 			
 			if (clk_sys.IsRising()) {
 				Rams.AfterEval();
-				SDram.AfterEval();
 				DDR.AfterEval();
 				//	errors = debuger.AfterEval(main_time);
 				
+				
 				if (top->emu->video_mixer__DOT__ce_pix) {
-					uint32_t colour = 0xFF000000 | top->emu->video_mixer__DOT__B << 16 | top->emu->video_mixer__DOT__G << 8 | top->emu->video_mixer__DOT__R;
-					video.Clock(top->emu->video_mixer__DOT__HBlank, top->emu->video_mixer__DOT__VBlank, top->emu->video_mixer__DOT__HSync, top->emu->video_mixer__DOT__VSync, colour);
+					if (pix_ratio == 1) {
+						uint32_t colour = 0xFF000000 | top->emu->video_mixer__DOT__B << 16 | top->emu->video_mixer__DOT__G << 8 | top->emu->video_mixer__DOT__R;
+						video.Clock(top->emu->video_mixer__DOT__HBlank, top->emu->video_mixer__DOT__VBlank, top->emu->video_mixer__DOT__HSync, top->emu->video_mixer__DOT__VSync, colour);
+						pix_ratio = 0;
+					}
+					else {
+						pix_ratio++;
+					}
 				}
 /*
 				if (top->emu->MSX->vdp_vdp18->ce_pix) {
@@ -258,8 +300,7 @@ int verilate() {
 				}
 */
 			}
-			
-			
+		
 			if (Trace) {
 				if (!tfp->isOpen()) tfp->open(Trace_File);
 				tfp->dump(main_time); //Trace
@@ -267,7 +308,7 @@ int verilate() {
 			
 			if (clk_sys.IsFalling()) 
 			{
-				bus.AfterEval();
+				 bus.AfterEval();
 				
 				// Ladìní load
 				//if (bus.AfterEval())
@@ -286,11 +327,11 @@ int verilate() {
 		}
 		*/
 		main_time++;
-		//if (main_time == 13176901) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		if (main_time == 50000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 60000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 44000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 73000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
-		//if (main_time == 83000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		//if (main_time == 482000000) Trace = 1;
 		
 		int ret = 1;
 		if (errors > 0) {
@@ -361,7 +402,19 @@ int main(int argc, char** argv, char** env) {
 		&kbd->q,
 		&kbd->wren,
 		1 << kbd->addr_width);
-	
+#ifdef SIM_SD_CARD
+	sd_buf = Rams.AddRAM(
+		5,
+		&SD_RAM->address_a,
+		&SD_RAM->data_a,
+		&SD_RAM->q_a,
+		&SD_RAM->wren_a,
+		&SD_RAM->address_b,
+		&SD_RAM->data_b,
+		&SD_RAM->q_b,
+		&SD_RAM->wren_b,
+		1 << SD_RAM->widthad_a);
+#endif	
 	DDR.addr = &top->emu->buffer->addr;
 	DDR.dout = &top->emu->buffer->dout;
 	DDR.dout64 = &top->emu->buffer->dout64;
@@ -399,6 +452,24 @@ int main(int argc, char** argv, char** env) {
 	bus.ioctl_download = &top->emu->hps_io->ioctl_download;
 	bus.ioctl_wr = &top->emu->hps_io->ioctl_wr;
 	bus.ioctl_dout = &top->emu->hps_io->ioctl_dout;
+
+	bus.img_mounted = &top->emu->hps_io->img_mounted;
+	bus.img_readonly = &top->emu->hps_io->img_readonly;
+	bus.img_size = &top->emu->hps_io->img_size;
+
+	bus.sd_rd = &top->emu->hps_io->sd_rd;
+	bus.sd_wr = &top->emu->hps_io->sd_wr;
+	bus.sd_ack = &top->emu->hps_io->sd_ack;
+	bus.sd_lba = &top->emu->hps_io->sd_lba;
+	bus.sd_blk_cnt = &top->emu->hps_io->sd_blk_cnt;
+
+	bus.sd_buff_addr = &top->emu->hps_io->sd_buff_addr;
+	bus.sd_buff_dout = &top->emu->hps_io->sd_buff_dout;
+	bus.sd_buff_din = &top->emu->hps_io->sd_buff_din;
+	bus.sd_buff_wr = &top->emu->hps_io->sd_buff_wr;
+
+
+
 	top->emu->hps_io->sdram_sz = SDram.getHPSsize();
 
 	/*
@@ -426,15 +497,18 @@ int main(int argc, char** argv, char** env) {
 	//31700000 CAS 
 	//40000000 Maximum					
 
-	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
 	bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
+	
+	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
+	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_EMPTY.msx", 2, true, 0x30300000, &DDR);
+	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_REDUCE.msx", 2, true, 0x30300000, &DDR);
+
 	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-20.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-20.msx", 1, true, 0x30000000, &DDR);
 	bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
 	//bus.QueueDownload("./rom/cas/joycol.cas", 5, true, 0x31700000, &DDR);
 	
-	bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
 	//bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
 	
 	//bus.QueueDownload("./rom/roms/R-Type - IREM [R-Type] .rom", 3, true, 0x30C00000, &DDR);
@@ -448,6 +522,7 @@ int main(int argc, char** argv, char** env) {
 	
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8250.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
+	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/OCM/ocm.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, false);
 
@@ -529,6 +604,12 @@ int main(int argc, char** argv, char** env) {
 		ImGui::Begin("KEYBOARD");
 		mem_edit.DrawContents(kbd_map->GetMem(), 1 << kbd->addr_width, 0);
 		ImGui::End();
+#ifdef SIM_SD_CARD
+		ImGui::Begin("SD BUFF");
+		mem_edit.DrawContents(sd_buf->GetMem(), 1 << SD_RAM->widthad_a, 0);
+		ImGui::End();
+#endif
+		
 		
 /*
 		ImGui::Begin("RAM Editor");
@@ -548,7 +629,7 @@ int main(int argc, char** argv, char** env) {
 			fileData.ioctl_id = 1;
 			fileData.mem = &DDR;
 			fileData.reset = true;
-			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "ROM PACK LOAD", ".msx", "./rom/ROMpack/", 1, &fileData);
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "ROM PACK LOAD", ".msx", "../tools/CreateMSXpack/MSX_test/", 1, &fileData);
 		}
 		if (ImGui::Button("Load FW PACK")) {
 			fileData.addr = 0x30300000;

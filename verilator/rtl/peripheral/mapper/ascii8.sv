@@ -7,5 +7,6 @@ module mapper_ascii8 (
     assign out.ram_cs  = '0;
     assign out.rnw     = '1;
     assign out.addr    = {27{1'b1}};
+    assign out.data    = '{8{1'b1}};
 
 endmodule

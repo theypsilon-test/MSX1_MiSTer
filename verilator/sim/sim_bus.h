@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <queue>
 #include "verilated.h"
 #include "sim_console.h"
@@ -58,8 +59,26 @@ public:
 	CData* ioctl_dout;
 	CData* ioctl_din;
 
+	CData* img_mounted;
+	CData* img_readonly;
+	QData* img_size;
+
+	CData* sd_rd;
+	CData* sd_wr;
+	CData* sd_ack;
+	IData(*sd_lba)[6];
+	CData(*sd_blk_cnt)[6]; //pole 6
+	
+	SData* sd_buff_addr;
+	CData* sd_buff_dout;
+	CData(*sd_buff_din)[6];			//pole 6
+	CData* sd_buff_wr;
+
+
+
 	void BeforeEval(void);
 	bool AfterEval(void);
+	void MountImage(std::string file, int index);
 	void QueueDownload(std::string file, int index);
 	void QueueDownload(std::string file, int index, bool restart);
 	void QueueDownload(std::string file, int index, bool restart, int addr, SimDDR *DDR);
@@ -69,7 +88,16 @@ public:
 	~SimBus();
 
 private:
+	struct image {
+		std::string filename;
+		int size;
+		FILE* handle;
+	};
+	
+	
+	
 	std::queue<SimBus_DownloadChunk> downloadQueue;
 	SimBus_DownloadChunk currentDownload;
+	std::vector<image> images;
 	void SetDownload(std::string file, int index);
 };

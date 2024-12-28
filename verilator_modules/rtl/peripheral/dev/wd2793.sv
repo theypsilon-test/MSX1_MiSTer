@@ -1,4 +1,4 @@
-module vy0010
+module WD2793
 (
    cpu_bus_if.device_mp cpu_bus,            // Interface for CPU communication
    device_bus           device_bus,         // Interface for device control
@@ -6,7 +6,8 @@ module vy0010
    sd_bus_control       sd_bus_control,     // Control SD
    image_info           image_info,
    output         [7:0] data,
-   output               output_rq
+   output               output_rq,
+   input          [7:0] param
 );
 
 assign data = '1;

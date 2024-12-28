@@ -30,9 +30,9 @@ SimMemoryRam* SimMemory::AddRAM(int id, SData* addr, CData* data, CData* q, CDat
 
 SimMemoryRam* SimMemory::AddRAM(int id, SData* addr, CData* data, CData* q, CData* we, int size)
 {
-	SimMemoryRam * ram = new SimMemoryRam(console, id);
+	SimMemoryRam * ram = new SimMemoryRam (console, id);
 	char* ret = ram->AllocateMemory(size);
-	if (!ram->AllocateMemory(size))
+	if (!ret)
 		return NULL;
 	ram->MapSignals(addr, data, q, we);
 	Rams.push_back(ram);

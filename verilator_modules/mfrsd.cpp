@@ -65,6 +65,8 @@ void mfrsd_test(SimCPU& CPU)
 	CPU.setSlot(1, 1);
 	CPU.setSlot(2, 1);
 	CPU.setSlot(3, 1);
+
+
 	/*
 	CPU.memoryWrite(0x7FFF, 0x00);  // 0x00007FFF   MAPPER REG
 	CPU.memoryWrite(0x7FFD, 0x00);  // 0x00007FFD   OFFSET REG
@@ -96,20 +98,24 @@ void mfrsd_test(SimCPU& CPU)
 	CPU.memoryWrite(0x7F02, 0x00);  // 0x00017F02   
 	CPU.memoryWrite(0x7F03, 0xED);  // 0x00017F03
 	*/
-	CPU.setTrace(false);
-	flash_zanac(CPU);
+	//CPU.setTrace(false);
+	//flash_zanac(CPU);
 
 	CPU.setTrace(true);
 	CPU.setReset();
-	CPU.setSlot(0, 1);
-	CPU.setSlot(1, 1);
-	CPU.setSlot(2, 1);
-	CPU.setSlot(3, 1);
+	CPU.setSlot(0, 3);
+	CPU.setSlot(1, 3);
+	CPU.setSlot(2, 3);
+	CPU.setSlot(3, 3);
 	
-	CPU.memoryWrite(0xFFFF, 0x10);	
-	CPU.memoryRead(0xbf00);  
-
-
+	CPU.memoryRead(0x4000);
+	CPU.memoryRead(0x4000 | 0x3FF8);
+	
+	CPU.memoryWrite(0x4000 | 0x3FF9, 0x10);
+	CPU.memoryWrite(0x4000 | 0x3FFA, 0x11);
+	CPU.memoryWrite(0x4000 | 0x3FFB, 0x12);
+	CPU.memoryWrite(0x4000 | 0x3FFC, 0x01);
+	CPU.memoryWrite(0x4000 | 0x3FFD, 0x02);
 	return;
 	CPU.memoryWrite(0x4000, 0xF0);  //RESET 
 
@@ -176,6 +182,12 @@ void mfrsd_test(SimCPU& CPU)
 
 void mfrsd_configure()
 {
+	setBlock(3, 0, 1, MAPPER_OFFSET, DEV_WD2793, 0, 0, 1, 0, 0);
+	setRam(0, 0, 16384, true);
+	setBlockDevice(0, 0, DEV_WD2793);
+	
+
+	/*
 	setBlock(0, 0, MAPPER_OFFSET, DEV_NONE, 0, 0, 0, 0, 0);
 
 	setBlock(1, 0, MAPPER_MFRSD0, DEV_NONE, 0, 0, 1, 0, 0);
@@ -190,6 +202,6 @@ void mfrsd_configure()
 	next_addr = setRam(2, next_addr, 4177920, true);  //ROM
 	next_addr = setRam(3, next_addr, 524288, false);  //RAM
 	next_addr = setRam(4, next_addr, 1048576, true);  //DISK ROM
-	
+	*/
 }
 

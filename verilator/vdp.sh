@@ -22,7 +22,6 @@ verilator \
 ../rtl/peripheral/slots/offset.sv          \
 ../rtl/peripheral/slots/mappers.sv         \
 ../rtl/peripheral/slots/devices.sv         \
-../rtl/peripheral/dev/io_decoder.sv        \
 ../rtl/peripheral/dev/vy-0010.sv           \
 ../rtl/peripheral/dev/scc.sv               \
 ../rtl/peripheral/dev/msx2_mem_mapper.sv   \

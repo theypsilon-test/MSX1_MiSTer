@@ -27,6 +27,7 @@ enum Mapper : uint8_t
 	MAPPER_MFRSD2,
 	MAPPER_MFRSD1,
 	MAPPER_MFRSD0,
+	MAPPER_NATIONAL,
 	MAPPER_UNUSED
 };
 
@@ -35,7 +36,7 @@ enum Device : uint8_t
 	DEV_NONE, 
 	DEV_OPL3, 
 	DEV_SCC, 
-	DEV_VY0010, 
+	DEV_WD2793, 
 	DEV_MSX2_RAM, 
 	DEV_ZEMINA90
 };
@@ -46,5 +47,6 @@ void setBlock(uint8_t slot, uint8_t subslot, uint8_t block, Mapper mapper, Devic
 uint32_t setRam(uint8_t ref, uint32_t addr, uint32_t size, bool ro);
 void setSram(uint8_t ref, uint32_t addr, uint16_t size);
 void setDevice(uint8_t id, uint8_t mask, uint8_t port, uint8_t num, uint8_t param, Device device);
+void setBlockDevice(uint8_t num, uint8_t param, Device device);
 void setExpander(uint8_t slot, uint8_t en, uint8_t wo);
 

@@ -7,13 +7,14 @@ module mapper_msx2_ram (
     assign out.ram_cs = '0;
     assign out.addr = {27{1'b1}};
     assign out.rnw = '1;
+    assign out.data    = '{8{1'b1}};
 endmodule
 
 module msx2_ram (
     cpu_bus_if.device_mp    cpu_bus,         // Interface for CPU communication
     device_bus              device_bus,      // Interface for device control
     input  [2:0]            dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
-    input  MSX::io_device_t io_device[16],   // Array of IO devices with port and mask info
+    input  MSX::io_device_t io_device[3],   // Array of IO devices with port and mask info
     output                  output_rq,
     output            [7:0] data,
     output            [7:0] data_to_mapper

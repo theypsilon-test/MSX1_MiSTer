@@ -34,7 +34,6 @@ verilator \
 ../rtl/cpu/tv80n.sv \
 ../rtl/peripheral/jt8255.v \
 ../rtl/peripheral/keyboard.sv \
-../rtl/peripheral/dev/io_decoder.sv        \
 ../rtl/peripheral/slots/memory_upload.sv   \
 ../rtl/peripheral/slots/crc32.sv           \
 ../rtl/peripheral/slots/msx_slots.sv       \
@@ -50,7 +49,8 @@ verilator \
 ../rtl/video/vdp18v/vdp18_core.sv          \
  \
 ./rtl/peripheral/mapper/crossBlaim.sv     \
-./rtl/peripheral/mapper/generic.sv        \
+./rtl/peripheral/mapper/generic8k.sv        \
+./rtl/peripheral/mapper/generic16k.sv        \
 ./rtl/peripheral/mapper/harryFox.sv       \
 ./rtl/peripheral/mapper/zemina80.sv      \
 ./rtl/peripheral/mapper/zemina90.sv      \
@@ -61,17 +61,21 @@ verilator \
 ./rtl/peripheral/mapper/konami_scc.sv     \
 ./rtl/peripheral/mapper/gamemaster2.sv    \
 ./rtl/peripheral/mapper/msx2_ram.sv       \
-../rtl/peripheral/mapper/mfrsd.sv          \
-./rtl/peripheral/dev/zemina90.sv          \
-./rtl/peripheral/dev/opl3.sv              \
+./rtl/peripheral/mapper/mfrsd.sv          \
+./rtl/peripheral/mapper/national.sv          \
+./rtl/peripheral/mapper/eseRam.sv          \
+./rtl/peripheral/dev/latch_port.sv        \
+../rtl/peripheral/dev/opl3.sv              \
 ./rtl/peripheral/dev/scc.sv               \
 ./rtl/sound/scc_wave.sv                   \
-./rtl/peripheral/dev/vy-0010.sv           \
+./rtl/peripheral/dev/wd2793.sv           \
+./rtl/peripheral/dev/kanji.sv            \
+./rtl/peripheral/dev/ocm.sv            \
 ./rtl/wd1793.sv                           \
 \
 ./rtl/sound/jt49/hdl/jt49_bus.sv          \
 ./rtl/peripheral/spi_divmmc.sv            \
 ./rtl/peripheral/flash.sv                 \
-./rtl/sd_card.sv                          \
+./sys/sd_card.sv                          \
 ./rtl/tape.sv                             \
 ./rtl/nvram_backup.sv                     \

@@ -251,8 +251,7 @@ localparam CONF_STR = {
 wire [7:0] status_menumask;
 wire [1:0] sdram_size;
 assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
-assign status_menumask[1] = fdc_enabled;
-assign status_menumask[2] = bios_config.use_FDC;
+assign status_menumask[1] = bios_config.use_FDC;
 assign status_menumask[3] = ROM_A_load_hide;
 assign status_menumask[4] = ROM_B_load_hide;
 assign status_menumask[5] = sram_A_select_hide;
@@ -296,7 +295,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 
 /////////////////   CONFIG   /////////////////
 wire [5:0] mapper_A, mapper_B;
-wire       reload, sram_A_select_hide, fdc_enabled, ROM_A_load_hide, ROM_B_load_hide;
+wire       reload, sram_A_select_hide, ROM_A_load_hide, ROM_B_load_hide;
 
 msx_config msx_config 
 (
@@ -312,7 +311,6 @@ msx_config msx_config
    .sram_A_select_hide(sram_A_select_hide),
    .ROM_A_load_hide(ROM_A_load_hide),
    .ROM_B_load_hide(ROM_B_load_hide),
-   .fdc_enabled(fdc_enabled),
    .msxConfig(msxConfig)
 );
 

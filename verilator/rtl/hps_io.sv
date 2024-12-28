@@ -91,22 +91,22 @@ module hps_io #(parameter CONF_STR, CONF_STR_BRAM=1, PS2DIV=0, WIDE=0, VDNUM=1, 
 	input       [7:0] info,
 
 	// SD config
-	output reg [VD:0] img_mounted,  // signaling that new image has been mounted
-	output reg        img_readonly, // mounted as read only. valid only for active bit in img_mounted
-	output reg [63:0] img_size,     // size of image in bytes. valid only for active bit in img_mounted
+	output reg [VD:0] img_mounted  /* verilator public */,  // signaling that new image has been mounted
+	output reg        img_readonly  /* verilator public */, // mounted as read only. valid only for active bit in img_mounted
+	output reg [63:0] img_size  /* verilator public */,     // size of image in bytes. valid only for active bit in img_mounted
 
 	// SD block level access
-	input      [31:0] sd_lba[VDNUM],
-	input       [5:0] sd_blk_cnt[VDNUM], // number of blocks-1, total size ((sd_blk_cnt+1)*(1<<(BLKSZ+7))) must be <= 16384!
-	input      [VD:0] sd_rd,
-	input      [VD:0] sd_wr,
-	output reg [VD:0] sd_ack,
+	input      [31:0] sd_lba[VDNUM] /* verilator public */,
+	input       [5:0] sd_blk_cnt[VDNUM] /* verilator public */, // number of blocks-1, total size ((sd_blk_cnt+1)*(1<<(BLKSZ+7))) must be <= 16384!
+	input      [VD:0] sd_rd /* verilator public */,
+	input      [VD:0] sd_wr /* verilator public */,
+	output reg [VD:0] sd_ack /* verilator public */,
 
 	// SD byte level access. Signals for 2-PORT altsyncram.
-	output reg [AW:0] sd_buff_addr,
-	output reg [DW:0] sd_buff_dout,
-	input      [DW:0] sd_buff_din[VDNUM],
-	output reg        sd_buff_wr,
+	output reg [AW:0] sd_buff_addr /* verilator public */,
+	output reg [DW:0] sd_buff_dout /* verilator public */,
+	input      [DW:0] sd_buff_din[VDNUM] /* verilator public */,
+	output reg        sd_buff_wr /* verilator public */,
 
 	// ARM -> FPGA download
 	output reg        ioctl_download /* verilator public */ , // signal indicating an active download

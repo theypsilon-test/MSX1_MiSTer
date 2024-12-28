@@ -54,7 +54,6 @@ verilator \
 ../rtl/peripheral/slots/konami.sv          \
 ../rtl/peripheral/slots/konami_scc.sv      \
 ../rtl/peripheral/slots/gamemaster2.sv     \
-../rtl/peripheral/dev/io_decoder.sv     \
 ../rtl/peripheral/dev/opl3.sv     \
 ../rtl/peripheral/dev/scc.sv               \
 ../rtl/peripheral/dev/vy-0010.sv     \
