@@ -1,5 +1,5 @@
 {
-  "R-Type": [10, 0, 170, 0],  
+  "R-Type": [10, 0, 170, 0],
   "ASCII8": [11, 0, 170, 0],
   "ASCII16": [12, 0, 170, 0],
   "Konami": [13, 0, 170, 0],
@@ -25,11 +25,16 @@
   "ASCII8SRAM2": [35, 2, 170, 0],
   "ASCII8SRAM8": [36, 4, 170, 0],
   "vv NERESENO vv": [3, 0, 0, 0],
-  "MatraInk": [9, 0, 0, 0],
-  "MatraCompilation": [12, 0, 0, 0],
-  "SuperSwangi": [13, 0, 0, 0],
-  "Synthesizer": [14, 0, 0, 0],
-  "MSXWrite": [16, 0, 0, 0],
-  "playball": [23, 0, 0, 0],
-  "AlQuranDecoded": [25, 0, 0, 0]
+  "Arc": [37, 0, 0, 0],
+  "MatraInk": [38, 0, 0, 0],
+  "MatraCompilation": [39, 0, 0, 0],
+  "SuperSwangi": [40, 0, 0, 0],
+  "Synthesizer": [41, 0, 0, 0],
+  "MSXWrite": [42, 0, 0, 0],
+  "playball": [43, 0, 0, 0],
+  "AlQuranDecoded": [44, 0, 0, 0],
+  "Majutsushi": [45, 0, 0, 0],
+  "SuperLodeRunner": [46, 0, 0, 0],
+  "Halnote": [47, 0, 0, 0],
+  "NettouYakyuu": [48, 0, 0, 0]
 }

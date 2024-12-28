@@ -147,7 +147,7 @@ module mapper_eseRam (
                     default: ;
                 endcase
             end
-                                 // 11                       // 1
+
             if (mmc_seq[4:1] < 4'b1011 && mmc_seq[4:1] > 4'b0001) begin
                 if (epc_en) begin
                     mmc_ck <= 1'b0;
@@ -179,7 +179,7 @@ module mapper_eseRam (
                     epc_cs <= 1;
                 end
                 
-                mmc_seq  = 5'b10011; //9 
+                mmc_seq  = 5'b10011;
                 mmc_di  <= mmc_dbo[7];
                 epc_di  <= mmc_dbo[7];
             end else begin
