@@ -199,7 +199,8 @@ def write_binary_file(output_path, binary_data):
 
 # Hlavní část programu
 if __name__ == '__main__':
-    root_directory = input("Zadejte kořenový adresář pro vyhledávání: ").strip()
+    #root_directory = input("Zadejte kořenový adresář pro vyhledávání: ").strip()
+    root_directory = "c:/Project/_OBSAH/ROMS"
     output_file_path = "mappers.db"
 
     # Načte existující seznam mapperů
