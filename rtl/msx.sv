@@ -7,6 +7,7 @@
    video_bus                video_bus,
    //Ext SD card
    ext_sd_card_if.device_mp ext_SD_card_bus,
+   spi_if                   ese_spi,
    //Flash acces to SDRAM
    flash_bus_if.device_mp   flash_bus,
    //debug
@@ -29,8 +30,6 @@
    input MSX::user_config_t msxConfig,
    input                    sram_save,
    input                    sram_load,
-   input              [2:0] dev_enable[0:(1 << $bits(device_t))-1],
-   input              [7:0] dev_params[0:(1 << $bits(device_t))-1][3],
    //IOCTL
    input                    ioctl_download,
    input             [15:0] ioctl_index,
@@ -47,7 +46,8 @@
    input MSX::block_t       slot_layout[64],
    input MSX::lookup_RAM_t  lookup_RAM[16],
    input MSX::lookup_SRAM_t lookup_SRAM[4],
-   input MSX::io_device_t   io_device[16],
+   input MSX::io_device_t   io_device[16][3],
+   input MSX::io_device_mem_ref_t io_memory[8],
    //KBD
    input                    kbd_request,
    input              [8:0] kbd_addr,
@@ -128,14 +128,20 @@ logic map_valid = 0;
 wire ppi_en = ~ppi_n;
 wire [1:0] active_slot;
 
+/*
 always @(posedge reset, posedge clock_bus.clk) begin
     if (reset)
         map_valid = 0;
-    else if (ppi_en)
+    else if (ppi_en) begin
         map_valid = 1;
+   end
 end
+*/
 
-assign active_slot =    ~map_valid                   ? 2'b00         :
+//wire [1:0] default_slot  = bios_config.MSX_typ == OCM ? 2'b11 : 2'b00;
+
+
+assign active_slot =    //~map_valid                             ? default_slot   :
                         cpu_bus.device_mp.addr[15:14] == 2'b00 ? ppi_out_a[1:0] :
                         cpu_bus.device_mp.addr[15:14] == 2'b01 ? ppi_out_a[3:2] :
                         cpu_bus.device_mp.addr[15:14] == 2'b10 ? ppi_out_a[5:4] :
@@ -147,7 +153,7 @@ assign active_slot =    ~map_valid                   ? 2'b00         :
 wire psg_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10100)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1);
 wire ppi_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10101)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1);
 wire vdp_en =   (cpu_bus.device_mp.addr[7:3] == 5'b10011)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1 ;
-wire rtc_en =   (cpu_bus.device_mp.addr[7:1] == 7'b1011010) & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1 & bios_config.MSX_typ == MSX2;
+wire rtc_en =   (cpu_bus.device_mp.addr[7:1] == 7'b1011010) & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1 & bios_config.MSX_typ != MSX1;
 
 //  -----------------------------------------------------------------------------
 //  -- 82C55 PPI
@@ -171,7 +177,9 @@ jt8255 PPI
    .portc_din(8'h0),
    .porta_dout(ppi_out_a),
    .portb_dout(),
-   .portc_dout(ppi_out_c)
+   .portc_dout(ppi_out_c),
+   .porta_reset_default(bios_config.MSX_typ == OCM ? 8'hFF : 8'h00),
+   .control_reset_default(bios_config.MSX_typ == OCM ? 7'h0b : 7'h1b)
  );
 
 //  -----------------------------------------------------------------------------
@@ -182,7 +190,7 @@ assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
                   rtc_en                  ? d_from_rtc      :
                   ~psg_n                  ? d_from_psg      :
                   ~ppi_n                  ? d_from_8255     :
-                  data_oe_rq              ? device_data     :                       // Prioritní data.
+                  device_oe_rq            ? device_data     :                       // Prioritní data.
                   slot_oe_rq              ? d_from_slots    :                       // Prioritní data.
                                             device_data & ram_dout & d_from_slots;
 //  -----------------------------------------------------------------------------
@@ -313,7 +321,7 @@ wire  [7:0] device_data;
 wire  [7:0] data_to_mapper;
 wire [26:0] device_ram_addr;
 wire        device_ram_ce;
-wire        data_oe_rq;
+wire        device_oe_rq;
 devices devices
 (
    .clock_bus(clock_bus),
@@ -322,12 +330,11 @@ devices devices
    .sd_bus(sd_bus),
    .sd_bus_control(sd_bus_control),
    .image_info(image_info),
-   .dev_enable(dev_enable),               // Konfigurace zařízení z load. Povoluje jednotlivé zařízení
-   .dev_params(dev_params),               // Parametry device
    .io_device(io_device),
+   .io_memory(io_memory),
    .sound(device_sound),
    .data(device_data),
-   .data_oe_rq(data_oe_rq),
+   .data_oe_rq(device_oe_rq),
    .data_to_mapper(data_to_mapper),
    .ram_cs(device_ram_ce),
    .ram_addr(device_ram_addr)
@@ -344,6 +351,7 @@ msx_slots msx_slots
    .device_bus(device_bus),
    .ext_SD_card_bus(ext_SD_card_bus),
    .flash_bus(flash_bus),
+   .ese_spi(ese_spi),
    .slot_expander(slot_expander),
    .slot_layout(slot_layout),
    .lookup_RAM(lookup_RAM),

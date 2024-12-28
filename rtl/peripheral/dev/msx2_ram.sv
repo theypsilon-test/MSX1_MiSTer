@@ -1,8 +1,7 @@
 module msx2_ram (
     cpu_bus_if.device_mp    cpu_bus,         // Interface for CPU communication
     device_bus              device_bus,      // Interface for device control
-    input  [2:0]            dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
-    input  MSX::io_device_t io_device[16],   // Array of IO devices with port and mask info
+    input  MSX::io_device_t io_device[3],   // Array of IO devices with port and mask info
     output            [7:0] data,
     output            [7:0] data_to_mapper
 );
@@ -10,16 +9,8 @@ module msx2_ram (
     // Signals
     logic [2:0] mapper_io;
     logic [7:0] sizes[3];
-    logic [7:0] data_out[0:2], data_to_mapper_ar[0:2];
-    wire       io_en = cpu_bus.iorq && ~cpu_bus.m1;
-
-    // Instantiate IO decoder to generate enable signals and parameters
-    io_decoder #(.DEV_NAME(DEV_MSX2_RAM)) msx2_mem_mapper_decoder (
-        .cpu_addr(cpu_bus.addr[7:0]),
-        .io_device(io_device),
-        .enable(mapper_io),
-        .params(sizes)
-    );
+    logic [7:0] data_out[0:2], data_to_mapper_ar[3];
+    wire        io_en = cpu_bus.iorq && ~cpu_bus.m1;
 
     // Generate request and output signals
     assign data      = data_out[0] & data_out[1] & data_out[2];
@@ -29,14 +20,16 @@ module msx2_ram (
     genvar i;
     generate
         for (i = 0; i < 3; i++) begin : msx2_ram_dev_INSTANCES
+            wire cs_io_active = (cpu_bus.addr[7:0] & io_device[i].mask) == io_device[i].port;
+            wire cs_enable = io_device[i].enable && cs_io_active && io_en;
             msx2_ram_dev msx2_ram_dev_i (
                 .clk(cpu_bus.clk),
                 .reset(cpu_bus.reset),
                 .data(cpu_bus.data),
                 .addr(cpu_bus.addr),
-                .oe(mapper_io[i] && io_en && cpu_bus.rd),  // IO read
-                .wr(mapper_io[i] && io_en && cpu_bus.wr),  // IO write
-                .size(sizes[i]),
+                .oe(cs_enable && cpu_bus.rd),  // IO read
+                .wr(cs_enable && cpu_bus.wr && cpu_bus.req),  // IO write
+                .size(io_device[i].param),
                 .q(data_out[i]),
                 .data_to_mapper(data_to_mapper_ar[i])
             );
@@ -67,6 +60,7 @@ module msx2_ram_dev (
             mem_seg[3] <= 8'd0; // Reset segment FF
         end else if (wr) begin
             mem_seg[addr[1:0]] <= data & (size -1'b1); // Write data to selected segment
+            $display("MSX2 RAM WR (size: %x) SEG:%d <= %x", size, addr[1:0], data & (size -1'b1) );
         end
     end
 

@@ -195,12 +195,14 @@ assign LED_DISK  = {1'b1, ~vsd_sel & sd_act};
 assign BUTTONS = 0;
 
 localparam VDNUM = 6;
-
+/*verilator tracing_on*/
 video_bus video_bus();
 clock_bus_if clock_bus(clk_core);
 ext_sd_card_if ext_SD_card_bus();
 flash_bus_if flash_bus();
-
+spi_if ese_spi();
+spi_if megasd_spi();
+/*verilator tracing_off*/
 MSX::cpu_regs_t    cpu_regs;
 MSX::user_config_t msxConfig;
 MSX::bios_config_t bios_config;
@@ -208,10 +210,9 @@ MSX::config_cart_t cart_conf[2];
 MSX::block_t       slot_layout[64];
 MSX::lookup_RAM_t  lookup_RAM[16];
 MSX::lookup_SRAM_t lookup_SRAM[4];
-MSX::io_device_t   io_device[16];
+MSX::io_device_t   io_device[16][3];
+MSX::io_device_mem_ref_t io_memory[8];
 MSX::slot_expander_t slot_expander[4];
-wire       [2:0] dev_enable[0:(1 << $bits(device_t))-1];
-wire       [7:0] dev_params[0:(1 << $bits(device_t))-1][3];
 
 wire             forced_scandoubler;
 wire      [21:0] gamma_bus;
@@ -298,7 +299,7 @@ localparam CONF_STR = {
    "V,v",`BUILD_DATE 
 };
 
-assign reset = RESET || status[0] || status[10] || upload;
+assign reset = RESET || status[0] || status[10] || upload_reset;
 
 wire [15:0] status_menumask;
 wire [1:0] sdram_size;
@@ -317,7 +318,7 @@ assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 
 assign info_req = error != ERR_NONE;
 assign info     = 8'(error);
-
+/*verilator tracing_on*/
 hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 (
    .clk_sys(clock_bus.base_mp.clk),
@@ -371,6 +372,7 @@ msx_config msx_config
    .msxConfig(msxConfig)
 );
 /////////////////   CLOCKS   /////////////////
+/*verilator tracing_on*/
 wire clk_core, clk_sdram, locked_sdram;
 pll pll
 (
@@ -401,7 +403,7 @@ wire [31:0] opcode;
 wire [1:0]  opcode_num;
 wire        opcode_out;
 wire [15:0] opcode_PC_start;
-/*verilator tracing_on*/
+
 msx MSX
 (
    .reset(reset),
@@ -409,6 +411,7 @@ msx MSX
    .video_bus(video_bus),
    .ext_SD_card_bus(ext_SD_card_bus),
    .flash_bus(flash_bus),
+   .ese_spi(ese_spi),
    .cpu_regs(cpu_regs),
    .opcode(opcode),
    .opcode_num(opcode_num),
@@ -433,27 +436,27 @@ msx MSX
    .sd_buff_wr(sd_buff_wr),
    .slot_expander(slot_expander),
    .slot_layout(slot_layout),
-   .dev_enable(dev_enable),
-   .dev_params(dev_params),
    .lookup_RAM(lookup_RAM),
    .lookup_SRAM(lookup_SRAM),
    .bios_config(bios_config),
    .io_device(io_device),
+   .io_memory(io_memory),
    .joy0(joy0[5:0]),
    .joy1(joy1[5:0]),
    .*
 );
-/*verilator tracing_off*/
+
 //////////////////   SD   ///////////////////
 wire sdclk;
 wire sdmosi;
+wire sdss;
 wire vsdmiso;
 wire sdmiso = vsd_sel ? vsdmiso : SD_MISO;
 
 reg vsd_sel = 0;
-always @(posedge clock_bus.base_mp.clk) if(img_mounted[4]) vsd_sel <= |img_size;
+always @(posedge clock_bus.base_mp.clk) if(img_mounted[4]) vsd_sel <= |img_size; //TODO je potřeba hlídat náběžnou hranu img mounted
 
-assign SD_CS   = vsd_sel;
+assign SD_CS   = vsd_sel |  sdss;
 assign SD_SCK  = sdclk  & ~vsd_sel;
 assign SD_MOSI = sdmosi & ~vsd_sel;
 
@@ -482,10 +485,19 @@ spi_divmmc spi
    .ready(),
 
    .spi_ce(1'b1),
-   .spi_clk(sdclk),
-   .spi_di(sdmiso),
-   .spi_do(sdmosi)
+   .spi_clk(megasd_spi.clk),
+   .spi_di(megasd_spi.miso),
+   .spi_do(megasd_spi.mosi)
 );
+
+assign sdclk           = ese_spi.enable ? ese_spi.clk  : megasd_spi.clk;
+assign sdmosi          = ese_spi.enable ? ese_spi.mosi : megasd_spi.mosi;
+assign sdss            = ese_spi.enable ? ese_spi.ss : '0;
+assign ese_spi.miso    = sdmiso;
+assign megasd_spi.miso = sdmiso;
+
+
+
 
 sd_card sd_card
 (
@@ -506,11 +518,11 @@ sd_card sd_card
     .clk_spi(clk_sdram),
     .sdhc(1),
     .sck(sdclk),
-    .ss(~vsd_sel),
+    .ss(~vsd_sel | sdss),
     .mosi(sdmosi),
     .miso(vsdmiso)
 );
-
+/*verilator tracing_off*/
 /////////////////  VIDEO  /////////////////
 wire       vga_de;
 wire [1:0] ar    = status[2:1];
@@ -579,7 +591,7 @@ ltc2308_tape #(.ADC_RATE(120000), .CLK_RATE(21477272)) tape
 );
 
 /////////////////  LOAD PACK   /////////////////
-wire upload_ram_ce, upload_sdram_rq, upload_bram_rq, upload;
+wire upload_ram_ce, upload_sdram_rq, upload_bram_rq, upload, upload_reset;
 wire  [7:0] upload_ram_din, config_msx;
 wire [26:0] upload_ram_addr;
 wire  [7:0] kbd_din;
@@ -616,10 +628,10 @@ memory_upload memory_upload(
     .bios_config(bios_config),
     .cart_conf(cart_conf),
     .load_sram(load_sram),
-    .dev_enable(dev_enable),
-    .dev_params(dev_params),
     .io_device(io_device),
-    .error(error)
+    .io_memory(io_memory),
+    .error(error),
+    .reset(upload_reset)
 );
 /*verilator tracing_off*/
 wire  [26:0] flash_addr;

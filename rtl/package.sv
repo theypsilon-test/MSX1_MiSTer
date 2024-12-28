@@ -323,14 +323,17 @@ package MSX;
     } config_cart_t;
 
     typedef struct {
-        logic [7:0] mask;
+        logic [7:0] mask; 
         logic [7:0] port;
-        logic [1:0] num;
         logic [7:0] param;
-        logic [26:0] memory;
-        logic [7:0] memory_size;
-        device_t    id;
+        logic [2:0] mem_ref;
+        logic       enable;
     } io_device_t;
+
+    typedef struct {
+        logic [26:0] memory;
+        logic  [7:0] memory_size;
+    } io_device_mem_ref_t;
 
     typedef struct {
         logic isConfigRegDisabled;

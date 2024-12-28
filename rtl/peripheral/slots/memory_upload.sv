@@ -25,11 +25,10 @@ module memory_upload
     output MSX::lookup_SRAM_t   lookup_SRAM[4],
     output MSX::bios_config_t   bios_config,
     input  MSX::config_cart_t   cart_conf[2],
-    output MSX::io_device_t     io_device[16],
+    output MSX::io_device_t     io_device[16][3],
+    output MSX::io_device_mem_ref_t io_memory[8],
     input                       sdram_ready,
     output logic                load_sram,
-    output logic          [2:0] dev_enable[0:(1 << $bits(device_t))-1],
-    output logic          [7:0] dev_params[0:(1 << $bits(device_t))-1][3],
     output error_t              error,
     output logic                reset
 );
@@ -70,16 +69,6 @@ module memory_upload
         if (reload) load <= 1'b1;
 
         ioctl_download_last <= ioctl_download;
-    end
-
-    // Správa zařízení
-    initial begin
-        for (int i = 0; i < (1 << $bits(device_t)); i++) begin
-            dev_enable[i] = 3'b000;
-            dev_params[i][0] = 8'd0;
-            dev_params[i][1] = 8'd0;
-            dev_params[i][2] = 8'd0;
-        end
     end
 
     // Pomocník pro vyplňování RAM
@@ -139,8 +128,11 @@ module memory_upload
         logic        ref_add, ref_sram_add, fw_space, ref_dev_block, ref_dev_mem, set_offset;
         logic [1:0]  slot, subslot, block, size, offset, ref_sram, device_num;
         logic [15:0] rom_fw_table;
+        logic  [2:0] io_ref_mem;
         mapper_typ_t mapper;
         device_t device;
+        
+        MSX::io_device_t temp_io_device;
 
         if (load) begin
             state <= STATE_CLEAN;
@@ -185,6 +177,37 @@ module memory_upload
                 STATE_RESET: begin
                     reset      <= '1;
                     state      <= STATE_IDLE;
+                    $display("IO DEVICE CONF [%d][0] port:%x mask:%x param:%x ref mem: %x enable: %d", 
+                            DEV_MSX2_RAM,
+                            io_device[DEV_MSX2_RAM][0].port,
+                            io_device[DEV_MSX2_RAM][0].mask,
+                            io_device[DEV_MSX2_RAM][0].param,
+                            io_device[DEV_MSX2_RAM][0].mem_ref,
+                            io_device[DEV_MSX2_RAM][0].enable);
+                    
+                    $display("IO DEVICE CONF [%d][1] port:%x mask:%x param:%x ref mem: %x enable: %d", 
+                            DEV_MSX2_RAM,
+                            io_device[DEV_MSX2_RAM][1].port,
+                            io_device[DEV_MSX2_RAM][1].mask,
+                            io_device[DEV_MSX2_RAM][1].param,
+                            io_device[DEV_MSX2_RAM][1].mem_ref,
+                            io_device[DEV_MSX2_RAM][1].enable);
+
+                    $display("IO DEVICE CONF [%d][2] port:%x mask:%x param:%x ref mem: %x enable: %d", 
+                            DEV_MSX2_RAM,
+                            io_device[DEV_MSX2_RAM][2].port,
+                            io_device[DEV_MSX2_RAM][2].mask,
+                            io_device[DEV_MSX2_RAM][2].param,
+                            io_device[DEV_MSX2_RAM][2].mem_ref,
+                            io_device[DEV_MSX2_RAM][2].enable);
+
+                    $display("IO DEVICE CONF [%d][0] port:%x mask:%x param:%x ref mem: %x enable: %d", 
+                            DEV_WD2793,
+                            io_device[DEV_WD2793][0].port,
+                            io_device[DEV_WD2793][0].mask,
+                            io_device[DEV_WD2793][0].param,
+                            io_device[DEV_WD2793][0].mem_ref,
+                            io_device[DEV_WD2793][0].enable);
                 end
                 STATE_CLEAN: begin
                     error <= ERR_NONE;
@@ -203,16 +226,28 @@ module memory_upload
                     lookup_SRAM[block_num[1:0]].size  <= '0;
                     slot_expander[block_num & 3].en   <= '0;
                     slot_expander[block_num & 3].wo   <= '1;
-                    io_device[block_num[3:0]].port    <= '1;
-                    io_device[block_num[3:0]].mask    <= '0;
-                    io_device[block_num[3:0]].id      <= DEV_NONE;
-                    io_device[block_num[3:0]].num     <= '0;
-                    io_device[block_num[3:0]].param   <= '0;
-                    io_device[block_num[3:0]].memory  <= '0;
-                    dev_enable[device_t'(block_num)]  <= '0;
-                    dev_params[device_t'(block_num)][0] <= 8'd0;
-                    dev_params[device_t'(block_num)][1] <= 8'd0;
-                    dev_params[device_t'(block_num)][2] <= 8'd0;
+                    
+                    io_device[block_num[3:0]][0].enable  <= '0;
+                    io_device[block_num[3:0]][0].port    <= '1;
+                    io_device[block_num[3:0]][0].mask    <= '0;
+                    io_device[block_num[3:0]][0].param   <= '0;
+                    io_device[block_num[3:0]][0].mem_ref <= '0;
+
+                    io_device[block_num[3:0]][1].enable  <= '0;
+                    io_device[block_num[3:0]][1].port    <= '1;
+                    io_device[block_num[3:0]][1].mask    <= '0;
+                    io_device[block_num[3:0]][1].param   <= '0;
+                    io_device[block_num[3:0]][1].mem_ref <= '0;
+
+                    io_device[block_num[3:0]][2].enable  <= '0;
+                    io_device[block_num[3:0]][2].port    <= '1;
+                    io_device[block_num[3:0]][2].mask    <= '0;
+                    io_device[block_num[3:0]][2].param   <= '0;
+                    io_device[block_num[3:0]][2].mem_ref <= '0;
+                    
+                    io_memory[block_num[2:0]].memory     <= '0;
+                    io_memory[block_num[2:0]].memory_size<= '0;
+
                     block_num                           <= block_num + 1'd1;
                     if (block_num == 63) begin
                         state      <= STATE_READ_CONF;
@@ -222,6 +257,7 @@ module memory_upload
                         ddr3_rd    <= '1;
                         head_addr  <= '0;
                         ram_addr   <= '0;
+                        io_ref_mem <= '0;
                         read_cnt   <= CONF_SIZE;
                         if (ioctl_size[1] > 0) begin
                             state      <= STATE_READ_CONF;
@@ -294,19 +330,57 @@ module memory_upload
                             state       <= STATE_LOAD_KBD_LAYOUT;
                         end
                         CONF_DEVICE:  begin
-                            $display("LOAD DEVICE  ref_IO:%x port:%x mask %x param %x size %x addr: %x device.id %x (DDR addr %x)", ref_device_io, conf[2], conf[3], conf[4], {3'b0, conf[5],14'd0} , ram_addr, conf[1], ddr3_addr);
-                            io_device[ref_device_io].port        <= conf[2];
-                            io_device[ref_device_io].mask        <= conf[3];
-                            io_device[ref_device_io].id          <= device_t'(conf[1]);
-                            io_device[ref_device_io].num         <= 0;
-                            io_device[ref_device_io].param       <= conf[4];
-                            io_device[ref_device_io].memory_size <= conf[5];
-                            io_device[ref_device_io].memory      <= ram_addr;
-                            ref_device_io                        <= ref_device_io + 1'd1;          //TODO pohlídej jestli nejsme na konci
-                            pattern                              <= PATTERN_DDR;
-                            data_size                            <= {3'b0, conf[5],14'd0};
-                            state                                <= STATE_FILL_RAM;
-                            next_state                           <= STATE_READ_CONF;
+                            if (~io_device[conf[1][3:0]][0].enable) begin
+                                $display("LOAD IO_DEVICE[0] ID:%x port:%x mask %x param %x size %x addr: %x (DDR addr %x)",
+                                        conf[1], conf[2], conf[3], conf[4], {3'b0, conf[5], 14'd0}, ram_addr, ddr3_addr);
+                                io_device[conf[1][3:0]][0].enable    <= 1'b1;
+                                io_device[conf[1][3:0]][0].port      <= conf[2];
+                                io_device[conf[1][3:0]][0].mask      <= conf[3];
+                                io_device[conf[1][3:0]][0].param     <= conf[4];
+                                if (conf[5] != 0) begin
+                                    io_device[conf[1][3:0]][0].mem_ref <= io_ref_mem;
+                                    io_ref_mem <= io_ref_mem + 3'd1;
+                                end
+
+                            end else if (~io_device[conf[1][3:0]][1].enable) begin
+                                $display("LOAD IO_DEVICE[1] ID:%x port:%x mask %x param %x size %x addr: %x (DDR addr %x)",
+                                        conf[1], conf[2], conf[3], conf[4], {3'b0, conf[5], 14'd0}, ram_addr, ddr3_addr);
+                                io_device[conf[1][3:0]][1].enable    <= 1'b1;
+                                io_device[conf[1][3:0]][1].port      <= conf[2];
+                                io_device[conf[1][3:0]][1].mask      <= conf[3];
+                                io_device[conf[1][3:0]][1].param     <= conf[4];
+                                if (conf[5] != 0) begin
+                                    io_device[conf[1][3:0]][1].mem_ref <= io_ref_mem;
+                                    io_ref_mem <= io_ref_mem + 3'd1;
+                                end
+
+                            end else if (~io_device[conf[1][3:0]][2].enable) begin
+                                $display("LOAD IO_DEVICE[2] ID:%x port:%x mask %x param %x size %x addr: %x (DDR addr %x)",
+                                        conf[1], conf[2], conf[3], conf[4], {3'b0, conf[5], 14'd0}, ram_addr, ddr3_addr);
+                                io_device[conf[1][3:0]][2].enable    <= 1'b1;
+                                io_device[conf[1][3:0]][2].port      <= conf[2];
+                                io_device[conf[1][3:0]][2].mask      <= conf[3];
+                                io_device[conf[1][3:0]][2].param     <= conf[4];
+                                if (conf[5] != 0) begin
+                                    io_device[conf[1][3:0]][2].mem_ref <= io_ref_mem;
+                                    io_ref_mem <= io_ref_mem + 3'd1;
+                                end
+
+                            end else begin
+                                $display("LOAD IO_DEVICE FAILED ID:%x port:%x mask %x param %x size %x addr: %x (DDR addr %x)",
+                                        conf[1], conf[2], conf[3], conf[4], {3'b0, conf[5], 14'd0}, ram_addr, ddr3_addr);
+                            end
+
+                            state      <= STATE_READ_CONF;
+                            next_state <= STATE_READ_CONF;
+
+                            if (conf[5] != 0) begin
+                                io_memory[io_ref_mem].memory      <= ram_addr;
+                                io_memory[io_ref_mem].memory_size <= conf[5];
+                                data_size                         <= {3'b0, conf[5], 14'd0};
+                                pattern                           <= PATTERN_DDR;
+                                state                             <= STATE_FILL_RAM;
+                            end
                         end
                         CONF_END: begin
                             ddr3_addr  <= save_addr;
@@ -462,38 +536,43 @@ module memory_upload
                         BLOCK_DEVICE: begin
                             state  <= STATE_SET_LAYOUT;
                             device <= device_t'(conf[3]);
-                            if (~dev_enable[device_t'(conf[3])][0]) begin
-                                dev_enable[device_t'(conf[3])][0] <= '1;
-                                dev_params[device_t'(conf[3])][0] <= conf[4];
-                                device_num                        <= 'd0;
-                                $display("DEVICE NUM: %d ENABLE PARAM: %x", 1, conf[4]);
-                            end else if (~dev_enable[device_t'(conf[3])][1]) begin
-                                dev_enable[device_t'(conf[3])][1] <= '1;
-                                dev_params[device_t'(conf[3])][1] <= conf[4];
+
+                            if (~io_device[device_t'(conf[3])][0].enable) begin
+                                $display("BLOCK IO_DEVICE[%x][0] enable: 1 param:%x", device_t'(conf[3]), conf[4]);
+                                device_num                              <= 'd0;
+                                io_device[device_t'(conf[3])][0].enable <= 1'b1;
+                                io_device[device_t'(conf[3])][0].param  <= conf[4];
+                            end else if (~io_device[device_t'(conf[3])][1].enable) begin
+                                $display("BLOCK IO_DEVICE[%x][1] enable: 1 param:%x", device_t'(conf[3]), conf[4]);
                                 device_num                        <= 'd1;
-                                $display("DEVICE NUM: %d ENABLE PARAM: %x", 2, conf[4]);
-                            end else if (~dev_enable[device_t'(conf[3])][2]) begin
-                                dev_enable[device_t'(conf[3])][2] <= '1;
-                                dev_params[device_t'(conf[3])][2] <= conf[4];
-                                device_num                        <= 'd2;;
-                                $display("DEVICE NUM: %d ENABLE PARAM: %x", 3, conf[4]);
+                                io_device[device_t'(conf[3])][1].enable <= 1'b1;
+                                io_device[device_t'(conf[3])][1].param  <= conf[4];
+                            end else if (~io_device[device_t'(conf[3])][2].enable) begin                                    
+                                $display("BLOCK IO_DEVICE[%x][2] enable: 1 param:%x", device_t'(conf[3]), conf[4]);
+                                device_num                        <= 'd2;
+                                io_device[device_t'(conf[3])][2].enable <= 1'b1;
+                                io_device[device_t'(conf[3])][2].param  <= conf[4];
                             end else begin
                                 error                             <= ERR_DEVICE_MISSING;                  // DEVICE JIZ NENI K DISPOZICI
                                 state                             <= STATE_IDLE;
-                                $display("DEVICE JIZ NENI K DISPOZICI");
+                                $display("DEVICE %x JIZ NENI K DISPOZICI", device_t'(conf[3]));
                                 device                            <= DEV_NONE;
-                            end
+                            end                             
                         end
                         BLOCK_IO_DEVICE: begin
-                            $display("BLOCK IO_DEVICE ref_IO:%x port:%x mask %d (%d/%d/%d) device.id %x", ref_device_io, conf[3], conf[4], slot, subslot, block, slot_layout[{slot, subslot, block}].device);
-                            io_device[ref_device_io].port  <= conf[3];
-                            io_device[ref_device_io].mask  <= conf[4];
-                            io_device[ref_device_io].id    <= slot_layout[{slot, subslot, block}].device;
-                            io_device[ref_device_io].num   <= slot_layout[{slot, subslot, block}].device_num;
-                            io_device[ref_device_io].param <= conf[5];
-                            ref_device_io                  <= ref_device_io + 1'd1;          //TODO pohlídej jestli nejsme na konci
-                            state                          <= STATE_READ_CONF;
-                            next_state                     <= STATE_LOAD_CONF;
+                            $display("BLOCK IO_DEVICE[%d][%d] port:%x mask %x param %x (%d/%d/%d)",
+                                    device_t'(slot_layout[{slot, subslot, block}].device), 
+                                    slot_layout[{slot, subslot, block}].device_num,
+                                    conf[3], conf[4], conf[5], slot, subslot, block);                          
+                            
+                            temp_io_device = io_device[slot_layout[{slot, subslot, block}].device][slot_layout[{slot, subslot, block}].device_num];
+                            temp_io_device.port  = conf[3];
+                            temp_io_device.mask  = conf[4];
+                            temp_io_device.param = conf[5];
+                            io_device[slot_layout[{slot, subslot, block}].device][slot_layout[{slot, subslot, block}].device_num] <= temp_io_device; 
+
+                            state      <= STATE_READ_CONF;
+                            next_state <= STATE_LOAD_CONF;
                         end
                         BLOCK_REF_DEV: begin
                             $display("BLOCK_REF_DEV ref to block:%x", conf[3][1:0]);
@@ -583,7 +662,7 @@ module memory_upload
                     if (device != DEV_NONE) begin
                         slot_layout[{slot, subslot, block}].device_num <= device_num;
                         slot_layout[{slot, subslot, block}].device     <= device;
-                        $display("BLOCK slot:%x subslot:%x block:%x < device:%x(id:%d) ", slot, subslot, block, device, device_num );
+                        $display("BLOCK slot:%x subslot:%x block:%x < device:[%x][%d]) ", slot, subslot, block, device, device_num );
                         if (device == DEV_WD2793) begin
                             $display("ENABLE FDC MENU");
                             bios_config.fdc_en       <= '1;

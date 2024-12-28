@@ -5,9 +5,8 @@ module devices (
     sd_bus                  sd_bus,                                 // SD bus interface
     sd_bus_control          sd_bus_control,                         // SD bus control interface
     image_info              image_info,                             // Image information
-    input             [2:0] dev_enable[0:(1 << $bits(device_t))-1], // Enable signals
-    input             [7:0] dev_params[0:(1 << $bits(device_t))-1][3], //Params devices
-    input MSX::io_device_t  io_device[16],                          // Array of IO devices
+    input MSX::io_device_t  io_device[16][3],                       // Array of IO devices
+    input MSX::io_device_mem_ref_t io_memory[8],                    // Array of memory references
     output    signed [15:0] sound,                                  // Combined audio output
     output            [7:0] data,                                   // Combined data output
     output                  data_oe_rq,                             // Priorite data
@@ -30,8 +29,7 @@ module devices (
     opl3 opl3 (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
-        .dev_enable(dev_enable),
-        .io_device(io_device),
+        .io_device(io_device[DEV_OPL3]),
         .sound(opl3_sound)
     );
 
@@ -41,8 +39,7 @@ module devices (
     scc scc (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
-        .dev_enable(dev_enable),
-        .io_device(io_device),
+        .io_device(io_device[DEV_SCC]),
         .sound(scc_sound),
         .data(scc_data)
     );
@@ -52,8 +49,7 @@ module devices (
     msx2_ram msx2_ram (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
-        .dev_enable(dev_enable),
-        .io_device(io_device),
+        .io_device(io_device[DEV_MSX2_RAM]),
         .data(msx2_ram_data),
         .data_to_mapper(msx2_ram_data_to_mapper)
     );
@@ -62,8 +58,7 @@ module devices (
     latch_port latch_port (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
-        .dev_enable(dev_enable),
-        .io_device(io_device),
+        .io_device(io_device[DEV_LATCH_PORT]),
         .data_to_mapper(latch_port_data_to_mapper)
     );
 
@@ -72,19 +67,20 @@ module devices (
     WD2793 WD2793 (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
+        .io_device(io_device[DEV_WD2793]),
         .sd_bus(sd_bus),
         .sd_bus_control(sd_bus_control),
         .image_info(image_info),
         .data(wd2793_data),
-        .data_oe_rq(wd2793_data_oe_rq),
-        .param(dev_params[DEV_WD2793][0])
+        .data_oe_rq(wd2793_data_oe_rq)
     );
 
     wire [26:0] kanji_ram_addr;
     wire        kanji_ram_cs;
     kanji kanji (
         .cpu_bus(cpu_bus),
-        .io_device(io_device),
+        .io_device(io_device[DEV_KANJI]),
+        .io_memory(io_memory),
         .ram_cs(kanji_ram_cs),
         .ram_addr(kanji_ram_addr)
     );
@@ -94,7 +90,8 @@ module devices (
     wire        ocm_data_oe_rq;
     ocm ocm (
         .cpu_bus(cpu_bus),
-        .io_device(io_device),
+        .io_device(io_device[DEV_OCM_BOOT]),
+        .io_memory(io_memory),
         .ram_cs(ocm_ram_cs),
         .ram_addr(ocm_ram_addr)
     );

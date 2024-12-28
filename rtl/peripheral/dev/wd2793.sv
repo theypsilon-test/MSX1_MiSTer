@@ -2,12 +2,12 @@ module WD2793
 (
    cpu_bus_if.device_mp cpu_bus,            // Interface for CPU communication
    device_bus           device_bus,         // Interface for device control
+   input  MSX::io_device_t io_device[3],    // Array of IO devices with port and mask info
    sd_bus               sd_bus,             // Data from SD
    sd_bus_control       sd_bus_control,     // Control SD
    image_info           image_info,
    output         [7:0] data,
-   output               data_oe_rq,         // Priorite data 
-   input          [7:0] param               // 00 - Philips, 01 - National
+   output               data_oe_rq
 );
 
 typedef enum logic [1:0] {DRIVE_NONE, DRIVE_A, DRIVE_B} drive_t;
@@ -25,8 +25,8 @@ always @(posedge cpu_bus.clk) begin
    end
 end
 
-wire area_philips   = (cpu_bus.addr[13:3] == 11'b11111111111) && param == 8'h00;
-wire area_national  = (cpu_bus.addr[13:7] ==  7'b1111111) && param == 8'h01;
+wire area_philips   = (cpu_bus.addr[13:3] == 11'b11111111111) && io_device[0].param == 8'h00;
+wire area_national  = (cpu_bus.addr[13:7] ==  7'b1111111) && io_device[0].param == 8'h01;
 wire area_device    = area_philips || area_national;
 wire device_cs      = cs && area_device && cpu_bus.mreq;
 

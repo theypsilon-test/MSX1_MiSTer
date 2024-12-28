@@ -2,41 +2,31 @@ module kanji
 (
    cpu_bus_if.device_mp    cpu_bus,                                // Interface for CPU communication
    input  [2:0]            dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
-   input  MSX::io_device_t io_device[16],                          // Array of IO devices with port and mask info
+   input  MSX::io_device_t io_device[3],                          // Array of IO devices with port and mask info
+   input  MSX::io_device_mem_ref_t io_memory[8],
    output                  ram_cs,
    output           [26:0] ram_addr
 );
 
-   logic [2:0] enable_io;
-   wire       io_en = cpu_bus.iorq && ~cpu_bus.m1;
+   wire        hangul      = io_device[0].param[0];
+   wire        lascom      = io_device[0].param[1];
+   wire [26:0] memory      = io_memory[io_device[0].mem_ref].memory;
+   wire  [7:0] memory_size = io_memory[io_device[0].mem_ref].memory_size;
 
-   wire  [7:0] params[3];
-   wire [26:0] memory[3];
-   wire  [7:0] memory_size[3];
-   
-   // Instantiate IO decoder to generate enable signals and parameters
-   io_decoder #(.DEV_NAME(DEV_KANJI)) kanji_decoder (
-      .cpu_addr(cpu_bus.addr[7:0]),
-      .io_device(io_device),
-      .enable(enable_io),
-      .params(params),
-      .memory(memory),
-      .memory_size(memory_size)
-   );
-
-   wire hangul = params[0][0];
-   wire lascom = params[0][1];
+   wire io_en = cpu_bus.iorq && ~cpu_bus.m1;
+   wire cs_io_active = (cpu_bus.addr[7:0] & io_device[0].mask) == io_device[0].port;
+   wire cs_enable = io_device[0].enable && cs_io_active && io_en;
 
    kanji_dev kanji_dev (
       .clk(cpu_bus.clk),
       .reset(cpu_bus.reset),
       .data(cpu_bus.data),
       .cpu_addr(cpu_bus.addr[1:0]),
-      .ram_base(memory[0]),
-      .ram_size(memory_size[0]),
+      .ram_base(memory),
+      .ram_size(memory_size),
       .req(cpu_bus.req),
-      .wr(enable_io[0] && io_en && cpu_bus.wr), // IO write  
-      .rd(enable_io[0] && io_en && cpu_bus.rd),                // IO read  
+      .wr(cs_enable && cpu_bus.wr && cpu_bus.req),
+      .rd(cs_enable && cpu_bus.rd),
       .hangul(hangul),
       .lascom(lascom),
       .ram_addr(ram_addr),

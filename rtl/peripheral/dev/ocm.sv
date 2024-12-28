@@ -1,8 +1,8 @@
 module ocm
 (
    cpu_bus_if.device_mp    cpu_bus,                                // Interface for CPU communication
-   input  [2:0]            dev_enable[0:(1 << $bits(device_t))-1], // Enable signals for each device
-   input  MSX::io_device_t io_device[16],                          // Array of IO devices with port and mask info
+   input  MSX::io_device_t io_device[3],                          // Array of IO devices with port and mask info
+   input  MSX::io_device_mem_ref_t io_memory[8],
    output                  ram_cs,
    output           [26:0] ram_addr
 );
@@ -14,33 +14,16 @@ module ocm
             en <= dev_en;
             if (dev_en && en == 0) $display("OCM Boot START");       
         end else begin
-            if (cpu_bus.addr[7:3] == 5'b10101 && cpu_bus.iorq && ~cpu_bus.m1 &&  cpu_bus.wr) begin      //First write to slot select disable pre boot sekvence
+            if (cpu_bus.addr[7:3] == 5'b10101 && cpu_bus.iorq && ~cpu_bus.m1 &&  cpu_bus.wr && cpu_bus.req) begin      //First write to slot select disable pre boot sekvence
                 en <= 0;
                 if (en) $display("OCM Boot STOP");       
             end
         end
     end
-    
 
-
-    logic [26:0] memory;
-    logic  [7:0] memory_size;  
-    logic        dev_en;
-
-    always_comb begin
-        // Iterate over each IO device
-        dev_en = 0;
-        memory = '1;
-        memory_size = '0;
-        for (int i = 0; i < 16; i++) begin
-            if (io_device[i].id == DEV_OCM_BOOT) begin
-                dev_en = 1;
-                //params = io_device[i].param;
-                memory = io_device[i].memory;
-                memory_size = io_device[i].memory_size;
-            end
-        end
-    end
+    logic [26:0] memory      = io_memory[io_device[0].mem_ref].memory;
+    logic  [7:0] memory_size = io_memory[io_device[0].mem_ref].memory_size;
+    logic        dev_en      = io_device[0].enable;
 
     assign ram_cs = cpu_bus.mreq && cpu_bus.rd && en && (cpu_bus.addr[15:14] == 2'b00 || cpu_bus.addr[15:14] == 2'b10);
     assign ram_addr = ram_cs ? memory + {16'b0, cpu_bus.addr[9:0]} : '1;

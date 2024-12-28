@@ -1,15 +1,14 @@
 module scc (
     cpu_bus_if.device_mp   cpu_bus,                                 // Interface for CPU communication
     device_bus             device_bus,                              // Interface for device control
-    input            [2:0] dev_enable[0:(1 << $bits(device_t))-1],  // Enable signals for each device
-    input MSX::io_device_t io_device[16],                           // Array of IO devices with port and mask info
+    input MSX::io_device_t io_device[3],                            // Array of IO devices with port and mask info
     output   signed [15:0] sound,                                   // Combined sound output from SCC devices
     output           [7:0] data                                     // Data output from SCC device
 );
 
     // Combine sound output from two SCC channels if enabled
-    assign sound = (dev_enable[DEV_SCC][0] ? {sound_SCC[0][14], sound_SCC[0]} : '0) +
-                   (dev_enable[DEV_SCC][1] ? {sound_SCC[1][14], sound_SCC[1]} : '0);
+    assign sound = (io_device[0].enable ? {sound_SCC[0][14], sound_SCC[0]} : '0) +
+                   (io_device[1].enable ? {sound_SCC[1][14], sound_SCC[1]} : '0);
 
     // Control logic for enabling or disabling SCC channels
     always @(posedge cpu_bus.clk) begin
@@ -46,7 +45,7 @@ module scc (
                 .reset(cpu_bus.reset),                          // Reset signal
                 .req(cs && device_bus.num == i),                // Request signal for SCC
                 .ack(),                                         // Acknowledge signal (not connected)
-                .wrt(cpu_bus.wr),                               // Write enable signal
+                .wrt(cpu_bus.wr && cpu_bus.req),                // Write enable signal
                 .adr(cpu_bus.addr[7:0]),                        // Address bus (8 bits)
                 .dbo(cpu_bus.data),                             // Data output from CPU to SCC
                 .dbi(data_SCC[i]),                              // Data input from SCC to CPU
