@@ -2125,7 +2125,7 @@ module tv80_mcode
                   endcase // case(MCycle)
                 end // case: 8'b01000011,8'b01010011,8'b01100011,8'b01110011
               
-              8'b10100000 , 8'b10101000 , 8'b10110000 , 8'b10111000  :
+              8'b10100000 , 8'b10101000 , 8'b10110000 , 8'b10111000  : //A0 A8 B0 B8
                 begin
                   // LDI, LDD, LDIR, LDDR
                   MCycles = 3'b100;

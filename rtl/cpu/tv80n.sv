@@ -75,7 +75,7 @@ module tv80n (/*AUTOARG*/
   wire [6:0]    tstate;
 
   cpu_regs_if cpu_regs_int();
-  wire alternate_regs, last_mcycle;
+  wire alternate_regs, last_mcycle, mask_m1;
   tv80_core #(Mode, IOWait) i_tv80_core
     (
      .cen (1),
@@ -103,7 +103,8 @@ module tv80n (/*AUTOARG*/
      .intcycle_n (intcycle_n),
      .cpu_regs(cpu_regs_int),
      .alternate_regs(alternate_regs),
-     .last_mcycle(last_mcycle)
+     .last_mcycle(last_mcycle),
+     .mask_m1(mask_m1)
      );  
 
   always @*
@@ -222,7 +223,7 @@ module tv80n (/*AUTOARG*/
   always @(posedge cpu_bus.clk) begin
     change <= 1'b0;
     if (tstate[2] && cpu_bus.clk_en) begin
-      if (m1_n == 1'b0) begin
+      if (m1_n == 1'b0 && mask_m1 == 1'b0) begin
         cpu_regs.AF  <= cpu_regs_int.AF;
         cpu_regs.BC  <= alternate_regs ? cpu_regs_int.BC2 : cpu_regs_int.BC;
         cpu_regs.DE  <= alternate_regs ? cpu_regs_int.DE2 : cpu_regs_int.DE;
