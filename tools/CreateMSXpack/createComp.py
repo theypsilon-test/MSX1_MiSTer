@@ -428,7 +428,7 @@ def create_msx_config_device(device, outfile, files_with_sha1, constants):
         rom_size = 0
         rom_skip = 0
         param = 0
-
+        filename = None
         
         if 'ROM_SHA1' in parameters : 
             filename = files_with_sha1[parameters['ROM_SHA1']]
@@ -449,6 +449,7 @@ def create_msx_config_device(device, outfile, files_with_sha1, constants):
         data = struct.pack('BBBBBBBB', constants['conf']['DEVICE'], constants['device'][device], port, port_mask, param, size, 0, 0)
         print(f"DEVIC: {constants['conf']['DEVICE']} {constants['device'][device]:02X} {port:02X} {port_mask:02X} {param:02X} {size:02X} {0:02X} {0:02X}")
         outfile.write(data)
+
         if filename:
             with open(filename, 'rb') as source_file:
                 if rom_skip > 0:

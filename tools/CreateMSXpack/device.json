@@ -6,5 +6,8 @@
   "MEM_MAPPER": 4,
   "LATCH_PORT": 5,
   "KANJI": 6,
-  "OCM_BOOT": 7
+  "OCM_BOOT": 7,
+  "TMS99xx": 8,
+  "V99xx": 9,
+  "RTC":10
 }

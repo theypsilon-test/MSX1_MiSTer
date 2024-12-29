@@ -196,12 +196,14 @@ assign BUTTONS = 0;
 
 localparam VDNUM = 6;
 /*verilator tracing_on*/
-video_bus video_bus();
+video_bus_if video_bus();
 clock_bus_if clock_bus(clk_core);
 ext_sd_card_if ext_SD_card_bus();
 flash_bus_if flash_bus();
 spi_if ese_spi();
 spi_if megasd_spi();
+vram_bus_if vram_bus();
+
 /*verilator tracing_off*/
 MSX::cpu_regs_t    cpu_regs;
 MSX::user_config_t msxConfig;
@@ -409,6 +411,7 @@ msx MSX
    .reset(reset),
    .clock_bus(clock_bus.base_mp),
    .video_bus(video_bus),
+   .vram_bus(vram_bus),
    .ext_SD_card_bus(ext_SD_card_bus),
    .flash_bus(flash_bus),
    .ese_spi(ese_spi),
@@ -541,7 +544,7 @@ video_freak video_freak
 (
 	.*,
 	.VGA_DE_IN(vga_de),
-   .VGA_VS(video_bus.VS),
+   .VGA_VS(video_bus.display_mp.VS),
 	.ARX((ar == 0) ? 12'd4 : {10'b0, (ar - 1'd1)}),
 	.ARY((ar == 0) ? 12'd3 : 12'd0),
 	.CROP_SIZE(en216p ? 12'd216 : 12'd0),
@@ -556,14 +559,14 @@ video_mixer #(.GAMMA(1), .LINE_LENGTH(284)) video_mixer
    .scandoubler(scale != 0 || forced_scandoubler),
    .gamma_bus(gamma_bus),
    
-   .ce_pix(video_bus.ce_pix),
-   .R(video_bus.R),
-   .G(video_bus.G),
-   .B(video_bus.B),
-   .HSync(video_bus.HS),
-   .VSync(video_bus.VS), 
-   .HBlank(video_bus.hblank),
-   .VBlank(video_bus.vblank),
+   .ce_pix(video_bus.display_mp.ce_pix),
+   .R(video_bus.display_mp.R),
+   .G(video_bus.display_mp.G),
+   .B(video_bus.display_mp.B),
+   .HSync(video_bus.display_mp.HS),
+   .VSync(video_bus.display_mp.VS), 
+   .HBlank(video_bus.display_mp.hblank),
+   .VBlank(video_bus.display_mp.vblank),
 
    .HDMI_FREEZE(0),
    .freeze_sync(),
@@ -718,6 +721,25 @@ sdram sdram
    .ch3_done(),
    .*
 );    
+
+// VDP video RAM
+spram #(.addr_width(16),.mem_name("VRA2")) vram_lo
+(
+   .clock(clock_bus.base_mp.clk),
+   .address(vram_bus.vram_mp.addr),
+   .wren(vram_bus.vram_mp.we_lo),
+   .data(vram_bus.vram_mp.data),
+   .q(vram_bus.vram_mp.q_lo)
+);
+spram #(.addr_width(16),.mem_name("VRA3")) vram_hi
+(
+   .clock(clock_bus.base_mp.clk),
+   .address(vram_bus.vram_mp.addr),
+   .wren(vram_bus.vram_mp.we_hi),
+   .data(vram_bus.vram_mp.data),
+   .q(vram_bus.vram_mp.q_hi)
+);
+
 /*
 dpram #(.addr_width(18)) systemRAM
 (

@@ -4,7 +4,8 @@
    //Clock
    clock_bus_if.base_mp     clock_bus,
    //Video
-   video_bus                video_bus,
+   video_bus_if.device_mp   video_bus,
+   vram_bus_if.device_mp    vram_bus,
    //Ext SD card
    ext_sd_card_if.device_mp ext_SD_card_bus,
    spi_if                   ese_spi,
@@ -86,6 +87,7 @@ assign audio            = compr[audio_mix[16:14]];
 //  -- T80 CPU
 //  -----------------------------------------------------------------------------
 wire [7:0] d_to_cpu;
+wire cpu_interrupt;
 tv80n Z80
 (
    .cpu_bus(cpu_bus.cpu_mp),
@@ -95,7 +97,7 @@ tv80n Z80
    .opcode_out(opcode_out),
    .opcode_PC_start(opcode_PC_start),
    .wait_n(wait_n),
-   .int_n(vdp_int_n),
+   .int_n(~cpu_interrupt),
    .nmi_n(1'b1),
    .busrq_n(1'b1),
    .busak_n(),
@@ -152,8 +154,6 @@ assign active_slot =    //~map_valid                             ? default_slot 
 //  -----------------------------------------------------------------------------
 wire psg_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10100)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1);
 wire ppi_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10101)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1);
-wire vdp_en =   (cpu_bus.device_mp.addr[7:3] == 5'b10011)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1 ;
-wire rtc_en =   (cpu_bus.device_mp.addr[7:1] == 7'b1011010) & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1 & bios_config.MSX_typ != MSX1;
 
 //  -----------------------------------------------------------------------------
 //  -- 82C55 PPI
@@ -186,8 +186,6 @@ jt8255 PPI
 //  -- CPU data multiplex
 //  -----------------------------------------------------------------------------
 assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
-                  vdp_en                  ? d_to_cpu_vdp    :
-                  rtc_en                  ? d_from_rtc      :
                   ~psg_n                  ? d_from_psg      :
                   ~ppi_n                  ? d_from_8255     :
                   device_oe_rq            ? device_data     :                       // Prioritní data.
@@ -259,43 +257,6 @@ jt49_bus PSG
    .IOB_out(psg_iob)
 );
 
-//  -----------------------------------------------------------------------------
-//  -- RTC
-//  -----------------------------------------------------------------------------
-wire [7:0] d_from_rtc;
-rtc rtc
-(
-   .clk21m(clock_bus.clk),
-   .reset(reset),
-   .setup(reset),
-   .rt(rtc_time),
-   .clkena(clock_bus.ce_10hz),
-   .req(cpu_bus.device_mp.req & rtc_en),
-   .ack(),
-   .wrt(cpu_bus.device_mp.wr),
-   .adr(cpu_bus.device_mp.addr),
-   .dbi(d_from_rtc),
-   .dbo(cpu_bus.device_mp.data)
-);
-//  -----------------------------------------------------------------------------
-//  -- Video
-//  -----------------------------------------------------------------------------
-wire [7:0] d_to_cpu_vdp;
-wire       vdp_int_n;   
-
-vdp_mux vdp
-(
-   .clock_bus(clock_bus),
-   .cpu_bus(cpu_bus.device_mp),
-   .video_bus(video_bus),
-   .ce(vdp_en),
-   .MSX_typ(bios_config.MSX_typ),
-   .data(d_to_cpu_vdp),
-   .interrupt_n(vdp_int_n),
-   .border(msxConfig.border),
-   .video_mode(msxConfig.video_mode == AUTO ? bios_config.video_mode : msxConfig.video_mode)
-);
-
 wire signed [15:0] device_sound;
 
 assign sd_bus.ack = sd_ack;
@@ -337,7 +298,11 @@ devices devices
    .data_oe_rq(device_oe_rq),
    .data_to_mapper(data_to_mapper),
    .ram_cs(device_ram_ce),
-   .ram_addr(device_ram_addr)
+   .ram_addr(device_ram_addr),
+   .vram_bus(vram_bus),
+   .video_bus(video_bus),
+   .cpu_interrupt(cpu_interrupt),
+   .rtc_time(rtc_time)
 );
 
 wire  [7:0] d_from_slots;
