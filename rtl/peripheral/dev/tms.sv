@@ -1,0 +1,69 @@
+module tms (
+    cpu_bus_if.device_mp    cpu_bus,
+    clock_bus_if.base_mp    clock_bus,
+    video_bus_if.device_mp  video_bus,
+    vram_bus_if.device_mp   vram_bus,
+    input  MSX::io_device_t io_device[3],
+    output            [7:0] data,
+    output                  interrupt
+);
+
+    wire  [7:0] q, R, G, B;
+    wire        interrupt_n, HS_n, VS_n, hblank, vblank, blank_n;    
+    wire        vram_we;
+    wire  [7:0] vram_data;
+    wire [13:0] vramm_addr;
+
+    wire io_en       = cpu_bus.iorq && ~cpu_bus.m1;
+    wire cs_io_match = (cpu_bus.addr[7:0] & io_device[0].mask) == io_device[0].port;
+    wire cs_enable   = io_device[0].enable && cs_io_match && io_en;
+
+    assign video_bus.R      = io_device[0].enable ? R                   : '0;
+    assign video_bus.G      = io_device[0].enable ? G                   : '0;
+    assign video_bus.B      = io_device[0].enable ? B                   : '0;
+    assign video_bus.HS     = io_device[0].enable ? ~HS_n               : '0;
+    assign video_bus.VS     = io_device[0].enable ? ~VS_n               : '0;
+    assign video_bus.DE     = io_device[0].enable ? blank_n             : '0;
+    assign video_bus.hblank = io_device[0].enable ? hblank              : '0;
+    assign video_bus.vblank = io_device[0].enable ? vblank              : '0;
+    assign video_bus.ce_pix = io_device[0].enable ? clock_bus.ce_5m39_n : '0;
+
+    assign vram_bus.addr    = io_device[0].enable ? {2'b00,vramm_addr}  : '1;
+    assign vram_bus.data    = io_device[0].enable ? vram_data           : '1;
+    assign vram_bus.we_lo   = io_device[0].enable ? vram_we             : '0;
+    assign vram_bus.we_hi   = io_device[0].enable ? '0                  : '0;
+
+    assign interrupt        = io_device[0].enable ? ~interrupt_n        : '0;
+
+    assign data             = cs_enable           ? q                   : '1;
+    
+
+    vdp18_core #(.compat_rgb_g(0)) vdp_vdp18
+    (
+        .clk_i(cpu_bus.clk),
+        .clk_en_10m7_i(clock_bus.ce_10m7_p),
+        .reset_n_i(~cpu_bus.reset),
+
+        .csr_n_i(~(cs_enable && cpu_bus.rd)),
+        .csw_n_i(~(cs_enable && cpu_bus.wr && cpu_bus.req)),
+        .mode_i(cpu_bus.addr[0]),
+        .cd_i(cpu_bus.data),
+        .cd_o(q),
+        .int_n_o(interrupt_n),
+        .vram_we_o(vram_we),
+        .vram_a_o(vramm_addr),
+        .vram_d_o(vram_data),
+        .vram_d_i(vram_bus.q_lo),
+        .border_i('0),   //TODO
+        .rgb_r_o(R),
+        .rgb_g_o(G),
+        .rgb_b_o(B),
+        .hsync_n_o(HS_n),
+        .vsync_n_o(VS_n),
+        .hblank_o(hblank),
+        .vblank_o(vblank),
+        .blank_n_o(blank_n),
+        .is_pal_i('0/*video_mode == PAL*/)  //TODO
+    );
+
+endmodule

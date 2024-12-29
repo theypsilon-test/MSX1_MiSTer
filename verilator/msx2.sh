@@ -41,7 +41,6 @@ verilator \
 ../rtl/peripheral/slots/devices.sv         \
 ../rtl/peripheral/mapper/offset.sv         \
 ../rtl/peripheral/mapper/none.sv           \
-../rtl/video/vdp_mux.sv                    \
 \
 ./rtl/video/vdp18v/vdp18_pack-p.sv        \
 ./rtl/video/vdp18v/vdp18_col_pack-p.sv    \
@@ -85,12 +84,15 @@ verilator \
 ./rtl/peripheral/dev/opl3.sv              \
 ./rtl/peripheral/dev/scc.sv               \
 ./rtl/sound/scc_wave.sv                   \
-./rtl/peripheral/dev/wd2793.sv           \
-./rtl/peripheral/dev/kanji.sv            \
-../rtl/peripheral/dev/msx2_ram.sv       \
-./rtl/peripheral/mapper/national.sv          \
-./rtl/peripheral/mapper/eseRam.sv          \
-./rtl/peripheral/dev/ocm.sv            \
+./rtl/peripheral/dev/wd2793.sv            \
+./rtl/peripheral/dev/kanji.sv             \
+../rtl/peripheral/dev/msx2_ram.sv         \
+./rtl/peripheral/mapper/national.sv       \
+./rtl/peripheral/mapper/eseRam.sv         \
+./rtl/peripheral/dev/ocm.sv               \
+./rtl/peripheral/dev/tms.sv               \
+../rtl/peripheral/dev/v99.sv              \
+../rtl/peripheral/dev/rtc.sv              \
 ./rtl/wd1793.sv                           \
 \
 ./rtl/sound/jt49/hdl/jt49_bus.sv          \

@@ -173,7 +173,7 @@ int verilate() {
 		}
 
 		main_time++;
-//			if (main_time == 13176901) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+//			if (main_time == 13176901) Trace = 1; // 19000000 RESET//60000000 cca zobrazenï¿½ videa
 		return ret;
 	}
 
@@ -443,6 +443,6 @@ int main(int argc, char** argv, char** env) {
 
 	void setBlockDevice(uint8_t num, uint8_t param, Device device)
 	{
-		top->modules->dev_enable[device] = num & 3;
-		top->modules->dev_params[device][num & 3] = param;
+		//top->modules->dev_enable[device] = num & 3;
+		//top->modules->dev_params[device][num & 3] = param;
 	}

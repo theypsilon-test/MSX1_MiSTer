@@ -130,8 +130,8 @@ float vga_scale = 1.5;
 // Memory
 
 #define systemRAM top->emu->systemRAM
-#define VRAMhi top->emu->MSX->vdp->vram_hi
-#define VRAMlo top->emu->MSX->vdp->vram_lo
+#define VRAMhi top->emu->vram_hi
+#define VRAMlo top->emu->vram_lo
 #define kbd top->emu->MSX->msx_key->kbd_ram
 #define SD_RAM top->emu->sd_card->sdbuf
 
@@ -327,11 +327,11 @@ int verilate() {
 		}
 		*/
 		main_time++;
-		if (main_time == 50000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		//if (main_time == 50000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 60000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 44000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 73000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
-		//if (main_time == 482000000) Trace = 1;
+		if (main_time == 189770000) Trace = 1;
 		
 		int ret = 1;
 		if (errors > 0) {
@@ -500,10 +500,10 @@ int main(int argc, char** argv, char** env) {
 	bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
 	
 	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
-	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_EMPTY.msx", 2, true, 0x30300000, &DDR);
-	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_REDUCE.msx", 2, true, 0x30300000, &DDR);
+	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_EMPTY.msx", 2, true, 0x30300000, &DDR);
+	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_REDUCE.msx", 2, true, 0x30300000, &DDR);
 
-	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-20.msx", 1, true, 0x30000000, &DDR);
+	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-20.msx", 1, true, 0x30000000, &DDR);
 	bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A

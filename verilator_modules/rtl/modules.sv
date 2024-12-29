@@ -6,8 +6,6 @@ module modules
 );
 
 logic [7:0] slot_mapper /* verilator public */;          
-logic [2:0] dev_enable[0:(1 << $bits(device_t))-1]  /* verilator public */ ;
-logic [7:0] dev_params[0:(1 << $bits(device_t))-1][3] /* verilator public */ ;
 MSX::block_t       slot_layout[64] /* verilator public */ ;
 MSX::lookup_RAM_t  lookup_RAM[16] /* verilator public */ ;
 MSX::lookup_SRAM_t lookup_SRAM[4] /* verilator public */ ;
@@ -90,8 +88,6 @@ devices devices
    .sd_bus(sd_bus),
    .sd_bus_control(sd_bus_control),
    .image_info(image_info),
-   .dev_enable(dev_enable),               //Konfigurace zařízení z load. Povoluje jednotlivé zařízení
-   .dev_params(dev_params),               // Parametry device
    .io_device(io_device),
    .sound(),
    .data(),
