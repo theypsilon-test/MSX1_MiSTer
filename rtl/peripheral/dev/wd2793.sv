@@ -1,10 +1,10 @@
 module WD2793
 (
-   cpu_bus_if.device_mp cpu_bus,            // Interface for CPU communication
-   device_bus           device_bus,         // Interface for device control
-   input  MSX::io_device_t io_device[3],    // Array of IO devices with port and mask info
-   sd_bus               sd_bus,             // Data from SD
-   sd_bus_control       sd_bus_control,     // Control SD
+   cpu_bus_if.device_mp cpu_bus,
+   device_bus           device_bus,
+   input  MSX::io_device_t io_device[3],
+   sd_bus               sd_bus,
+   sd_bus_control       sd_bus_control,
    image_info           image_info,
    output         [7:0] data,
    output               data_oe_rq
@@ -12,7 +12,7 @@ module WD2793
 
 typedef enum logic [1:0] {DRIVE_NONE, DRIVE_A, DRIVE_B} drive_t;
 
-wire cs = (device_bus.typ == DEV_WD2793) && (device_bus.num == 0); // Only first instance
+wire cs = (device_bus.typ == DEV_WD2793) && (device_bus.num == 0);
 
 logic image_mounted = 1'b0;
 logic layout = 1'b0;
@@ -30,7 +30,7 @@ wire area_national  = (cpu_bus.addr[13:7] ==  7'b1111111) && io_device[0].param 
 wire area_device    = area_philips || area_national;
 wire device_cs      = cs && area_device && cpu_bus.mreq;
 
-wire wdcs           = device_cs && cpu_bus.addr[2] == 0; // addr 0 - 3
+wire wdcs           = device_cs && cpu_bus.addr[2] == 0;
 
 logic motor, side;
 drive_t drive;
@@ -76,7 +76,7 @@ always @(posedge cpu_bus.clk) begin
 end
 
 always_comb begin
-   data = 8'hFF;     // výchozí hodnota pro data
+   data = 8'hFF;
    data_oe_rq = 0;
    if (cpu_bus.rd && device_cs) begin
       if (cpu_bus.addr[2] == 0) begin
@@ -86,7 +86,7 @@ always_comb begin
          if (area_philips) begin
             case(cpu_bus.addr[1:0])
                0: begin data = philips_sideReg; data_oe_rq = 1; end
-               1: begin data = philips_driveReg & 8'hFB; data_oe_rq = 1; end  //TODO changed bit
+               1: begin data = philips_driveReg & 8'hFB; data_oe_rq = 1; end
                2: ;
                3: begin data = {~drq, ~intrq, 6'b111111}; data_oe_rq = 1; end
             endcase

@@ -11,8 +11,8 @@ module ocm
 
     always @(posedge cpu_bus.clk) begin
         if (cpu_bus.reset) begin
-            en <= dev_en;
-            if (dev_en && en == 0) $display("OCM Boot START");       
+            en <= io_device[0].enable;
+            if (io_device[0].enable && en == 0) $display("OCM Boot START");       
         end else begin
             if (cpu_bus.addr[7:3] == 5'b10101 && cpu_bus.iorq && ~cpu_bus.m1 &&  cpu_bus.wr && cpu_bus.req) begin      //First write to slot select disable pre boot sekvence
                 en <= 0;
@@ -21,9 +21,8 @@ module ocm
         end
     end
 
-    logic [26:0] memory      = io_memory[io_device[0].mem_ref].memory;
-    logic  [7:0] memory_size = io_memory[io_device[0].mem_ref].memory_size;
-    logic        dev_en      = io_device[0].enable;
+    wire [26:0] memory      = io_memory[io_device[0].mem_ref].memory;
+    wire  [7:0] memory_size = io_memory[io_device[0].mem_ref].memory_size;
 
     assign ram_cs = cpu_bus.mreq && cpu_bus.rd && en && (cpu_bus.addr[15:14] == 2'b00 || cpu_bus.addr[15:14] == 2'b10);
     assign ram_addr = ram_cs ? memory + {16'b0, cpu_bus.addr[9:0]} : '1;

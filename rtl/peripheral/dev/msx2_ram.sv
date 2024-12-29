@@ -1,22 +1,19 @@
 module msx2_ram (
-    cpu_bus_if.device_mp    cpu_bus,         // Interface for CPU communication
-    device_bus              device_bus,      // Interface for device control
-    input  MSX::io_device_t io_device[3],   // Array of IO devices with port and mask info
+    cpu_bus_if.device_mp    cpu_bus,
+    device_bus              device_bus,
+    input  MSX::io_device_t io_device[3],
     output            [7:0] data,
     output            [7:0] data_to_mapper
 );
 
-    // Signals
     logic [2:0] mapper_io;
     logic [7:0] sizes[3];
     logic [7:0] data_out[0:2], data_to_mapper_ar[3];
     wire        io_en = cpu_bus.iorq && ~cpu_bus.m1;
 
-    // Generate request and output signals
     assign data      = data_out[0] & data_out[1] & data_out[2];
     assign data_to_mapper = device_bus.typ == DEV_MSX2_RAM ? data_to_mapper_ar[device_bus.num] : 8'hFF;
 
-    // Generate MSX2 Memory Mapper Device Instances
     genvar i;
     generate
         for (i = 0; i < 3; i++) begin : msx2_ram_dev_INSTANCES
@@ -51,7 +48,6 @@ module msx2_ram_dev (
 );
     logic [7:0] mem_seg[0:3];
 
-    // Memory segment handling with read and write operations
     always_ff @(posedge clk or posedge reset) begin
         if (reset) begin
             mem_seg[0] <= 8'd0; // Reset segment FC
@@ -59,12 +55,11 @@ module msx2_ram_dev (
             mem_seg[2] <= 8'd0; // Reset segment FE
             mem_seg[3] <= 8'd0; // Reset segment FF
         end else if (wr) begin
-            mem_seg[addr[1:0]] <= data & (size -1'b1); // Write data to selected segment
+            mem_seg[addr[1:0]] <= data & (size -1'b1);
             $display("MSX2 RAM WR (size: %x) SEG:%d <= %x", size, addr[1:0], data & (size -1'b1) );
         end
     end
 
-    // Output logic with optional bitwise operation based on size
     assign q = oe ? (mem_seg[addr[1:0]] | (~(size -1'b1))) : 8'hFF;
     assign data_to_mapper = mem_seg[addr[15:14]];
 endmodule
