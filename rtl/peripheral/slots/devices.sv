@@ -26,7 +26,7 @@ module devices (
 
     // Výstupy kombinující jednotlivé zařízení
     assign sound = opl3_sound + scc_sound;
-    assign data = scc_data & wd2793_data & msx2_ram_data & rtc_data;
+    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data;
     assign data_oe_rq = wd2793_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
 
@@ -52,8 +52,9 @@ module devices (
     assign vram_bus.we_hi    = vram_bus_tms.device_mp.we_hi | vram_bus_v99.device_mp.we_hi;
     
     assign vram_bus_tms.q_lo = vram_bus.q_lo;
+    assign vram_bus_tms.q_hi = vram_bus.q_hi;
     assign vram_bus_v99.q_lo = vram_bus.q_lo;
-    assign vram_bus_v99.q_hi = vram_bus.q_lo;
+    assign vram_bus_v99.q_hi = vram_bus.q_hi;
     
     // Definice instancí zařízení s výstupy pro propojení
     wire signed [15:0] opl3_sound;
