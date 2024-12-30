@@ -16,7 +16,9 @@ module devices (
     output            [7:0] data_to_mapper,                         // Data output to mapper
     output           [26:0] ram_addr,
     output                  ram_cs,
-    output                  cpu_interrupt
+    output                  cpu_interrupt,
+    input             [5:0] joy[2],
+    input                   tape_in
 );
 
     video_bus_if            video_bus_tms();
@@ -25,8 +27,8 @@ module devices (
     vram_bus_if             vram_bus_v99();
 
     // Výstupy kombinující jednotlivé zařízení
-    assign sound = opl3_sound + scc_sound;
-    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data;
+    assign sound = opl3_sound + scc_sound + psg_sound;
+    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data;
     assign data_oe_rq = wd2793_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
 
@@ -161,5 +163,17 @@ module devices (
         .rtc_time(rtc_time),
         .data(rtc_data)
     );
-    
+
+    wire [7:0] psg_data;
+    wire signed [15:0] psg_sound;
+    dev_psg dev_psg
+    (
+        .cpu_bus(cpu_bus),
+        .clock_bus(clock_bus),
+        .io_device(io_device[DEV_PSG]),
+        .sound(psg_sound),
+        .data(psg_data),
+        .joy(joy),
+        .tape_in(tape_in)
+    );    
 endmodule

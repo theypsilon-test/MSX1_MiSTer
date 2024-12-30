@@ -223,6 +223,7 @@ wire     [127:0] status;
 wire      [10:0] ps2_key;
 wire      [24:0] ps2_mouse;
 wire      [31:0] joy0, joy1;
+wire       [5:0] joy[2];
 wire             ioctl_download;
 wire      [15:0] ioctl_index;
 wire             ioctl_wr;
@@ -405,7 +406,8 @@ wire [31:0] opcode;
 wire [1:0]  opcode_num;
 wire        opcode_out;
 wire [15:0] opcode_PC_start;
-
+assign joy[0] = joy0[5:0];
+assign joy[1] = joy1[5:0];
 msx MSX
 (
    .reset(reset),
@@ -420,8 +422,8 @@ msx MSX
    .opcode_num(opcode_num),
    .opcode_out(opcode_out),
    .opcode_PC_start(opcode_PC_start),
-   .cas_motor(motor),
-   .cas_audio_in(msxConfig.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
+   .tape_motor_on(motor),
+   .tape_in(msxConfig.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
    .rtc_time(rtc),
    .sram_save(status[38]),
    .sram_load(status[39]),
@@ -444,8 +446,7 @@ msx MSX
    .bios_config(bios_config),
    .io_device(io_device),
    .io_memory(io_memory),
-   .joy0(joy0[5:0]),
-   .joy1(joy1[5:0]),
+   .joy(joy),
    .*
 );
 

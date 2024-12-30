@@ -439,6 +439,7 @@ def create_msx_config_device(device, outfile, files_with_sha1, constants):
 
         if 'mask'     in parameters : port_mask = convert_to_8bit(parameters['mask'])
         if 'port'     in parameters : port      = convert_to_8bit(parameters['port'])
+        if 'param'    in parameters : param     = convert_to_8bit(parameters['param'])
         
         size = (rom_size + 16383) // 16384
         

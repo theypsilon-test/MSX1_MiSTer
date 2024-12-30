@@ -20,11 +20,10 @@
    //I/O
    output            [15:0] audio,
    input  [           10:0] ps2_key,
-   input              [5:0] joy0,
-   input              [5:0] joy1,
+   input              [5:0] joy[2],
    //Cassete
-   output                   cas_motor,
-   input                    cas_audio_in,
+   output                   tape_motor_on,
+   input                    tape_in,
    //MSX config
    input             [64:0] rtc_time,
    input MSX::bios_config_t bios_config,
@@ -77,8 +76,8 @@ sd_bus_control sd_bus_control();
 //  -- Audio MIX
 //  -----------------------------------------------------------------------------
 wire [15:0] compr[7:0];
-wire  [9:0] audioPSG    = ay_ch_mix + {4'b0, keybeep,5'b00000} + {5'b0, (cas_audio_in & ~cas_motor),4'b0000};
-wire [16:0] fm          = {3'b00, audioPSG, 4'b0000};
+wire  [9:0] sysAudio    = {4'b0, keybeep,5'b00000} + {5'b0, (tape_in & ~tape_motor_on),4'b0000};
+wire [16:0] fm          = {3'b00, sysAudio, 4'b0000};
 wire [16:0] audio_mix   = {device_sound[15], device_sound} + fm;
 assign compr            = '{ {1'b1, audio_mix[13:0], 1'b0}, 16'h8000, 16'h8000, 16'h8000, 16'h7FFF, 16'h7FFF, 16'h7FFF,  {1'b0, audio_mix[13:0], 1'b0}};
 assign audio            = compr[audio_mix[16:14]];
@@ -152,7 +151,6 @@ assign active_slot =    //~map_valid                             ? default_slot 
 //  -----------------------------------------------------------------------------
 //  -- IO Decoder
 //  -----------------------------------------------------------------------------
-wire psg_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10100)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1);
 wire ppi_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10101)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1);
 
 //  -----------------------------------------------------------------------------
@@ -161,7 +159,7 @@ wire ppi_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10101)   & cpu_bus.device_mp.
 wire [7:0] d_from_8255;
 wire [7:0] ppi_out_a, ppi_out_c;
 wire keybeep = ppi_out_c[7];
-assign cas_motor =  ppi_out_c[4];
+assign tape_motor_on =  ppi_out_c[4];
 jt8255 PPI
 (
    .rst(reset),
@@ -186,7 +184,6 @@ jt8255 PPI
 //  -- CPU data multiplex
 //  -----------------------------------------------------------------------------
 assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
-                  ~psg_n                  ? d_from_psg      :
                   ~ppi_n                  ? d_from_8255     :
                   device_oe_rq            ? device_data     :                       // Prioritní data.
                   slot_oe_rq              ? d_from_slots    :                       // Prioritní data.
@@ -206,55 +203,6 @@ keyboard msx_key
    .kbd_din(kbd_din),
    .kbd_we(kbd_we),
    .kbd_request(kbd_request)
-);
-//  -----------------------------------------------------------------------------
-//  -- Sound AY-3-8910
-//  -----------------------------------------------------------------------------
-wire [7:0] d_from_psg, psg_ioa, psg_iob;
-wire [5:0] joy_a = psg_iob[4] ? 6'b111111 : {~joy0[5], ~joy0[4], ~joy0[0], ~joy0[1], ~joy0[2], ~joy0[3]};
-wire [5:0] joy_b = psg_iob[5] ? 6'b111111 : {~joy1[5], ~joy1[4], ~joy1[0], ~joy1[1], ~joy1[2], ~joy1[3]};
-wire [5:0] joyA = joy_a & {psg_iob[0], psg_iob[1], 4'b1111};
-wire [5:0] joyB = joy_b & {psg_iob[2], psg_iob[3], 4'b1111};
-assign psg_ioa = {cas_audio_in,1'b0, psg_iob[6] ? joyB : joyA};
-wire [9:0] ay_ch_mix;
-
-logic u21_1_q = 1'b0;
-always @(posedge clock_bus.clk,  posedge psg_n) begin
-   if (psg_n)
-      u21_1_q <= 1'b0;
-   else if (clock_bus.ce_3m58_p)
-      u21_1_q <= ~psg_n;
-end
-
-logic u21_2_q = 1'b0;
-always @(posedge clock_bus.clk, posedge psg_n) begin
-   if (psg_n)
-      u21_2_q <= 1'b0;
-   else if (clock_bus.ce_3m58_p)
-      u21_2_q <= u21_1_q;
-end
-
-wire psg_e = !(!u21_2_q | clock_bus.ce_3m58_p) | psg_n;
-wire psg_bc   = !(cpu_bus.device_mp.addr[0] | psg_e);
-wire psg_bdir = !(cpu_bus.device_mp.addr[1] | psg_e);
-jt49_bus PSG
-(
-   .rst_n(~reset),
-   .clk(clock_bus.clk),
-   .clk_en(clock_bus.ce_3m58_p),
-   .bdir(psg_bdir),
-   .bc1(psg_bc),
-   .din(cpu_bus.device_mp.data),
-   .sel(0),
-   .dout(d_from_psg),
-   .sound(ay_ch_mix),
-   .A(),
-   .B(),
-   .C(),
-   .IOA_in(psg_ioa),
-   .IOA_out(),
-   .IOB_in(8'hFF),
-   .IOB_out(psg_iob)
 );
 
 wire signed [15:0] device_sound;
@@ -302,7 +250,9 @@ devices devices
    .vram_bus(vram_bus),
    .video_bus(video_bus),
    .cpu_interrupt(cpu_interrupt),
-   .rtc_time(rtc_time)
+   .rtc_time(rtc_time),
+   .joy(joy),
+   .tape_in(tape_in)
 );
 
 wire  [7:0] d_from_slots;

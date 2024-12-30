@@ -8,3 +8,4 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) o
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) tms.sv                             ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) v99.sv                             ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) rtc.sv                             ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) psg.sv                             ]
