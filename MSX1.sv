@@ -447,6 +447,7 @@ msx MSX
    .io_device(io_device),
    .io_memory(io_memory),
    .joy(joy),
+   .kb_upload_memory(kb_upload_memory),
    .*
 );
 
@@ -499,9 +500,6 @@ assign sdmosi          = ese_spi.enable ? ese_spi.mosi : megasd_spi.mosi;
 assign sdss            = ese_spi.enable ? ese_spi.ss : '0;
 assign ese_spi.miso    = sdmiso;
 assign megasd_spi.miso = sdmiso;
-
-
-
 
 sd_card sd_card
 (
@@ -603,6 +601,8 @@ wire  [8:0] kbd_addr;
 wire        kbd_request, kbd_we;
 wire        load_sram;
 error_t     error;
+MSX::kb_memory_t  kb_upload_memory;
+
 /*verilator tracing_on*/
 memory_upload memory_upload(
     .clk(clock_bus.base_mp.clk),
@@ -621,10 +621,7 @@ memory_upload memory_upload(
     .ram_din(upload_ram_din),
     .ram_ce(upload_ram_ce),
     .sdram_ready(sdram_ready),
-    .kbd_request(kbd_request),
-    .kbd_addr(kbd_addr),
-    .kbd_din(kbd_din),
-    .kbd_we(kbd_we),
+    .kb_upload_memory(kb_upload_memory),
     .slot_expander(slot_expander),
     .slot_layout(slot_layout),
     .lookup_RAM(lookup_RAM),

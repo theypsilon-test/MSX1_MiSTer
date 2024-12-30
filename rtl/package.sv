@@ -10,7 +10,7 @@ typedef enum logic [1:0] {MSX1,MSX2,MSXx,OCM} MSX_typ_t;
 
 
 typedef enum logic [3:0] {DEVICE_NONE, DEVICE_ROM } device_typ_t;
-typedef enum logic [3:0] {DEV_NONE, DEV_OPL3, DEV_SCC, DEV_WD2793, DEV_MSX2_RAM, DEV_LATCH_PORT, DEV_KANJI, DEV_OCM_BOOT, DEV_VDP_TMS, DEV_VDP_V99xx, DEV_RTC, DEV_PSG } device_t;
+typedef enum logic [3:0] {DEV_NONE, DEV_OPL3, DEV_SCC, DEV_WD2793, DEV_MSX2_RAM, DEV_LATCH_PORT, DEV_KANJI, DEV_OCM_BOOT, DEV_VDP_TMS, DEV_VDP_V99xx, DEV_RTC, DEV_PSG, DEV_PPI } device_t;
 typedef enum logic [4:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTYPE, MAPPER_ASCII8, MAPPER_KOEI, MAPPER_WIZARDY, MAPPER_KONAMI, MAPPER_FMPAC, MAPPER_GM2, VY0010, MAPPER_KONAMI_SCC, MAPPER_MSX2, MAPPER_GENERIC16KB, MAPPER_CROSS_BLAIM, MAPPER_GENERIC8KB, MAPPER_HARRY_FOX, MAPPER_ZEMINA_80, MAPPER_ZEMINA_90, MAPPER_KONAMI_SCC_PLUS, MAPPER_MFRSD3, MAPPER_MFRSD2, MAPPER_MFRSD1, MAPPER_MFRSD0, MAPPER_NATIONAL, MAPPER_ESE_RAM, MAPPER_UNUSED} mapper_typ_t;
 typedef enum logic [3:0] {BLOCK_RAM, BLOCK_ROM, BLOCK_SRAM, BLOCK_DEVICE, BLOCK_MAPPER, BLOCK_CART, BLOCK_REF_MEM, BLOCK_REF_DEV, BLOCK_IO_DEVICE, BLOCK_EXPANDER, BLOCK_REF_SHARED_MEM} block_t;
 typedef enum logic [2:0] {CONF_BLOCK, CONF_DEVICE, CONF_LAYOUT, CONF_CARTRIGE, CONF_BLOCK_FW, CONF_UNUSED5, CONF_UNUSED6, CONF_END} conf_t;
@@ -369,5 +369,12 @@ package MSX;
         logic isSlotExpanderEnabled;
         logic isFlashRomBlockProtectEnabled;
         logic isFlashRomWriteEnabled;
-    } mfrsd_config_t;    
+    } mfrsd_config_t;
+
+    typedef struct {
+       logic [8:0] addr;
+       logic [7:0] data;
+       logic       we;
+       logic       rq;
+    } kb_memory_t;
 endpackage

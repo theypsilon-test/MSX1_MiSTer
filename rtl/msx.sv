@@ -19,7 +19,7 @@
    output logic [15:0]      opcode_PC_start,
    //I/O
    output            [15:0] audio,
-   input  [           10:0] ps2_key,
+   input             [10:0] ps2_key,
    input              [5:0] joy[2],
    //Cassete
    output                   tape_motor_on,
@@ -49,10 +49,7 @@
    input MSX::io_device_t   io_device[16][3],
    input MSX::io_device_mem_ref_t io_memory[8],
    //KBD
-   input                    kbd_request,
-   input              [8:0] kbd_addr,
-   input              [7:0] kbd_din,
-   input                    kbd_we,
+   input MSX::kb_memory_t   kb_upload_memory,
    //SD FDC
    input                    img_mounted,
    input             [31:0] img_size,
@@ -125,85 +122,21 @@ always @(posedge clock_bus.clk, negedge exwait_n) begin
       u1_2_q <= wait_n;
 end
 
-logic map_valid = 0;
-wire ppi_en = ~ppi_n;
 wire [1:0] active_slot;
 
-/*
-always @(posedge reset, posedge clock_bus.clk) begin
-    if (reset)
-        map_valid = 0;
-    else if (ppi_en) begin
-        map_valid = 1;
-   end
-end
-*/
-
-//wire [1:0] default_slot  = bios_config.MSX_typ == OCM ? 2'b11 : 2'b00;
-
-
 assign active_slot =    //~map_valid                             ? default_slot   :
-                        cpu_bus.device_mp.addr[15:14] == 2'b00 ? ppi_out_a[1:0] :
-                        cpu_bus.device_mp.addr[15:14] == 2'b01 ? ppi_out_a[3:2] :
-                        cpu_bus.device_mp.addr[15:14] == 2'b10 ? ppi_out_a[5:4] :
-                                                       ppi_out_a[7:6] ;
-
-//  -----------------------------------------------------------------------------
-//  -- IO Decoder
-//  -----------------------------------------------------------------------------
-wire ppi_n  = ~((cpu_bus.device_mp.addr[7:3] == 5'b10101)   & cpu_bus.device_mp.iorq & ~cpu_bus.device_mp.m1);
-
-//  -----------------------------------------------------------------------------
-//  -- 82C55 PPI
-//  -----------------------------------------------------------------------------
-wire [7:0] d_from_8255;
-wire [7:0] ppi_out_a, ppi_out_c;
-wire keybeep = ppi_out_c[7];
-assign tape_motor_on =  ppi_out_c[4];
-jt8255 PPI
-(
-   .rst(reset),
-   .clk(clock_bus.clk),
-   .addr(cpu_bus.device_mp.addr[1:0]),
-   .din(cpu_bus.device_mp.data),
-   .dout(d_from_8255),
-   .rdn(~cpu_bus.device_mp.rd),
-   .wrn(~cpu_bus.device_mp.wr),
-   .csn(ppi_n),
-   .porta_din(8'h0),
-   .portb_din(d_from_kb),
-   .portc_din(8'h0),
-   .porta_dout(ppi_out_a),
-   .portb_dout(),
-   .portc_dout(ppi_out_c),
-   .porta_reset_default(bios_config.MSX_typ == OCM ? 8'hFF : 8'h00),
-   .control_reset_default(bios_config.MSX_typ == OCM ? 7'h0b : 7'h1b)
- );
+                        cpu_bus.device_mp.addr[15:14] == 2'b00 ? slot_config[1:0] :
+                        cpu_bus.device_mp.addr[15:14] == 2'b01 ? slot_config[3:2] :
+                        cpu_bus.device_mp.addr[15:14] == 2'b10 ? slot_config[5:4] :
+                                                                 slot_config[7:6] ;
 
 //  -----------------------------------------------------------------------------
 //  -- CPU data multiplex
 //  -----------------------------------------------------------------------------
 assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
-                  ~ppi_n                  ? d_from_8255     :
                   device_oe_rq            ? device_data     :                       // Prioritní data.
                   slot_oe_rq              ? d_from_slots    :                       // Prioritní data.
                                             device_data & ram_dout & d_from_slots;
-//  -----------------------------------------------------------------------------
-//  -- Keyboard decoder
-//  -----------------------------------------------------------------------------
-wire [7:0] d_from_kb;
-keyboard msx_key
-(
-   .reset(reset),
-   .clk(clock_bus.clk),
-   .ps2_key(ps2_key),
-   .kb_row(ppi_out_c[3:0]),
-   .kb_data(d_from_kb),
-   .kbd_addr(kbd_addr),
-   .kbd_din(kbd_din),
-   .kbd_we(kbd_we),
-   .kbd_request(kbd_request)
-);
 
 wire signed [15:0] device_sound;
 
@@ -228,9 +161,12 @@ assign image_info.readonly = img_readonly;
 
 wire  [7:0] device_data;
 wire  [7:0] data_to_mapper;
+wire  [7:0] slot_config;
 wire [26:0] device_ram_addr;
 wire        device_ram_ce;
 wire        device_oe_rq;
+wire        keybeep;
+
 devices devices
 (
    .clock_bus(clock_bus),
@@ -250,9 +186,14 @@ devices devices
    .vram_bus(vram_bus),
    .video_bus(video_bus),
    .cpu_interrupt(cpu_interrupt),
+   .kb_upload_memory(kb_upload_memory),
+   .ps2_key(ps2_key),
    .rtc_time(rtc_time),
    .joy(joy),
-   .tape_in(tape_in)
+   .tape_in(tape_in),
+   .tape_motor_on(tape_motor_on),
+   .slot_config(slot_config),
+   .keybeep(keybeep)
 );
 
 wire  [7:0] d_from_slots;

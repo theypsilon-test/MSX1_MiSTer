@@ -9,6 +9,8 @@ module devices (
     image_info              image_info,                             // Image information
     input MSX::io_device_t  io_device[16][3],                       // Array of IO devices
     input MSX::io_device_mem_ref_t io_memory[8],                    // Array of memory references
+    input MSX::kb_memory_t  kb_upload_memory,
+    input            [10:0] ps2_key,
     input            [64:0] rtc_time,
     output    signed [15:0] sound,                                  // Combined audio output
     output            [7:0] data,                                   // Combined data output
@@ -18,7 +20,10 @@ module devices (
     output                  ram_cs,
     output                  cpu_interrupt,
     input             [5:0] joy[2],
-    input                   tape_in
+    input                   tape_in,
+    output                  tape_motor_on,
+    output            [7:0] slot_config,
+    output                  keybeep
 );
 
     video_bus_if            video_bus_tms();
@@ -28,7 +33,7 @@ module devices (
 
     // Výstupy kombinující jednotlivé zařízení
     assign sound = opl3_sound + scc_sound + psg_sound;
-    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data;
+    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data;
     assign data_oe_rq = wd2793_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
 
@@ -175,5 +180,17 @@ module devices (
         .data(psg_data),
         .joy(joy),
         .tape_in(tape_in)
-    );    
+    );
+
+    wire [7:0] ppi_data;
+    dev_ppi dev_ppi
+    (
+        .cpu_bus(cpu_bus),
+        .io_device(io_device[DEV_PPI]),
+        .data(ppi_data),
+        .kb_upload_memory(kb_upload_memory),
+        .ps2_key(ps2_key),
+        .slot_config(slot_config),
+        .keybeep(keybeep)
+    ); 
 endmodule

@@ -1,14 +1,11 @@
 module keyboard
 (
-   input         clk,
-   input         reset,
-   input  [10:0] ps2_key,
-   input   [3:0] kb_row,
-   output  [7:0] kb_data,
-   input   [8:0] kbd_addr,
-   input   [7:0] kbd_din,
-   input         kbd_we,
-   input         kbd_request
+   input                  clk,
+   input                  reset,
+   input           [10:0] ps2_key,
+   input            [3:0] kb_row,
+   output           [7:0] kb_data,
+   input MSX::kb_memory_t upload_memory
 );
 
 wire [3:0] row;
@@ -44,10 +41,10 @@ wire [7:0] map_key;
 spram #(.addr_width(9), .mem_name("KBD"), .mem_init_file("kbd.mif")) kbd_ram 
 (
    .clock(clk),
-   .address(kbd_request ? kbd_addr : key_decode),
-   .data(kbd_din),
+   .address(upload_memory.rq ? upload_memory.addr : key_decode),
+   .data(upload_memory.data),
    .q(map_key),
-   .wren(kbd_we)
+   .wren(upload_memory.we)
 );
 
 endmodule

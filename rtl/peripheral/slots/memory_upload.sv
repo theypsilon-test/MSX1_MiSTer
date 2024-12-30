@@ -15,10 +15,7 @@ module memory_upload
     output logic         [26:0] ram_addr,
     output                [7:0] ram_din,
     output logic                ram_ce,
-    output logic                kbd_request,
-    output logic          [8:0] kbd_addr,
-    output logic          [7:0] kbd_din,
-    output logic                kbd_we,
+    output MSX::kb_memory_t     kb_upload_memory,
     output MSX::slot_expander_t slot_expander[4],
     output MSX::block_t         slot_layout[64],
     output MSX::lookup_RAM_t    lookup_RAM[16],
@@ -149,30 +146,30 @@ module memory_upload
         if (ram_ce) ram_addr <= ram_addr + 1'd1;
 
 
-        kbd_we <= '0;
-        if (kbd_we) kbd_addr <= kbd_addr + 1'd1;
+        kb_upload_memory.we  <= '0;
+        if (kb_upload_memory.we) kb_upload_memory.addr <= kb_upload_memory.addr + 1'd1;
 
         if (ddr3_ready && ~ddr3_rd) begin
             case(state)
                 STATE_IDLE: begin
-                    block_num         <= '0;
-                    ddr3_request      <= '0;
-                    ref_add           <= '0;
-                    ref_sram_add      <= '0;
-                    ref_sram          <= '0;
-                    ref_ram           <= '0;
-                    ref_device_io     <= '0;
-                    ram_addr          <= '0;
-                    crc_en            <= '0;
-                    fw_space          <= '0;
-                    save_addr         <= '0;
-                    save_addr2        <= '0;
-                    kbd_request       <= '0;
-                    ref_dev_block     <= '0;
-                    ref_dev_mem       <= '0;
-                    set_offset        <= '0;
-                    load_sram         <= '0;
-                    reset             <= '0;
+                    block_num           <= '0;
+                    ddr3_request        <= '0;
+                    ref_add             <= '0;
+                    ref_sram_add        <= '0;
+                    ref_sram            <= '0;
+                    ref_ram             <= '0;
+                    ref_device_io       <= '0;
+                    ram_addr            <= '0;
+                    crc_en              <= '0;
+                    fw_space            <= '0;
+                    save_addr           <= '0;
+                    save_addr2          <= '0;
+                    kb_upload_memory.rq <= '0;
+                    ref_dev_block       <= '0;
+                    ref_dev_mem         <= '0;
+                    set_offset          <= '0;
+                    load_sram           <= '0;
+                    reset               <= '0;
                 end
                 STATE_RESET: begin
                     reset      <= '1;
@@ -303,7 +300,7 @@ module memory_upload
                         reset     <= '0;
                         $display("CONFIG LOAD END %d", $time);
                     end
-                    kbd_request <= '0;
+                    kb_upload_memory.rq <= '0;
                 end
                 STATE_CHECK_FW_CONF: begin
                     if ({conf[0], conf[1], conf[2]} == {"M", "s", "X"}) begin
@@ -344,9 +341,9 @@ module memory_upload
                         end
                         CONF_LAYOUT:  begin
                             $display("  LOAD KBD LAYOUT");
-                            kbd_addr    <= '0;
-                            kbd_request <= '1;
-                            state       <= STATE_LOAD_KBD_LAYOUT;
+                            kb_upload_memory.addr <= '0;
+                            kb_upload_memory.rq   <= '1;
+                            state                 <= STATE_LOAD_KBD_LAYOUT;
                         end
                         CONF_DEVICE:  begin
                             if (~io_device[conf[1][3:0]][0].enable) begin
@@ -755,11 +752,11 @@ module memory_upload
                     $display("CART_CONFIG DDR ADDR %x", {conf[2][3:0], conf[1], conf[0]});
                 end
                 STATE_LOAD_KBD_LAYOUT: begin
-                    if (~kbd_we) begin
-                        ddr3_rd <= 1'b1;
-                        kbd_we  <= 1'b1;
-                        kbd_din <= ddr3_dout;
-                        if (kbd_addr == 9'h1FF) begin
+                    if (~kb_upload_memory.we) begin
+                        ddr3_rd               <= 1'b1;
+                        kb_upload_memory.we   <= 1'b1;
+                        kb_upload_memory.data <= ddr3_dout;
+                        if (kb_upload_memory.addr == 9'h1FF) begin
                             state <= STATE_READ_CONF;
                         end
                     end
