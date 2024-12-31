@@ -240,6 +240,7 @@ module memory_upload
                     lookup_SRAM[block_num[1:0]].size  <= '0;
                     slot_expander[block_num & 3].en   <= '0;
                     slot_expander[block_num & 3].wo   <= '1;
+                    slot_expander[block_num & 3].init <= '0;
                     
                     io_device[block_num[3:0]][0].enable  <= '0;
                     io_device[block_num[3:0]][0].port    <= '1;
@@ -597,9 +598,10 @@ module memory_upload
                             ref_dev_mem <= 1'b1;
                         end
                         BLOCK_EXPANDER: begin
-                            $display("BLOCK_EXPANDER slot: %d enabled: %d wo: %d", slot, conf[3][0], conf[3][1]);
-                            slot_expander[slot].en <= conf[3][0];
-                            slot_expander[slot].wo <= conf[3][1];
+                            $display("BLOCK_EXPANDER slot: %d enabled: %d wo: %d init:%x", slot, conf[3][0], conf[3][1], conf[4]);
+                            slot_expander[slot].en <=   conf[3][0];
+                            slot_expander[slot].wo <=   conf[3][1];
+                            slot_expander[slot].init <= conf[4];
                             next_state             <= STATE_LOAD_CONF;
                             state                  <= STATE_READ_CONF;
                         end

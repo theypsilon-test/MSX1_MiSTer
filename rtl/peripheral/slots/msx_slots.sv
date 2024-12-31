@@ -27,7 +27,6 @@ module msx_slots (
     memory_bus memory_bus();
 
     // Subslot 
-    wire       slot_expander_en, slot_expander_wo;
     wire [1:0] active_subslot;
     wire       subslot_output_rq;
     wire [7:0] subslot_data;
@@ -37,10 +36,10 @@ module msx_slots (
     subslot subslot 
     (
         .cpu_bus(cpu_bus),
-        .expander_enable(slot_expander_en),
-        .expander_wo(slot_expander_wo),
+        .slot_expander_conf(slot_expander),
         .data(subslot_data),
         .active_subslot(active_subslot),
+        .expander_force_en(slot_expander_force_en),
         .output_rq(subslot_output_rq),
         .active_slot(active_slot),
         .bios_config(bios_config)
@@ -54,11 +53,6 @@ module msx_slots (
     assign active_block = slot_layout[layout_id];
     assign active_RAM = lookup_RAM[active_block.ref_ram];
     assign active_SRAM = lookup_SRAM[active_block.ref_sram];
-    
-    
-    assign slot_expander_en = slot_expander[active_slot].en | slot_expander_force_en;
-    assign slot_expander_wo = slot_expander[active_slot].wo;
-  
     
     // Retrieve configuration for the current slot
     wire [1:0] offset_ram = active_block.offset_ram;

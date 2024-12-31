@@ -8,6 +8,14 @@
       <memory SHA1="e998f0c441f4f1800ef44e42cd1659150206cf79" filename = "vg8020-20_basic-bios1.rom">ROM</memory>
     </block>
   </primary>
+  <primary slot="3" expander = "1" expander_wo = "0">
+    <secondary slot="2">
+      <block>
+        <memory pattern="2">RAM</memory>
+      </block>
+    </secondary>
+  </primary>
+  <!-- Location of external slots at the end of the XML definition -->
   <primary slot="1">
     <block>
       <cart>A</cart>
@@ -17,12 +25,5 @@
     <block>
       <cart>B</cart>
     </block>
-  </primary>
-  <primary slot="3" expander = "1" expander_wo = "0">
-    <secondary slot="2">
-      <block>
-        <memory pattern="2">RAM</memory>
-      </block>
-    </secondary>
   </primary>
 </msxConfig>

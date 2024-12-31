@@ -9,20 +9,6 @@
       </block>
     </secondary>
   </primary>
-  <primary slot="1">
-    <secondary slot="0">
-      <block start="0">
-        <cart>A</cart>
-      </block>
-    </secondary>
-  </primary>
-  <primary slot="2">
-    <secondary slot="0">
-      <block start="0">
-         <cart>B</cart>
-      </block>
-    </secondary>
-  </primary>
   <primary slot="3">
     <secondary slot="0">
       <block count="1"> <!-- MSX BIOS with BASIC ROM -->
@@ -55,6 +41,21 @@
       </block>
       <block start="2" count="2">
         <ref to_block="1">DEVICE</ref>
+      </block>
+    </secondary>
+  </primary>
+  <!-- Location of external slots at the end of the XML definition -->
+  <primary slot="1">
+    <secondary slot="0">
+      <block start="0">
+        <cart>A</cart>
+      </block>
+    </secondary>
+  </primary>
+  <primary slot="2">
+    <secondary slot="0">
+      <block start="0">
+         <cart>B</cart>
       </block>
     </secondary>
   </primary>

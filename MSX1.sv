@@ -300,7 +300,7 @@ localparam CONF_STR = {
    "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING;",
    "V,v",`BUILD_DATE 
 };
-
+/*verilator tracing_on*/
 assign reset = RESET || status[0] || status[10] || upload_reset;
 
 wire [15:0] status_menumask;
@@ -311,9 +311,9 @@ wire info_req;
 assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
 
 
-wire enable_menu_FDC = io_device[DEV_WD2793][0].param[7] && io_device[DEV_WD2793][0].enable; //Enable FDC to CART menu
+wire disable_menu_FDC = io_device[DEV_WD2793][0].param[7] && io_device[DEV_WD2793][0].enable; //Enable FDC to CART menu
 assign status_menumask[1] = io_device[DEV_WD2793][0].enable;
-assign status_menumask[2] = enable_menu_FDC;
+assign status_menumask[2] = disable_menu_FDC;
 assign status_menumask[3] = ROM_A_load_hide;
 assign status_menumask[4] = ROM_B_load_hide;
 assign status_menumask[5] = '0;
@@ -323,7 +323,7 @@ assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 
 assign info_req = error != ERR_NONE;
 assign info     = 8'(error);
-/*verilator tracing_on*/
+
 hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 (
    .clk_sys(clock_bus.base_mp.clk),
@@ -367,7 +367,7 @@ msx_config msx_config
 (
    .clk(clock_bus.base_mp.clk),
    .reset(reset),
-   .enable_menu_FDC(enable_menu_FDC),
+   .disable_menu_FDC(disable_menu_FDC),
    .HPS_status(status[63:0]),
    .sdram_size(sdram_size),
    .cart_conf(cart_conf),

@@ -9,20 +9,6 @@
       </block>
     </secondary>
   </primary>
-  <primary slot="1">
-    <secondary slot="0">
-      <block>
-        <cart>A</cart>
-      </block>
-    </secondary>
-  </primary>
-  <primary slot="2">
-    <secondary slot="0">
-      <block>
-        <cart>B</cart>
-      </block>
-    </secondary>
-  </primary>
   <primary slot="3">
     <secondary slot="0">
       <block count="1">
@@ -43,4 +29,20 @@
       </block>
     </secondary>
   </primary>
+  <!-- Location of external slots at the end of the XML definition -->
+  <primary slot="1">
+    <secondary slot="0">
+      <block>
+        <cart>A</cart>
+      </block>
+    </secondary>
+  </primary>
+  <primary slot="2">
+    <secondary slot="0">
+      <block>
+        <cart>B</cart>
+      </block>
+    </secondary>
+  </primary>
+
 </msxConfig>

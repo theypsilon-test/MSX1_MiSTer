@@ -13,6 +13,14 @@
       </block>
     </secondary>
   </primary>
+  <primary slot="3">
+    <secondary slot="0">
+      <block start="0">
+        <memory pattern="3">RAM</memory>
+      </block>
+    </secondary>
+  </primary>
+  <!-- Location of external slots at the end of the XML definition -->
   <primary slot="1">
     <secondary slot="0">
       <block start="0">
@@ -24,13 +32,6 @@
     <secondary slot="0">
       <block start="0">
         <cart>B</cart>
-      </block>
-    </secondary>
-  </primary>
-  <primary slot="3">
-    <secondary slot="0">
-      <block start="0">
-        <memory pattern="3">RAM</memory>
       </block>
     </secondary>
   </primary>

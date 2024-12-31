@@ -1,8 +1,8 @@
 module subslot (
-    cpu_bus_if.device_mp    cpu_bus,        // Interface for CPU communication
-    input             [1:0] active_slot,    // Currently active slot
-    input                   expander_enable,// Enable signals for the expander
-    input                   expander_wo,    // Expander write only
+    cpu_bus_if.device_mp    cpu_bus,                  // Interface for CPU communication
+    input MSX::slot_expander_t slot_expander_conf[4], 
+    input             [1:0] active_slot,              // Currently active slot
+    input                   expander_force_en,        // Enable signals for the expander
     output            [7:0] data,           // Data output
     output            [1:0] active_subslot, // Currently active subslot
     output                  output_rq,      // Chip select signal
@@ -13,7 +13,7 @@ module subslot (
     logic [7:0] mapper_slot[3:0];
 
     // Chip select is active when the address is 0xFFFF, the expander is enabled for the active slot, and there's a memory request
-    wire mapper_cs = (cpu_bus.addr == 16'hFFFF) && cpu_bus.mreq && expander_enable;
+    wire mapper_cs = (cpu_bus.addr == 16'hFFFF) && cpu_bus.mreq && (slot_expander_conf[active_slot].en || expander_force_en);
     
     // Write enable is active when chip select and write request are active
     wire mapper_wr = mapper_cs && cpu_bus.wr && cpu_bus.req;
@@ -25,13 +25,10 @@ module subslot (
     always @(posedge cpu_bus.clk or posedge cpu_bus.reset) begin
         if (cpu_bus.reset) begin
             // Initialize mapper_slot array on reset
-            mapper_slot[0] <= 8'h00;
-            mapper_slot[1] <= 8'h00;
-            mapper_slot[2] <= 8'h00;
-            if (bios_config.MSX_typ == OCM) 
-                mapper_slot[3] <= 8'b00101011;
-            else
-                mapper_slot[3] <= 8'h00;
+            mapper_slot[0] <= slot_expander_conf[0].init;
+            mapper_slot[1] <= slot_expander_conf[1].init;
+            mapper_slot[2] <= slot_expander_conf[2].init;
+            mapper_slot[3] <= slot_expander_conf[3].init;
         end else if (mapper_wr) begin
             // Write to the currently active slot
             mapper_slot[active_slot] <= cpu_bus.data;

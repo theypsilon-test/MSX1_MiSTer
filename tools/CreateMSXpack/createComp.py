@@ -72,6 +72,7 @@ def parse_msx_primary(root):
     if root.tag == 'primary':
         expander_en = convert_to_int(root.attrib.get("expander",'0'))
         expander_wo = convert_to_int(root.attrib.get("expander_wo",'0'))
+        expander_init = convert_to_8bit(root.attrib.get("expander_init",'0'))
         if expander > 0:
             expander_en = 1
         if expander_en > 0:
@@ -79,10 +80,10 @@ def parse_msx_primary(root):
             if 'secondary' in results: 
                 for slot, slot_data in results['secondary'].items():
                     if 'block' in slot_data :
-                        slot_data['block'].append({'expander': (expander, {})})
+                        slot_data['block'].append({'expander': (expander, expander_init)})
                         break
             else :
-                results['block'].append({'expander': (expander, {})})
+                results['block'].append({'expander': (expander, expander_init)})
             
     return results
 
@@ -167,7 +168,7 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
 
         if 'expander' in block:
             address = (slot & 3) << 6
-            (params[0], dummy) = block['expander']
+            (params[0], params[1]) = block['expander']
             add_block_type_to_file(address, 'EXPANDER', params, outfile, constants)
             continue
 
@@ -293,12 +294,12 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
             if typ in constants['device']:
                 params[0] = constants['device'][typ]
                 if (typ == "WD2793") :
-                    parameter = 0
+                    parameter = 0x80
                     if "style" in attributes:
                         if attributes["style"] == "Philips" :
-                            parameter = 0
+                            parameter = 0x80
                         elif attributes["style"] == "National" :
-                            parameter = 1
+                            parameter = 0x81
                     params[1] = parameter
 
                 if "param" in attributes:

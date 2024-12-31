@@ -307,8 +307,9 @@ package MSX;
     } user_config_t;    
     
     typedef struct {
-        logic     en;
-        logic     wo;
+        logic       en;
+        logic       wo;
+        logic [7:0] init;
     } slot_expander_t;
 
     typedef struct {
