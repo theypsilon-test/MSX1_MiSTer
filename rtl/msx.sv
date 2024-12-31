@@ -193,7 +193,8 @@ devices devices
    .tape_in(tape_in),
    .tape_motor_on(tape_motor_on),
    .slot_config(slot_config),
-   .keybeep(keybeep)
+   .keybeep(keybeep),
+   .msxConfig(msxConfig)
 );
 
 wire  [7:0] d_from_slots;

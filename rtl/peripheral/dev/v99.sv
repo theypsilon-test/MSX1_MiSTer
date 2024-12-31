@@ -5,7 +5,8 @@ module v99 (
     vram_bus_if.device_mp   vram_bus,
     input  MSX::io_device_t io_device[3],
     output            [7:0] data,
-    output                  interrupt
+    output                  interrupt,
+    input                   border
 );
 
     wire  [7:0] q;
@@ -82,9 +83,9 @@ module v99 (
         .DISPRESO(/*msxConfig.scandoubler*/ 0), //TODO
         .LEGACY_VGA(1), //TODO
         .RATIOMODE(3'b000), //TODO
-        .NTSC_PAL_TYPE('1/*video_mode == AUTO*/), //TODO
-        .FORCED_V_MODE('0/*video_mode == PAL*/),  //TODO
-        .BORDER('0)   //TODO
+        .NTSC_PAL_TYPE('1),
+        .FORCED_V_MODE('0),
+        .BORDER(border)
     );
 
 endmodule

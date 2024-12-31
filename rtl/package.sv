@@ -1,4 +1,3 @@
-typedef enum logic [1:0] {AUTO,PAL,NTSC} video_mode_t;
 typedef enum logic {CAS_AUDIO_FILE,CAS_AUDIO_ADC} cas_audio_src_t;
 typedef enum logic [3:0] {CONFIG_NONE, CONFIG_FDC, CONFIG_SLOT_A, CONFIG_SLOT_B, CONFIG_SLOT_INTERNAL, CONFIG_KBD_LAYOUT, CONFIG_CONFIG, CONFIG_DEVICE} config_typ_t;
 typedef enum logic [2:0] {CART_TYP_ROM, CART_TYP_SCC, CART_TYP_SCC2, CART_TYP_FM_PAC, CART_TYP_MFRSD, CART_TYP_GM2, CART_TYP_FDC, CART_TYP_EMPTY } cart_typ_t;
@@ -304,7 +303,6 @@ package MSX;
 
     typedef struct {
         logic           border;
-        video_mode_t    video_mode;
         cas_audio_src_t cas_audio_src;
     } user_config_t;    
     
@@ -314,12 +312,7 @@ package MSX;
     } slot_expander_t;
 
     typedef struct {
-        video_mode_t    video_mode;
         MSX_typ_t       MSX_typ;
-        logic     [7:0] ram_size;
-        logic           use_FDC;
-        logic           fdc_en;
-        logic           fdc_internal;
     } bios_config_t;    
     
     typedef struct {

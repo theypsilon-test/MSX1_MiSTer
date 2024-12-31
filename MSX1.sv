@@ -289,7 +289,6 @@ localparam CONF_STR = {
    "H0T9,Tape Rewind;",
    "-;",
    "P1,Video settings;",
-   "P1O[14:13],Video mode,default,PAL,NTSC;",
    "P1O[2:1],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
    "P1O[5:3],Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
    "P1O[8:6],Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer,HV-Integer;",
@@ -310,8 +309,11 @@ wire [7:0] info;
 wire info_req;
 
 assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
-assign status_menumask[1] = bios_config.fdc_en;
-assign status_menumask[2] = bios_config.fdc_internal;
+
+
+wire enable_menu_FDC = io_device[DEV_WD2793][0].param[7] && io_device[DEV_WD2793][0].enable; //Enable FDC to CART menu
+assign status_menumask[1] = io_device[DEV_WD2793][0].enable;
+assign status_menumask[2] = enable_menu_FDC;
 assign status_menumask[3] = ROM_A_load_hide;
 assign status_menumask[4] = ROM_B_load_hide;
 assign status_menumask[5] = '0;
@@ -365,7 +367,7 @@ msx_config msx_config
 (
    .clk(clock_bus.base_mp.clk),
    .reset(reset),
-   .bios_config(bios_config),
+   .enable_menu_FDC(enable_menu_FDC),
    .HPS_status(status[63:0]),
    .sdram_size(sdram_size),
    .cart_conf(cart_conf),

@@ -5,7 +5,8 @@ module tms (
     vram_bus_if.device_mp   vram_bus,
     input  MSX::io_device_t io_device[3],
     output            [7:0] data,
-    output                  interrupt
+    output                  interrupt,
+    input                   border
 );
 
     wire  [7:0] q, R, G, B;
@@ -54,7 +55,7 @@ module tms (
         .vram_a_o(vramm_addr),
         .vram_d_o(vram_data),
         .vram_d_i(vram_bus.q_lo),
-        .border_i('0),   //TODO
+        .border_i(border),
         .rgb_r_o(R),
         .rgb_g_o(G),
         .rgb_b_o(B),
@@ -63,7 +64,7 @@ module tms (
         .hblank_o(hblank),
         .vblank_o(vblank),
         .blank_n_o(blank_n),
-        .is_pal_i('0/*video_mode == PAL*/)  //TODO
+        .is_pal_i(io_device[0].param[0])
     );
 
 endmodule

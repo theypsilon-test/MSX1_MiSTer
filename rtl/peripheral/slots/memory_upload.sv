@@ -229,8 +229,6 @@ module memory_upload
                     error <= ERR_NONE;
                     reset <= '1;
                     ddr3_request <= '1;
-                    bios_config.fdc_en       <= '0;
-                    bios_config.fdc_internal <= '0;
                     slot_layout[block_num].mapper     <= MAPPER_NONE;
                     slot_layout[block_num].device     <= DEV_NONE;
                     slot_layout[block_num].device_num <= '0;
@@ -321,9 +319,7 @@ module memory_upload
                         next_state             <= STATE_LOAD_CONF;
                         ddr3_request           <= '1;
                         bios_config.MSX_typ    <= MSX_typ_t'(conf[3][1:0]);
-                        bios_config.video_mode <= video_mode_t'(conf[3][3:2]);
                         $display("MSX CONFIG typ %x", conf[3][1:0]);
-                        $display("MSX CONFIG video %x", conf[3][3:2]);
                     end else begin
                         error <= ERR_BAD_MSX_CONF;
                         state <= STATE_IDLE;
@@ -679,11 +675,6 @@ module memory_upload
                         slot_layout[{slot, subslot, block}].device_num <= device_num;
                         slot_layout[{slot, subslot, block}].device     <= device;
                         $display("BLOCK slot:%x subslot:%x block:%x < device:[%x][%d]) ", slot, subslot, block, device, device_num );
-                        if (device == DEV_WD2793) begin
-                            $display("ENABLE FDC MENU");
-                            bios_config.fdc_en       <= '1;
-                            bios_config.fdc_internal <= ~fw_space;
-                        end
                     end
 
                     if (ref_dev_block) begin
@@ -700,14 +691,7 @@ module memory_upload
                         $display("BLOCK slot:%x subslot:%x block:%x < offset:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].offset_ram);
                         $display("BLOCK slot:%x subslot:%x block:%x < mapper:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].mapper);
                         ref_dev_mem <= '0;
-                    end
-
-/*
-                    if (subslot != 2'b00) begin
-                        bios_config.slot_expander_en[slot]             <= 1'b1;
-                        $display("BLOCK expander enable slot:%x", slot);
-                    end
-*/                    
+                    end                 
                 end
                 STATE_SEARCH_CRC32_INIT: begin
                     // TODO: Pokud není k dispozici CRC32 DB, nastav mapper offset a pokračuj. Nezapomeň na obnovení ddr3_addr.

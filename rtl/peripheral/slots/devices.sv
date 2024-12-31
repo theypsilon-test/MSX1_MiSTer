@@ -10,6 +10,7 @@ module devices (
     input MSX::io_device_t  io_device[16][3],                       // Array of IO devices
     input MSX::io_device_mem_ref_t io_memory[8],                    // Array of memory references
     input MSX::kb_memory_t  kb_upload_memory,
+    input MSX::user_config_t msxConfig,
     input            [10:0] ps2_key,
     input            [64:0] rtc_time,
     output    signed [15:0] sound,                                  // Combined audio output
@@ -144,7 +145,8 @@ module devices (
         .vram_bus(vram_bus_tms),
         .io_device(io_device[DEV_VDP_TMS]),
         .data(tms_data),
-        .interrupt(tms_interrupt)
+        .interrupt(tms_interrupt),
+        .border(msxConfig.border)
     );
     
     wire  [7:0] v99_data;
@@ -156,7 +158,8 @@ module devices (
         .vram_bus(vram_bus_v99),
         .io_device(io_device[DEV_VDP_V99xx]),
         .data(v99_data),
-        .interrupt(v99_interrupt)
+        .interrupt(v99_interrupt),
+        .border(msxConfig.border)
     );
 
     wire [7:0] rtc_data;
