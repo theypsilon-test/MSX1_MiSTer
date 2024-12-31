@@ -26,7 +26,6 @@
    input                    tape_in,
    //MSX config
    input             [64:0] rtc_time,
-   input MSX::bios_config_t bios_config,
    input MSX::user_config_t msxConfig,
    input                    sram_save,
    input                    sram_load,
@@ -223,7 +222,6 @@ msx_slots msx_slots
    .bram_ce(bram_ce),
    .sdram_size(sdram_size),
    .active_slot(active_slot),
-   .bios_config(bios_config),
    .data_to_mapper(data_to_mapper)
 );
 

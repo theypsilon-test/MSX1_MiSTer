@@ -5,9 +5,6 @@ typedef enum logic [2:0] {CART_TYP_ROM, CART_TYP_SCC, CART_TYP_SCC2, CART_TYP_FM
 //typedef enum logic [3:0] {DEVICE_NONE, DEVICE_ROM, DEVICE_RAM, DEVICE_FDC,  DEVICE_MFRSD0} device_typ_t;
 typedef enum logic [3:0] {ROM_NONE, ROM_ROM, ROM_RAM, ROM_FDC, ROM_FMPAC, ROM_MFRSD, ROM_GM2 } data_ID_t;
 
-typedef enum logic [1:0] {MSX1,MSX2,MSXx,OCM} MSX_typ_t;
-
-
 typedef enum logic [3:0] {DEVICE_NONE, DEVICE_ROM } device_typ_t;
 typedef enum logic [3:0] {DEV_NONE, DEV_OPL3, DEV_SCC, DEV_WD2793, DEV_MSX2_RAM, DEV_LATCH_PORT, DEV_KANJI, DEV_OCM_BOOT, DEV_VDP_TMS, DEV_VDP_V99xx, DEV_RTC, DEV_PSG, DEV_PPI } device_t;
 typedef enum logic [4:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTYPE, MAPPER_ASCII8, MAPPER_KOEI, MAPPER_WIZARDY, MAPPER_KONAMI, MAPPER_FMPAC, MAPPER_GM2, VY0010, MAPPER_KONAMI_SCC, MAPPER_MSX2, MAPPER_GENERIC16KB, MAPPER_CROSS_BLAIM, MAPPER_GENERIC8KB, MAPPER_HARRY_FOX, MAPPER_ZEMINA_80, MAPPER_ZEMINA_90, MAPPER_KONAMI_SCC_PLUS, MAPPER_MFRSD3, MAPPER_MFRSD2, MAPPER_MFRSD1, MAPPER_MFRSD0, MAPPER_NATIONAL, MAPPER_ESE_RAM, MAPPER_UNUSED} mapper_typ_t;
@@ -310,11 +307,7 @@ package MSX;
         logic       en;
         logic       wo;
         logic [7:0] init;
-    } slot_expander_t;
-
-    typedef struct {
-        MSX_typ_t       MSX_typ;
-    } bios_config_t;    
+    } slot_expander_t; 
     
     typedef struct {
         logic  [3:0] ref_ram;

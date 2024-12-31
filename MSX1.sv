@@ -207,7 +207,6 @@ vram_bus_if vram_bus();
 /*verilator tracing_off*/
 MSX::cpu_regs_t    cpu_regs;
 MSX::user_config_t msxConfig;
-MSX::bios_config_t bios_config;
 MSX::config_cart_t cart_conf[2];
 MSX::block_t       slot_layout[64];
 MSX::lookup_RAM_t  lookup_RAM[16];
@@ -445,7 +444,6 @@ msx MSX
    .slot_layout(slot_layout),
    .lookup_RAM(lookup_RAM),
    .lookup_SRAM(lookup_SRAM),
-   .bios_config(bios_config),
    .io_device(io_device),
    .io_memory(io_memory),
    .joy(joy),
@@ -628,7 +626,6 @@ memory_upload memory_upload(
     .slot_layout(slot_layout),
     .lookup_RAM(lookup_RAM),
     .lookup_SRAM(lookup_SRAM),
-    .bios_config(bios_config),
     .cart_conf(cart_conf),
     .load_sram(load_sram),
     .io_device(io_device),

@@ -18,7 +18,7 @@ module msx_slots (
     output                      sdram_ce,         // SDRAM chip enable
     output                      bram_ce,          // BRAM chip enable
     input                 [1:0] sdram_size,       // SDRAM size
-    input MSX::bios_config_t    bios_config,      // BIOS configuration
+
     device_bus                  device_bus,       // Interface for device control
     input                 [7:0] data_to_mapper
 );
@@ -41,8 +41,7 @@ module msx_slots (
         .active_subslot(active_subslot),
         .expander_force_en(slot_expander_force_en),
         .output_rq(subslot_output_rq),
-        .active_slot(active_slot),
-        .bios_config(bios_config)
+        .active_slot(active_slot)
     );
 
     wire [5:0] layout_id = {active_slot, active_subslot, cpu_bus.addr[15:14]};

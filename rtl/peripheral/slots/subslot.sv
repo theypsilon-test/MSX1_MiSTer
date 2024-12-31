@@ -5,8 +5,7 @@ module subslot (
     input                   expander_force_en,        // Enable signals for the expander
     output            [7:0] data,           // Data output
     output            [1:0] active_subslot, // Currently active subslot
-    output                  output_rq,      // Chip select signal
-    input MSX::bios_config_t bios_config    // BIOS configuration
+    output                  output_rq      // Chip select signal
 );
 
     // Array to store mapper slot data for 4 slots

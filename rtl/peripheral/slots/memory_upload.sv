@@ -20,7 +20,6 @@ module memory_upload
     output MSX::block_t         slot_layout[64],
     output MSX::lookup_RAM_t    lookup_RAM[16],
     output MSX::lookup_SRAM_t   lookup_SRAM[4],
-    output MSX::bios_config_t   bios_config,
     input  MSX::config_cart_t   cart_conf[2],
     output MSX::io_device_t     io_device[16][3],
     output MSX::io_device_mem_ref_t io_memory[8],
@@ -319,8 +318,6 @@ module memory_upload
                         state                  <= STATE_READ_CONF;
                         next_state             <= STATE_LOAD_CONF;
                         ddr3_request           <= '1;
-                        bios_config.MSX_typ    <= MSX_typ_t'(conf[3][1:0]);
-                        $display("MSX CONFIG typ %x", conf[3][1:0]);
                     end else begin
                         error <= ERR_BAD_MSX_CONF;
                         state <= STATE_IDLE;
