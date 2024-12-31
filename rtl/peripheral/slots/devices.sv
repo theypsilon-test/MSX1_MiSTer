@@ -1,3 +1,40 @@
+// devices
+//
+// Copyright (c) 2024-2025 Molekula
+//
+// All rights reserved
+//
+// Redistribution and use in source and synthezised forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in synthesized form must reproduce the above copyright
+//   notice, this list of conditions and the following disclaimer in the
+//   documentation and/or other materials provided with the distribution.
+//
+// * Neither the name of the author nor the names of other contributors may
+//   be used to endorse or promote products derived from this software without
+//   specific prior written agreement from the author.
+//
+// * License is granted for non-commercial use only.  A fee may not be charged
+//   for redistributions as source code or in synthesized/hardware form without
+//   specific prior written agreement from the author.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+
 module devices (
     clock_bus_if.base_mp    clock_bus,                              // Clock interface
     cpu_bus_if.device_mp    cpu_bus,                                // CPU bus interface
@@ -66,7 +103,7 @@ module devices (
     
     // Definice instancí zařízení s výstupy pro propojení
     wire signed [15:0] opl3_sound;
-    opl3 opl3 (
+    dev_opl3 opl3 (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .io_device(io_device[DEV_OPL3]),
@@ -76,7 +113,7 @@ module devices (
     wire [7:0] scc_data;
     wire       scc_output_rq;
     wire signed [15:0] scc_sound;
-    scc scc (
+    dev_scc scc (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .io_device(io_device[DEV_SCC]),
@@ -86,7 +123,7 @@ module devices (
 
     wire [7:0] msx2_ram_data_to_mapper;
     wire [7:0] msx2_ram_data;
-    msx2_ram msx2_ram (
+    dev_msx2_ram msx2_ram (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .io_device(io_device[DEV_MSX2_RAM]),
@@ -95,7 +132,7 @@ module devices (
     );
 
     wire [7:0] latch_port_data_to_mapper;
-    latch_port latch_port (
+    dev_latch_port latch_port (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .io_device(io_device[DEV_LATCH_PORT]),
@@ -104,7 +141,7 @@ module devices (
 
     wire [7:0] wd2793_data;
     wire wd2793_data_oe_rq;
-    WD2793 WD2793 (
+    dev_WD2793 WD2793 (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .io_device(io_device[DEV_WD2793]),
@@ -117,7 +154,7 @@ module devices (
 
     wire [26:0] kanji_ram_addr;
     wire        kanji_ram_cs;
-    kanji kanji (
+    dev_kanji kanji (
         .cpu_bus(cpu_bus),
         .io_device(io_device[DEV_KANJI]),
         .io_memory(io_memory),
@@ -128,7 +165,7 @@ module devices (
     wire [26:0] ocm_ram_addr;
     wire        ocm_ram_cs;
     wire        ocm_data_oe_rq;
-    ocm ocm (
+    dev_ocm ocm (
         .cpu_bus(cpu_bus),
         .io_device(io_device[DEV_OCM_BOOT]),
         .io_memory(io_memory),
@@ -138,7 +175,7 @@ module devices (
 
     wire  [7:0] tms_data;
     wire        tms_interrupt;
-    tms tms (
+    dev_tms tms (
         .cpu_bus(cpu_bus),
         .clock_bus(clock_bus),
         .video_bus(video_bus_tms),
@@ -151,7 +188,7 @@ module devices (
     
     wire  [7:0] v99_data;
     wire        v99_interrupt;
-    v99 v99 (
+    dev_v99 v99 (
         .cpu_bus(cpu_bus),
         .clock_bus(clock_bus),
         .video_bus(video_bus_v99),

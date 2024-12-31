@@ -1,4 +1,41 @@
-module kanji (
+// Kanji device
+//
+// Copyright (c) 2024-2025 Molekula
+//
+// All rights reserved
+//
+// Redistribution and use in source and synthezised forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in synthesized form must reproduce the above copyright
+//   notice, this list of conditions and the following disclaimer in the
+//   documentation and/or other materials provided with the distribution.
+//
+// * Neither the name of the author nor the names of other contributors may
+//   be used to endorse or promote products derived from this software without
+//   specific prior written agreement from the author.
+//
+// * License is granted for non-commercial use only.  A fee may not be charged
+//   for redistributions as source code or in synthesized/hardware form without
+//   specific prior written agreement from the author.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+
+module dev_kanji (
     cpu_bus_if.device_mp       cpu_bus,
     input  MSX::io_device_t    io_device[3],
     input  MSX::io_device_mem_ref_t io_memory[8],
@@ -15,7 +52,7 @@ module kanji (
     wire cs_io_match = (cpu_bus.addr[7:0] & io_device[0].mask) == io_device[0].port;
     wire cs_enable   = io_device[0].enable && cs_io_match && io_en;
 
-    kanji_dev kanji_dev (
+    kanji kanji_i (
         .clk(cpu_bus.clk),
         .reset(cpu_bus.reset),
         .data(cpu_bus.data),
@@ -31,9 +68,9 @@ module kanji (
         .ram_cs(ram_cs)
     );
 
-endmodule 
+endmodule
 
-module kanji_dev (
+module kanji (
     input              clk,
     input              reset,
     input        [7:0] data,
@@ -41,13 +78,13 @@ module kanji_dev (
     input       [26:0] ram_base,
     input        [7:0] ram_size,
     input              req,
-    input              wr,   
+    input              wr,
     input              rd,
     input              hangul,
     input              lascom,
     output      [26:0] ram_addr,
     output             ram_cs
-);  
+);
 
     logic [26:0] addr1, addr2, addr;
     logic        ram_en;
@@ -65,7 +102,7 @@ module kanji_dev (
         end else begin
             ram_en <= 1'b0;
             addr2 <= addr2;
-            
+
             if (req) begin
                 if (wr) begin
                     case (cpu_addr)
@@ -75,7 +112,7 @@ module kanji_dev (
                         2'd3: addr2 <= (addr2 & 27'h207e0) | (27'(data[5:0]) << 11);
                     endcase
                 end
-                if (rd) begin 
+                if (rd) begin
                     case (cpu_addr)
                         2'd0: ;
                         2'd1: begin
@@ -88,7 +125,7 @@ module kanji_dev (
                             if (ram_size == 8'h10) begin
                                 addr   <= addr2;
                                 ram_en <= 1'b1;
-                            end                    
+                            end
                             addr2 <= (addr2 & ~27'h1f) | ((addr2 + 27'd1) & 27'h1f);
                         end
                     endcase
