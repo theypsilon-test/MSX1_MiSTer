@@ -273,14 +273,6 @@ interface image_info;
     logic        readonly;
 endinterface
 
-interface spi_if;
-    logic        miso;
-    logic        mosi;
-    logic        clk;
-    logic        ss;
-    logic        enable;
-endinterface
-
 package MSX;
     
     typedef struct {

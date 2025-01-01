@@ -3,7 +3,6 @@ module msx_slots (
     cpu_bus_if.device_mp        cpu_bus,          // Interface for CPU communication
     ext_sd_card_if.device_mp    ext_SD_card_bus,  // Interface Ext SD card
     flash_bus_if.device_mp      flash_bus,        // Interface to emulate FLASH
-    spi_if                      ese_spi,
     input MSX::slot_expander_t  slot_expander[4],
     input MSX::block_t          slot_layout[64],
     input MSX::lookup_RAM_t     lookup_RAM[16],
@@ -104,7 +103,6 @@ module msx_slots (
         .device_bus(device_bus),
         .memory_bus(memory_bus),
         .ext_SD_card_bus(ext_SD_card_bus),
-        .ese_spi(ese_spi),
         .flash_bus(flash_bus),
         .block_info(block_info),
         .data(mapper_data),

@@ -2,6 +2,10 @@
 <msxConfig>
   <type>OCM</type>
   <kbd_layout>/yX/cWdlZv//ZP//cHMh////YP9hRgH///9XUCZUAv//MFUxMgQD//+AUzNRRwX//0MnNTRWBv///0I3UgcQ//8iQDZEABH//yMkQRdFEv///yD/FRP//2Ngdxb/FP//////////df///////////////////3L/dv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Yv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////hIH///+Cg4b/h4X///////90//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8=</kbd_layout>
+  <device mask="0xFC" port="0x98" param="0x0">V99xx</device> <!-- param ???? -->
+  <device mask="0xF8" port="0xA0" param="0x1">PSG</device> <!-- param bit 0 system PSG -->
+  <device mask="0xF8" port="0xA8" param="0x1">PPI</device> <!-- param bit 0 OCM config -->
+  <device mask="0xFE" port="0xB4">RTC</device> <!-- param ???? -->
   <device ROM_SHA1="666f610b191b2cd4dd619e92d75c8a1488b0912b">OCM_BOOT</device>
   <!-- 
   <primary slot="0">
@@ -11,23 +15,8 @@
       </block>
     </secondary>
   </primary>
-  -->
-  <primary slot="1">
-    <secondary slot="0">
-      <block start="0">
-        <cart>A</cart>
-      </block>
-    </secondary>
-  </primary>
-  <primary slot="2">
-    <secondary slot="0">
-      <block start="0">
-        <cart>B</cart>
-      </block>
-    </secondary>
-  </primary>
-  
-  <primary slot="3">
+  --> 
+  <primary slot="3" expander_init="0x2B">
     <secondary slot="0">
       <block>
         <memory size="4194304" pattern="4">RAM</memory>
@@ -69,6 +58,21 @@
     <secondary slot="3"> <!-- FREE ROM -->
       <block start="1" count="1">
         <shared_memory slot="3" subslot="2" block="1" size="16384" offset="245760" >ROM</shared_memory>
+      </block>
+    </secondary>
+  <!-- Location of external slots at the end of the XML definition -->    
+  </primary>
+    <primary slot="1">
+    <secondary slot="0">
+      <block start="0">
+        <cart>A</cart>
+      </block>
+    </secondary>
+  </primary>
+  <primary slot="2">
+    <secondary slot="0">
+      <block start="0">
+        <cart>B</cart>
       </block>
     </secondary>
   </primary>

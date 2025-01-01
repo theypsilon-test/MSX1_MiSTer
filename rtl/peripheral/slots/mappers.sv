@@ -3,7 +3,6 @@ module mappers (
     cpu_bus_if.device_mp        cpu_bus,            // Interface for CPU communication
     ext_sd_card_if.device_mp    ext_SD_card_bus,    // Interface Ext SD card
     flash_bus_if.device_mp      flash_bus,          // Interface to emulate FLASH
-    spi_if                      ese_spi,
     block_info                  block_info,         // Struct containing block configuration and parameters
     device_bus                  device_bus,         // Interface for device control
     memory_bus                  memory_bus,         // Interface for memory control
@@ -34,6 +33,10 @@ module mappers (
     device_bus konami_SCC_device_out(); // Device bus output for SCC mapper
     device_bus mfrsd_device_out();      // Device bus output for MFRSD1 mapper
     mapper_out national_out();          // Outputs from NATIONAL mapper
+
+    ext_sd_card_if ext_SD_card_mfrsd();
+    ext_sd_card_if ext_SD_card_ese();
+    
     
     
     //Instantiate the LINEAR mapper
@@ -144,10 +147,10 @@ module mappers (
         .out(zemina90_out),
         .data_to_mapper(data_to_mapper)
     );
-      
+
     mapper_mfrsd  mapper_mfrsd (
         .cpu_bus(cpu_bus),
-        .ext_SD_card_bus(ext_SD_card_bus),
+        .ext_SD_card_bus(ext_SD_card_mfrsd),
         .flash_bus(flash_bus),
         .block_info(block_info),
         .out(mfrsd_out),
@@ -163,14 +166,13 @@ module mappers (
         .out(national_out)
     );
     
-    // Instantiate the National mapper
+    // Instantiate the OCM mapper
     mapper_eseRam ese_ram (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(ese_ram_out),
-        .spi(ese_spi)
+        .ext_SD_card_bus(ext_SD_card_ese)
     );
-
 
     // Assign 
     //assign slot_expander_en = slot_expander_en;
@@ -243,5 +245,12 @@ module mappers (
     assign device_bus.en    = fm_pac_device_out.en | konami_SCC_device_out.en | mfrsd_device_out.en;
     assign device_bus.mode  = konami_SCC_device_out.mode & mfrsd_device_out.mode;
     assign device_bus.param = konami_SCC_device_out.param & mfrsd_device_out.param;
+
+    // SDCARD
+    assign ext_SD_card_bus.rx             = ext_SD_card_ese.rx         | ext_SD_card_mfrsd.rx;
+    assign ext_SD_card_bus.tx             = ext_SD_card_ese.tx         | ext_SD_card_mfrsd.tx;
+    assign ext_SD_card_bus.data_to_SD     = ext_SD_card_ese.data_to_SD & ext_SD_card_mfrsd.data_to_SD;
+    assign ext_SD_card_mfrsd.data_from_SD = ext_SD_card_bus.data_from_SD;
+    assign ext_SD_card_ese.data_from_SD   = ext_SD_card_bus.data_from_SD;
 
 endmodule

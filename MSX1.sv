@@ -200,8 +200,6 @@ video_bus_if video_bus();
 clock_bus_if clock_bus(clk_core);
 ext_sd_card_if ext_SD_card_bus();
 flash_bus_if flash_bus();
-spi_if ese_spi();
-spi_if megasd_spi();
 vram_bus_if vram_bus();
 
 /*verilator tracing_off*/
@@ -417,7 +415,6 @@ msx MSX
    .vram_bus(vram_bus),
    .ext_SD_card_bus(ext_SD_card_bus),
    .flash_bus(flash_bus),
-   .ese_spi(ese_spi),
    .cpu_regs(cpu_regs),
    .opcode(opcode),
    .opcode_num(opcode_num),
@@ -454,14 +451,13 @@ msx MSX
 //////////////////   SD   ///////////////////
 wire sdclk;
 wire sdmosi;
-wire sdss;
 wire vsdmiso;
 wire sdmiso = vsd_sel ? vsdmiso : SD_MISO;
 
 reg vsd_sel = 0;
 always @(posedge clock_bus.base_mp.clk) if(img_mounted[4]) vsd_sel <= |img_size; //TODO je potřeba hlídat náběžnou hranu img mounted
 
-assign SD_CS   = vsd_sel |  sdss;
+assign SD_CS   = vsd_sel;
 assign SD_SCK  = sdclk  & ~vsd_sel;
 assign SD_MOSI = sdmosi & ~vsd_sel;
 
@@ -490,16 +486,10 @@ spi_divmmc spi
    .ready(),
 
    .spi_ce(1'b1),
-   .spi_clk(megasd_spi.clk),
-   .spi_di(megasd_spi.miso),
-   .spi_do(megasd_spi.mosi)
+   .spi_clk(sdclk),
+   .spi_di(sdmiso),
+   .spi_do(sdmosi)
 );
-
-assign sdclk           = ese_spi.enable ? ese_spi.clk  : megasd_spi.clk;
-assign sdmosi          = ese_spi.enable ? ese_spi.mosi : megasd_spi.mosi;
-assign sdss            = ese_spi.enable ? ese_spi.ss : '0;
-assign ese_spi.miso    = sdmiso;
-assign megasd_spi.miso = sdmiso;
 
 sd_card sd_card
 (
@@ -520,7 +510,7 @@ sd_card sd_card
     .clk_spi(clk_sdram),
     .sdhc(1),
     .sck(sdclk),
-    .ss(~vsd_sel | sdss),
+    .ss(~vsd_sel),
     .mosi(sdmosi),
     .miso(vsdmiso)
 );

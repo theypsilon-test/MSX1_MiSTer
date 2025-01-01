@@ -8,7 +8,6 @@
    vram_bus_if.device_mp    vram_bus,
    //Ext SD card
    ext_sd_card_if.device_mp ext_SD_card_bus,
-   spi_if                   ese_spi,
    //Flash acces to SDRAM
    flash_bus_if.device_mp   flash_bus,
    //debug
@@ -207,7 +206,6 @@ msx_slots msx_slots
    .device_bus(device_bus),
    .ext_SD_card_bus(ext_SD_card_bus),
    .flash_bus(flash_bus),
-   .ese_spi(ese_spi),
    .slot_expander(slot_expander),
    .slot_layout(slot_layout),
    .lookup_RAM(lookup_RAM),

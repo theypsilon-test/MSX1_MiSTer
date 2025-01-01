@@ -254,6 +254,7 @@ module mapper_mfrsd3 (
 
         ext_SD_card_bus.rx <= 1'b0;
         ext_SD_card_bus.tx <= 1'b0;
+        ext_SD_card_bus.data_to_SD <= '1;
 
         if (cpu_bus.reset) begin
             selected_sd <= 1'b0;
