@@ -1,3 +1,42 @@
+// Original megasd.vhd SD/MMC card interface
+// Copyright (c) 2006 Kazuhiro Tsujikawa (ESE Artists' factory)
+//
+// Rewrite and modify 2024-2025 Molekula
+//
+// All rights reserved
+//
+// Redistribution and use in source and synthezised forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in synthesized form must reproduce the above copyright
+//   notice, this list of conditions and the following disclaimer in the
+//   documentation and/or other materials provided with the distribution.
+//
+// * Neither the name of the author nor the names of other contributors may
+//   be used to endorse or promote products derived from this software without
+//   specific prior written agreement from the author.
+//
+// * License is granted for non-commercial use only.  A fee may not be charged
+//   for redistributions as source code or in synthesized/hardware form without
+//   specific prior written agreement from the author.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+
+
 module mapper_eseRam (
     cpu_bus_if.device_mp    cpu_bus,       // Interface for CPU communication
     mapper_out              out,           // Interface for mapper output
@@ -6,7 +45,6 @@ module mapper_eseRam (
 );
   
     wire cs;
-
 
     assign cs = block_info.typ == MAPPER_ESE_RAM & cpu_bus.mreq;
 
@@ -17,11 +55,7 @@ module mapper_eseRam (
             bank <= '{8'h00, 8'h00, 8'h00, 8'h00};
         end else begin
             if (cs && cpu_bus.wr && cpu_bus.req && cpu_bus.addr[15:13] == 3'b011) begin
-                bank[cpu_bus.addr[12:11]] <= cpu_bus.data;
-                $display("BANK: %d  value: %x", cpu_bus.addr[12:11], {cpu_bus.data[6:0],13'b0});
-                if (cpu_bus.addr[12:11] == 2'b00) begin
-                     $display("mmc: %d  epc %d", cpu_bus.data[7:6] == 2'b01, cpu_bus.data[7:4] == 4'b0110);
-                end
+                bank[cpu_bus.addr[12:11]] <= cpu_bus.data;               
             end
         end
     end
@@ -76,12 +110,12 @@ module mapper_eseRam (
             mmc_mod <= '0;
             mmc_cs  <= '1;
         end else begin
-            if (cs && mmc_enable) begin // 4000 - 5FFF
-                if (cpu_bus.addr[12:11] == 2'b11) begin // 5800-5FFFh SD/MMC data register
+            if (cs && mmc_enable) begin // 4000 - 5FFF SD/MMC data registers
+                if (cpu_bus.addr[12:11] == 2'b11) begin // 5800-5FFFh
                     if (cpu_bus.wr && cpu_bus.req) begin
                             mmc_mod <= cpu_bus.data[0];
                     end
-                end else begin // 4000-57FFh 
+                end else begin // 4000-57FFh
                     if (~mmc_mod) begin
                         ext_SD_card_bus.rx <= 1'b1;
                         mmc_cs             <= cpu_bus.addr[12];
@@ -93,25 +127,6 @@ module mapper_eseRam (
                 end
             end
         end
-    /*    
-        if (cs && cpu_bus.req && mmc_enable && cpu_bus.addr[12:11] != 2'b11 && ~mmc_mod ) begin
-                ext_SD_card_bus.rx <= 1'b1;
-
-                if (cpu_bus.wr) begin
-                    ext_SD_card_bus.tx <= 1'b1;
-                    ext_SD_card_bus.data_to_SD <= cpu_bus.data;
-                end
-
-                if (mmc_en) begin
-                    mmc_cs <= cpu_bus.addr[12];
-                end
-            end 
-            
-            // 5800-5FFFh SD/MMC data register
-            if (cs && cpu_bus.req && cpu_bus.wr && mmc_enable && cpu_bus.addr[12:11] == 2'b11) begin
-                mmc_mod = cpu_bus.data[0];
-            end
-        end*/
     end
 
 endmodule
