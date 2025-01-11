@@ -296,7 +296,7 @@ module memory_upload
                         state     <= STATE_RESET;
                         load_sram <= '1;
                         reset     <= '0;
-                        $display("CONFIG LOAD END %d", $time);
+                        $display("CONFIG LOAD END %t", $time);
                     end
                     kb_upload_memory.rq <= '0;
                 end
@@ -501,7 +501,7 @@ module memory_upload
                         BLOCK_CART: begin
                             next_state <= STATE_LOAD_CONF;                          // Defaultně neděláme nic
                             state      <= STATE_READ_CONF;
-                            $display("BLOCK CART ID:%d CONF:%x", conf[3][0], cart_conf[conf[3][0]]);
+                            $display("BLOCK CART ID:%d CONF:%x", conf[3][0], cart_conf[conf[3][0]].typ);
 
                             if (cart_conf[conf[3][0]].typ == CART_TYP_ROM) begin
                                 if (ioctl_size[conf[3][0] ? 3'd3 : 3'd2] > '0) begin
