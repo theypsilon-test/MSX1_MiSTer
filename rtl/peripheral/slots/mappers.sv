@@ -8,7 +8,10 @@ module mappers (
     memory_bus                  memory_bus,         // Interface for memory control
     output                [7:0] data,               // Data output from the active mapper; defaults to FF if no mapper is active
     input                 [7:0] data_to_mapper,
-    output                      slot_expander_force_en
+    output                      slot_expander_force_en,
+    input                       ocm_megaSD_enable,
+    input                       ocm_slot1_mode,
+    input                 [1:0] ocm_slot2_mode
 );
 
     // Intermediate signals from each mapper
@@ -29,10 +32,11 @@ module mappers (
     mapper_out zemina90_out();          // Outputs from Zemina 90 in 1 mapper
     mapper_out mfrsd_out();             // Outputs from MFRSD3 mapper
     mapper_out ese_ram_out();           // Outputs from ESE RAM mapper
+    mapper_out national_out();          // Outputs from NATIONAL mapper
+    mapper_out mega_ram_out();          // Outputs from MegaRam mapper
     device_bus fm_pac_device_out();     // Device bus output for FM-PAC mapper
     device_bus konami_SCC_device_out(); // Device bus output for SCC mapper
     device_bus mfrsd_device_out();      // Device bus output for MFRSD1 mapper
-    mapper_out national_out();          // Outputs from NATIONAL mapper
 
     ext_sd_card_if ext_SD_card_mfrsd();
     ext_sd_card_if ext_SD_card_ese();
@@ -171,7 +175,16 @@ module mappers (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(ese_ram_out),
-        .ext_SD_card_bus(ext_SD_card_ese)
+        .ext_SD_card_bus(ext_SD_card_ese),
+        .megaSD_enable(ocm_megaSD_enable)
+    );
+
+    mapper_megaram mega_ram (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(mega_ram_out),
+        .ocm_slot1_mode(ocm_slot1_mode),
+        .ocm_slot2_mode(ocm_slot2_mode)
     );
 
     // Assign 

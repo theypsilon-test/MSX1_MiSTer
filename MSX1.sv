@@ -197,7 +197,7 @@ assign BUTTONS = 0;
 localparam VDNUM = 6;
 /*verilator tracing_on*/
 video_bus_if video_bus();
-clock_bus_if clock_bus(clk_core);
+clock_bus_if clock_bus(clk_core, clk_sdram);
 ext_sd_card_if ext_SD_card_bus();
 flash_bus_if flash_bus();
 vram_bus_if vram_bus();
@@ -240,7 +240,7 @@ wire             img_readonly;
 wire      [15:0] sdram_sz;
 wire      [64:0] rtc;
 wire             reset;
-
+wire             hard_reset;
 //[0]     RESET
 //[2:1]   Aspect ratio
 //[5:3]   Scandoubler
@@ -298,7 +298,8 @@ localparam CONF_STR = {
    "V,v",`BUILD_DATE 
 };
 /*verilator tracing_on*/
-assign reset = RESET || status[0] || status[10] || upload_reset;
+assign hard_reset = RESET || status[0] || upload_reset;
+assign reset = hard_reset || status[10] || status[21] || (status[12] && img_mounted[4] && io_device[DEV_WD2793][0].enable) ;
 
 wire [15:0] status_menumask;
 wire [1:0] sdram_size;
@@ -371,7 +372,8 @@ msx_config msx_config
    .reload(reload),
    .ROM_A_load_hide(ROM_A_load_hide),
    .ROM_B_load_hide(ROM_B_load_hide),
-   .msxConfig(msxConfig)
+   .msxConfig(msxConfig),
+   .ocmMode(io_device[DEV_WD2793][0].enable)
 );
 /////////////////   CLOCKS   /////////////////
 /*verilator tracing_on*/
@@ -409,7 +411,8 @@ assign joy[0] = joy0[5:0];
 assign joy[1] = joy1[5:0];
 msx MSX
 (
-   .reset(reset),
+   .core_reset(reset),
+   .core_hard_reset(hard_reset),
    .clock_bus(clock_bus.base_mp),
    .video_bus(video_bus),
    .vram_bus(vram_bus),

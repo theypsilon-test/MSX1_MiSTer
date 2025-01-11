@@ -19,7 +19,10 @@ module msx_slots (
     input                 [1:0] sdram_size,       // SDRAM size
 
     device_bus                  device_bus,       // Interface for device control
-    input                 [7:0] data_to_mapper
+    input                 [7:0] data_to_mapper,
+    input                       ocm_megaSD_enable,
+    input                       ocm_slot1_mode,
+    input                 [1:0] ocm_slot2_mode
 );
     // Mapper and memory bus configuration
     block_info block_info();
@@ -107,7 +110,10 @@ module msx_slots (
         .block_info(block_info),
         .data(mapper_data),
         .data_to_mapper(data_to_mapper),
-        .slot_expander_force_en(slot_expander_force_en)
+        .slot_expander_force_en(slot_expander_force_en),
+        .ocm_megaSD_enable(ocm_megaSD_enable),
+        .ocm_slot1_mode(ocm_slot1_mode),
+        .ocm_slot2_mode(ocm_slot2_mode)
     );
 
 endmodule

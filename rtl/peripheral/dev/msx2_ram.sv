@@ -39,6 +39,7 @@ module dev_msx2_ram (
     cpu_bus_if.device_mp    cpu_bus,
     device_bus              device_bus,
     input  MSX::io_device_t io_device[3],
+    input                   limit_internal_mapper,
     output            [7:0] data,
     output            [7:0] data_to_mapper
 );
@@ -65,7 +66,8 @@ module dev_msx2_ram (
                 .wr(cs_enable && cpu_bus.wr && cpu_bus.req),
                 .size(io_device[i].param),
                 .q(data_out[i]),
-                .data_to_mapper(data_to_mapper_ar[i])
+                .data_to_mapper(data_to_mapper_ar[i]),
+                .limit_mapper(i == 0 ? limit_internal_mapper : 1'b0)
             );
         end
     endgenerate
@@ -81,7 +83,8 @@ module msx2_ram (
     input        [7:0] data,
     output       [7:0] q,
     input        [7:0] size,
-    output logic [7:0] data_to_mapper
+    output logic [7:0] data_to_mapper,
+    input              limit_mapper
 );
     logic [7:0] mem_seg[0:3];
 
@@ -92,11 +95,11 @@ module msx2_ram (
             mem_seg[2] <= 8'd0;
             mem_seg[3] <= 8'd0;
         end else if (wr) begin
-            mem_seg[addr[1:0]] <= data & (size -1'b1);
+            mem_seg[addr[1:0]] <= data & (size -1'b1) & (limit_mapper ? 8'h7F : 8'hFF);
         end
     end
 
-    assign q = oe ? (mem_seg[addr[1:0]] | (~(size -1'b1))) : 8'hFF;
+    assign q = oe ? (mem_seg[addr[1:0]] | (~(size -1'b1)) | (limit_mapper ? 8'h80 : 8'h00) ) : 8'hFF;
     assign data_to_mapper = mem_seg[addr[15:14]];
 
 endmodule

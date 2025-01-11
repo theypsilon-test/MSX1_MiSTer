@@ -38,10 +38,11 @@
 
 
 module mapper_eseRam (
-    cpu_bus_if.device_mp    cpu_bus,       // Interface for CPU communication
-    mapper_out              out,           // Interface for mapper output
-    block_info              block_info,
-    ext_sd_card_if.device_mp    ext_SD_card_bus  // Interface Ext SD card
+    cpu_bus_if.device_mp        cpu_bus,       
+    mapper_out                  out,           
+    block_info                  block_info,
+    ext_sd_card_if.device_mp    ext_SD_card_bus,
+    input                       megaSD_enable    
 );
   
     wire cs;
@@ -87,7 +88,7 @@ module mapper_eseRam (
     wire mmc_enable, mmc_read;
     wire [26:0] ram_addr;   
     
-    assign mmc_enable = bank[0][7:6] == 2'b01 && cpu_bus.addr[15:13] == 3'b010 ;
+    assign mmc_enable = bank[0][7:6] == 2'b01 && cpu_bus.addr[15:13] == 3'b010 && megaSD_enable;
     assign ram_addr   = {7'b0, bank_base, cpu_bus.addr[12:0]};                   
     
     assign out.ram_cs = cs && (cpu_bus.rd && ~mmc_enable) || ram_wr;

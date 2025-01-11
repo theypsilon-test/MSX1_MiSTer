@@ -61,7 +61,12 @@ module devices (
     input                   tape_in,
     output                  tape_motor_on,
     output            [7:0] slot_config,
-    output                  keybeep
+    output                  keybeep,
+    output                  reset_lock,
+    output                  reset_request,
+    output                  ocm_megaSD_enable,
+    output                  ocm_slot1_mode,
+    output [1:0]            ocm_slot2_mode
 );
 
     video_bus_if            video_bus_tms();
@@ -71,9 +76,12 @@ module devices (
 
     // Výstupy kombinující jednotlivé zařízení
     assign sound = opl3_sound + scc_sound + psg_sound;
-    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data;
+    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data & ocm_data;
     assign data_oe_rq = wd2793_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
+
+    assign reset_request = ocm_reset_request;
+    assign reset_lock    = ocm_reset_lock;
 
     assign ram_cs = kanji_ram_cs | ocm_ram_cs;
     assign ram_addr = kanji_ram_addr & ocm_ram_addr;
@@ -90,7 +98,7 @@ module devices (
     assign video_bus.hblank  = video_bus_tms.hblank         | video_bus_v99.hblank;
     assign video_bus.vblank  = video_bus_tms.vblank         | video_bus_v99.vblank;
     assign video_bus.ce_pix  = video_bus_tms.ce_pix         | video_bus_v99.ce_pix;
-
+    
     assign vram_bus.addr     = vram_bus_tms.device_mp.addr  & vram_bus_v99.device_mp.addr;
     assign vram_bus.data     = vram_bus_tms.device_mp.data  & vram_bus_v99.device_mp.data;
     assign vram_bus.we_lo    = vram_bus_tms.device_mp.we_lo | vram_bus_v99.device_mp.we_lo;
@@ -100,6 +108,8 @@ module devices (
     assign vram_bus_tms.q_hi = vram_bus.q_hi;
     assign vram_bus_v99.q_lo = vram_bus.q_lo;
     assign vram_bus_v99.q_hi = vram_bus.q_hi;
+    
+    //MSX2 memory limiter
     
     // Definice instancí zařízení s výstupy pro propojení
     wire signed [15:0] opl3_sound;
@@ -127,6 +137,7 @@ module devices (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .io_device(io_device[DEV_MSX2_RAM]),
+        .limit_internal_mapper(ocm_mapper_limit),
         .data(msx2_ram_data),
         .data_to_mapper(msx2_ram_data_to_mapper)
     );
@@ -163,14 +174,27 @@ module devices (
     );
 
     wire [26:0] ocm_ram_addr;
+    wire  [7:0] ocm_data;
     wire        ocm_ram_cs;
     wire        ocm_data_oe_rq;
+    wire        ocm_mapper_limit;
+    wire        ocm_reset_request;
+    wire        ocm_reset_lock;
     dev_ocm ocm (
         .cpu_bus(cpu_bus),
+        .clock_bus(clock_bus),
         .io_device(io_device[DEV_OCM_BOOT]),
         .io_memory(io_memory),
         .ram_cs(ocm_ram_cs),
-        .ram_addr(ocm_ram_addr)
+        .ram_addr(ocm_ram_addr),
+        .data(ocm_data),
+        .ff_dip_req(msxConfig.ocm_dip),
+        .mapper_limit(ocm_mapper_limit),
+        .rst_key_lock(ocm_reset_lock),
+        .swio_reset(ocm_reset_request),
+        .megaSD_enable(ocm_megaSD_enable),
+        .Slot1Mode(ocm_slot1_mode),                             
+        .Slot2Mode(ocm_slot2_mode)
     );
 
     wire  [7:0] tms_data;

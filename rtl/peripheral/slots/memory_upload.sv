@@ -173,7 +173,7 @@ module memory_upload
                 STATE_RESET: begin
                     reset      <= '1;
                     state      <= STATE_IDLE;
-                    
+/*                    
                     if (io_device[DEV_VDP_V99xx][0].enable) 
                         $display("IO DEVICE CONF [%x][0] port:%x mask:%x param:%x ref mem: %x enable: %d", 
                             device_t'(DEV_VDP_V99xx),
@@ -190,6 +190,7 @@ module memory_upload
                             io_device[DEV_RTC][0].param,
                             io_device[DEV_RTC][0].mem_ref,
                             io_device[DEV_RTC][0].enable);
+                    */
                     /*
                     $display("IO DEVICE CONF [%d][0] port:%x mask:%x param:%x ref mem: %x enable: %d", 
                             DEV_MSX2_RAM,
@@ -379,17 +380,21 @@ module memory_upload
                             end else begin
                                 $display("LOAD IO_DEVICE FAILED ID:%x port:%x mask %x param %x size %x addr: %x (DDR addr %x)",
                                         conf[1], conf[2], conf[3], conf[4], {3'b0, conf[5], 14'd0}, ram_addr, ddr3_addr);
+                                error <= ERR_MISSING_SOURECE;
+                                state <= STATE_IDLE;
                             end
 
-                            state      <= STATE_READ_CONF;
-                            next_state <= STATE_LOAD_CONF;
-
-                            if (conf[5] != 0) begin
+                            if (conf[5] != 0 && ~io_device[conf[1][3:0]][2].enable) begin
+                                $display("  LOAD IO_DEVICE FILL ROM io_ref_mem :%x memory addr:%x size: %x", io_ref_mem, ram_addr, {3'b0, conf[5], 14'd0});
                                 io_memory[io_ref_mem].memory      <= ram_addr;
                                 io_memory[io_ref_mem].memory_size <= conf[5];
                                 data_size                         <= {3'b0, conf[5], 14'd0};
                                 pattern                           <= PATTERN_DDR;
                                 state                             <= STATE_FILL_RAM;
+                                next_state                        <= STATE_READ_CONF;
+                            end else begin
+                                state      <= STATE_READ_CONF;
+                                next_state <= STATE_LOAD_CONF;
                             end
                         end
                         CONF_END: begin
@@ -523,13 +528,14 @@ module memory_upload
                             end else begin                                                                // Neni ROM jdeme do FW
                                 if (ioctl_size[1] > '0) begin                                             // Máme FW?
                                     save_addr  <= ddr3_addr - 1'b1;                                       // Uchováme adresu -1 kvůli již načtenému prefetch bajtu
-                                    ddr3_addr  <= 28'h300010 + {23'b0, cart_conf[conf[3][0]].typ,2'b00};  // FW Area + ID zařízení
+                                    ddr3_addr  <= 28'h300010 + {22'b0, cart_conf[conf[3][0]].typ,2'b00};  // FW Area + ID zařízení
                                     ddr3_rd    <= '1;                                                     // Preferch
                                     read_cnt   <= 4;
                                     fw_space   <= '1;
                                     ref_sram   <= conf[3][0] ? 2'd2 : 2'd1;                               // Kam patří případná SRAM
                                     state      <= STATE_READ_CONF;                                        // Zahájíme LOAD
                                     next_state <= STATE_GET_FW_ADDR;
+                                    $display("%t BLOCK CART LOAD FW FROM DDR ADDR %x", $time(), 28'h300010 + {22'b0, cart_conf[conf[3][0]].typ,2'b00});
                                 end else begin
                                     error <= ERR_NOT_FW_CONF;                                             // FW není k dispozici
                                     state <= STATE_IDLE;

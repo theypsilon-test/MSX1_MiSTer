@@ -1,6 +1,7 @@
    module msx
 (
-   input                    reset,
+   input                    core_reset,
+   input                    core_hard_reset,
    //Clock
    clock_bus_if.base_mp     clock_bus,
    //Video
@@ -66,6 +67,14 @@ device_bus device_bus();
 cpu_bus_if cpu_bus(clock_bus.clk, clock_bus.ce_3m58_n, reset);
 sd_bus sd_bus();
 sd_bus_control sd_bus_control();
+
+//  -----------------------------------------------------------------------------
+//  -- reset
+//  -----------------------------------------------------------------------------
+   logic reset = '0;
+   always_ff @(posedge clock_bus.clk) begin
+      reset <= core_hard_reset || (core_reset && ~reset_lock) || reset_request;
+   end
 
 //  -----------------------------------------------------------------------------
 //  -- Audio MIX
@@ -164,7 +173,9 @@ wire [26:0] device_ram_addr;
 wire        device_ram_ce;
 wire        device_oe_rq;
 wire        keybeep;
-
+wire        reset_lock, reset_request, ocm_megaSD_enable;
+wire [1:0]  ocm_slot2_mode;
+wire        ocm_slot1_mode;
 devices devices
 (
    .clock_bus(clock_bus),
@@ -192,7 +203,12 @@ devices devices
    .tape_motor_on(tape_motor_on),
    .slot_config(slot_config),
    .keybeep(keybeep),
-   .msxConfig(msxConfig)
+   .msxConfig(msxConfig),
+   .reset_lock(reset_lock),
+   .reset_request(reset_request),
+   .ocm_megaSD_enable(ocm_megaSD_enable),
+   .ocm_slot1_mode(ocm_slot1_mode),
+   .ocm_slot2_mode(ocm_slot2_mode)
 );
 
 wire  [7:0] d_from_slots;
@@ -220,7 +236,10 @@ msx_slots msx_slots
    .bram_ce(bram_ce),
    .sdram_size(sdram_size),
    .active_slot(active_slot),
-   .data_to_mapper(data_to_mapper)
+   .data_to_mapper(data_to_mapper),
+   .ocm_megaSD_enable(ocm_megaSD_enable),
+   .ocm_slot1_mode(ocm_slot1_mode),
+   .ocm_slot2_mode(ocm_slot2_mode)
 );
 
 endmodule
