@@ -2,9 +2,9 @@
 <msxConfig>
   <type>OCM</type>
   <kbd_layout>/yX/cWdlZv//ZP//cHMh////YP9hRgH///9XUCZUAv//MFUxMgQD//+AUzNRRwX//0MnNTRWBv///0I3UgcQ//8iQDZEABH//yMkQRdFEv///yD/FRP//2Ngdxb/FP//////////df///////////////////3L/dv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Yv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////hIH///+Cg4b/h4X///////90//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8=</kbd_layout>
-  <device mask="0xFC" port="0x98" param="0x0">V99xx</device> <!-- param ???? -->
-  <device mask="0xF8" port="0xA0" param="0x1">PSG</device> <!-- param bit 0 system PSG -->
-  <device mask="0xF8" port="0xA8" param="0x1">PPI</device> <!-- param bit 0 OCM config -->
+  <device mask="0xFC" port="0x98" param="0x02">V99xx</device> <!-- 0x00-V9938; 0x02-V9958 -->
+  <device mask="0xF8" port="0xA0" param="0x01">PSG</device> <!-- param bit 0 system PSG -->
+  <device mask="0xF8" port="0xA8" param="0x01">PPI</device> <!-- param bit 0 OCM config -->
   <device mask="0xFE" port="0xB4">RTC</device> <!-- param ???? -->
   <device ROM_SHA1="666f610b191b2cd4dd619e92d75c8a1488b0912b">OCM_BOOT</device>
   <!-- 

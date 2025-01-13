@@ -116,9 +116,10 @@ module dev_v99 (
         .PVIDEOCS_N(),
         .PVIDEODHCLK(DHClk),
         .PVIDEODLCLK(DLClk),
-        .NTSC_PAL_TYPE('1),
-        .FORCED_V_MODE('0),
-        .BORDER(border)
+        .NTSC_PAL_TYPE('1), //TODO
+        .FORCED_V_MODE('0), //TODO
+        .BORDER(border),
+        .VDP_ID(io_device[0].param[4:0])
     );
 
 endmodule
