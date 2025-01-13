@@ -1,4 +1,4 @@
-module WD2793
+module dev_WD2793
 (
    cpu_bus_if.device_mp cpu_bus,            // Interface for CPU communication
    device_bus           device_bus,         // Interface for device control

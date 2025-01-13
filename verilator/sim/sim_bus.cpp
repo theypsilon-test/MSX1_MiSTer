@@ -7,7 +7,8 @@
 #include "sim_console.h"
 #include "verilated.h"
 
-//#define SIM_SD_CARD
+#define SIM_SD_CARD
+#define SIM_SPEED_DDR_LOAD 1
 
 #ifndef _MSC_VER
 #else
@@ -117,7 +118,17 @@ void SimBus::BeforeEval()
 
 		console.AddLog("Starting download: %s %d velikost: %d", currentDownload.file.c_str(), ioctl_next_addr, file_size);
 
-		nextchar = fgetc(ioctl_file);
+		if (currentDownload.DDR && 1 == SIM_SPEED_DDR_LOAD) {
+			int addr = 0;
+			while (!feof(ioctl_file))
+			{
+				currentDownload.DDR->writeData(currentDownload.addr + addr++, (unsigned char)fgetc(ioctl_file));
+			}
+		}
+		else {
+			nextchar = fgetc(ioctl_file);
+		}
+		
 		wr_delay_cnt = 0;
 		next_wr = false;
 
@@ -133,6 +144,8 @@ void SimBus::BeforeEval()
 
 			if (currentDownload.DDR) {
 				*ioctl_addr = file_size;
+
+				if (SIM_SPEED_DDR_LOAD != 1 ) currentDownload.DDR->writeData(ioctl_next_addr + currentDownload.addr, (unsigned char)nextchar);
 			}
 		}
 	}
@@ -170,7 +183,7 @@ void SimBus::BeforeEval()
 							wr_delay_cnt = WR_WAIT;
 						}
 						else {
-							currentDownload.DDR->writeData(ioctl_next_addr + currentDownload.addr, (unsigned char)nextchar);
+							if (SIM_SPEED_DDR_LOAD != 1)  currentDownload.DDR->writeData(ioctl_next_addr + currentDownload.addr, (unsigned char)nextchar);
 							wr_delay_cnt = WR_WAIT;
 						}
 					}

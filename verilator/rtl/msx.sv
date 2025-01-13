@@ -29,10 +29,7 @@ module msx
    input                    cas_audio_in,
    //MSX config
    input             [64:0] rtc_time,
-   input MSX::bios_config_t bios_config,
    input MSX::user_config_t msxConfig,
-   input  dev_typ_t         cart_device[2],
-   input  dev_typ_t         msx_device,
    input              [3:0] msx_dev_ref_ram[8],
    input  mapper_typ_t      selected_mapper[2],
    input                    sram_save,

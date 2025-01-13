@@ -15,4 +15,7 @@ module mapper_mfrsd (
     assign out.rnw     = '1;
     assign out.data    = '{8{1'b1}};
 
+    assign ext_SD_card_bus.data_to_SD = '1;
+    assign ext_SD_card_bus.rx = '0;
+    assign ext_SD_card_bus.tx = '0;
 endmodule

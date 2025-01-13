@@ -175,7 +175,6 @@ assign BUTTONS = 0;
 localparam VDNUM = 6;
 
 MSX::user_config_t msxConfig;
-MSX::bios_config_t bios_config;
 MSX::config_cart_t cart_conf[2];
 MSX::block_t       slot_layout[64];
 MSX::lookup_RAM_t  lookup_RAM[16];
@@ -251,7 +250,7 @@ localparam CONF_STR = {
 wire [7:0] status_menumask;
 wire [1:0] sdram_size;
 assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
-assign status_menumask[1] = bios_config.use_FDC;
+assign status_menumask[1] = 
 assign status_menumask[3] = ROM_A_load_hide;
 assign status_menumask[4] = ROM_B_load_hide;
 assign status_menumask[5] = sram_A_select_hide;
@@ -301,7 +300,6 @@ msx_config msx_config
 (
    .clk(clk21m),
    .reset(reset),
-   .bios_config(bios_config),
    .HPS_status(status),
    .scandoubler(scandoubler),
    .sdram_size(sdram_size),
@@ -346,8 +344,7 @@ wire        ram_rnw, sdram_ce, bram_ce;
 wire        sd_tx, sd_rx;
 wire  [7:0] d_to_sd, d_from_sd;
 
-dev_typ_t    cart_device[2];
-dev_typ_t    msx_device;
+
 wire   [3:0] msx_dev_ref_ram[8];
 mapper_typ_t selected_mapper[2];
 assign selected_mapper[0] = cart_conf[0].selected_mapper;
@@ -377,7 +374,6 @@ msx MSX
    .slot_layout(slot_layout),
    .lookup_RAM(lookup_RAM),
    .lookup_SRAM(lookup_SRAM),
-   .bios_config(bios_config),
    .cart_device(cart_device),
    .msx_device(msx_device),
    .msx_dev_ref_ram(msx_dev_ref_ram),
@@ -585,7 +581,6 @@ memory_upload memory_upload(
     .slot_layout(slot_layout),
     .lookup_RAM(lookup_RAM),
     .lookup_SRAM(lookup_SRAM),
-    .bios_config(bios_config),
     .cart_conf(cart_conf),
     .rom_loaded(rom_loaded),
     .cart_device(cart_device),
@@ -603,7 +598,6 @@ memory_upload memory_upload(
 
 /*
 MSX::user_config_t msxConfig;
-MSX::bios_config_t bios_config;
 MSX::config_cart_t cart_conf[2];
 
 assign sdram_we = upload_ram_ce & upload_sdram_rq;
@@ -639,7 +633,6 @@ memory_upload memory_upload(
     .slot_layout(),
     .lookup_RAM(),
     .lookup_SRAM(),
-    .bios_config(bios_config),
     .cart_conf(cart_conf),
     .rom_loaded(rom_loaded),
     .cart_device(cart_device),

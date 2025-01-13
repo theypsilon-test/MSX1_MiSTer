@@ -74,7 +74,6 @@ msx_slots msx_slots(
     .sdram_ce(sdram_req),                     //>
     .bram_ce(),                      //>
     .sdram_size(),                   //<
-    .bios_config(),                  //<
     .device_bus(device_bus),         //
     .data_to_mapper(data_to_mapper)                //<
 );

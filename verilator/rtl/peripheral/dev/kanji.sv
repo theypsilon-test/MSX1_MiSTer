@@ -1,4 +1,4 @@
-module kanji
+module dev_kanji
 (
    cpu_bus_if.device_mp    cpu_bus,                                // Interface for CPU communication
    input  MSX::io_device_t io_device[3],                       // Array of IO devices with port and mask info

@@ -73,6 +73,8 @@ verilator \
 ../rtl/peripheral/dev/tms.sv            \
 ./rtl/peripheral/dev/v99.sv               \
 ./rtl/peripheral/dev/rtc.sv              \
+../rtl/peripheral/dev/psg.sv              \
+../rtl/peripheral/dev/ppi.sv              \
 ./rtl/wd1793.sv                           \
 \
 ./rtl/sound/jt49/hdl/jt49_bus.sv          \

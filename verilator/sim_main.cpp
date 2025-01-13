@@ -1,7 +1,7 @@
 //#define SIM_AUDIO
-//#define SIM_INPUT
+#define SIM_INPUT
 //#define SIM_DEBUG_PLAY
-//#define SIM_SD_CARD
+#define SIM_SD_CARD
 
 #include <verilated.h>
 #include "Vemu__Syms.h"
@@ -74,9 +74,8 @@ FileDialogData fileData;
 // ------------
 VL_OUTW(status, 127, 0, 4);
 
-const char* slotA1[] = { "ROM","SCC","SCC +","FM - PAC","MegaFlashROM SCC + SD","GameMaster2","FDC","Empty"};
-const char* slotA2[] = { "ROM","SCC","SCC +","FM - PAC","MegaFlashROM SCC + SD","GameMaster2","Empty" };
-const char* slotB[] = { "ROM","SCC","SCC +","FM - PAC","Empty" };
+const char* slotA[] = { "ROM","SCC","SCC +","FM - PAC","MegaSCC + 1MB","MegaFlashROM SCC + SD","GameMaster2","Empty"};
+const char* slotB[] = { "FDC","ROM","SCC","SCC +","FM - PAC","MegaSCC + 2MB","MegaRAM ASCII - 8K 1MB","MegaRAM ASCII - 16K 2MB","Empty" };
 const char* mapperA[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* mapperB[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* sramA[] = { "auto","1kB","2kB","4kB","8kB","16kB","32kB","none" };
@@ -132,7 +131,7 @@ float vga_scale = 1.5;
 #define systemRAM top->emu->systemRAM
 #define VRAMhi top->emu->vram_hi
 #define VRAMlo top->emu->vram_lo
-#define kbd top->emu->MSX->msx_key->kbd_ram
+#define kbd top->emu->MSX->devices->dev_ppi->msx_key->kbd_ram
 #define SD_RAM top->emu->sd_card->sdbuf
 
 //SimMemoryRam* systemRAM_mem;
@@ -181,14 +180,25 @@ char SaveModel_File_tmp[20] = "test", SaveModel_File[20] = "test";
 
 
 void ChangeStatus(void) {
-	status[1] = 0;
-	status[0] = 0;
-	status[0] |= static_cast<uint64_t>(currentSlotA & 0x7) << 17;
-	status[0] |= static_cast<uint64_t>(currentMapperA & 0xF) << 20;
-	status[0] |= static_cast<uint64_t>(currentSramA & 0x7) << 26;
-	status[0] |= static_cast<uint64_t>(currentSlotB & 0x7) << 29;
-	status[0] |= static_cast<uint64_t>(currentMapperB & 0x7) << 32;
-	console.AddLog("New Status %X", status);
+	uint64_t status_tmp = 0;
+	status_tmp |= static_cast<uint64_t>(currentSlotA & 0x0F) << 17;
+	//status_tmp |= static_cast<uint64_t>(currentMapperA & 0xF) << 20;
+	//status[0] |= static_cast<uint64_t>(currentSramA & 0x7) << 26;
+	status_tmp |= static_cast<uint64_t>(currentSlotB & 0x0F) << 29;
+	//status[0] |= static_cast<uint64_t>(currentMapperB & 0x7) << 32;
+
+
+	//status[1] = 0;
+	//status[0] = 0;
+	//status[0] |= static_cast<uint64_t>(currentSlotA & 0x0F) << 17;
+	//status[0] |= static_cast<uint64_t>(currentMapperA & 0xF) << 20;
+	//status[0] |= static_cast<uint64_t>(currentSramA & 0x7) << 26;
+	//status[0] |= static_cast<uint64_t>(currentSlotB & 0x0F) << 29;
+	//status[0] |= static_cast<uint64_t>(currentMapperB & 0x7) << 32;
+	status[0] = static_cast<uint32_t>(status_tmp & 0xFFFFFFFF);
+	status[1] = static_cast<uint32_t>(status_tmp >> 32);
+	console.AddLog("New Status1 0x%016" PRIx64, status_tmp);
+	console.AddLog("New Status2 %x %x", status[0], status[1]);
 }
 
 
@@ -284,14 +294,14 @@ int verilate() {
 				
 				
 				if (top->emu->video_mixer__DOT__ce_pix) {
-					if (pix_ratio == 1) {
+					//if (pix_ratio == 0) {
 						uint32_t colour = 0xFF000000 | top->emu->video_mixer__DOT__B << 16 | top->emu->video_mixer__DOT__G << 8 | top->emu->video_mixer__DOT__R;
 						video.Clock(top->emu->video_mixer__DOT__HBlank, top->emu->video_mixer__DOT__VBlank, top->emu->video_mixer__DOT__HSync, top->emu->video_mixer__DOT__VSync, colour);
 						pix_ratio = 0;
-					}
-					else {
-						pix_ratio++;
-					}
+					//}
+					//else {
+					//	pix_ratio++;
+					//}
 				}
 /*
 				if (top->emu->MSX->vdp_vdp18->ce_pix) {
@@ -331,7 +341,7 @@ int verilate() {
 		//if (main_time == 60000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 44000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 73000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
-		if (main_time == 189770000) Trace = 1;
+		//if (main_time == 62415000) Trace = 1;
 		
 		int ret = 1;
 		if (errors > 0) {
@@ -497,15 +507,15 @@ int main(int argc, char** argv, char** env) {
 	//31700000 CAS 
 	//40000000 Maximum					
 
-	bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
+	bus.QueueDownload("..tools/CreateCRC/mappers.db", 6, true, 0x31600000, &DDR);
 	
 	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
-	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_EMPTY.msx", 2, true, 0x30300000, &DDR);
-	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_REDUCE.msx", 2, true, 0x30300000, &DDR);
-
+	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_EMPTY.msx", 2, true, 0x30300000, &DDR);
+	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_REDUCE.msx", 2, true, 0x30300000, &DDR);
+	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/OCM/ocm.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-20.msx", 1, true, 0x30000000, &DDR);
-	bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
+	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
 	//bus.QueueDownload("./rom/cas/joycol.cas", 5, true, 0x31700000, &DDR);
 	
@@ -522,7 +532,6 @@ int main(int argc, char** argv, char** env) {
 	
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8250.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
-	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/OCM/ocm.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, false);
 
@@ -672,7 +681,7 @@ int main(int argc, char** argv, char** env) {
 		}
 
 		ImGui::PushItemWidth(180.0f);
-		if (ImGui::Combo("SLOT A", &currentSlotA, slotA1, IM_ARRAYSIZE(slotA1)))
+		if (ImGui::Combo("SLOT A", &currentSlotA, slotA, IM_ARRAYSIZE(slotA)))
 		{
 			ChangeStatus();
 		}

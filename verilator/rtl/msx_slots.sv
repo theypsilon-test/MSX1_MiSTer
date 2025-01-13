@@ -44,10 +44,7 @@ module msx_slots
    input  MSX::block_t         slot_layout[64],
    input  MSX::lookup_RAM_t    lookup_RAM[16],
    input  MSX::lookup_SRAM_t   lookup_SRAM[4],
-   input  MSX::bios_config_t   bios_config,
    input  mapper_typ_t         selected_mapper[2],
-   input  dev_typ_t            cart_device[2],
-   input  dev_typ_t            msx_device,
    input                 [3:0] msx_dev_ref_ram[8],
    //SD CARD
    output             [7:0] d_to_sd,
