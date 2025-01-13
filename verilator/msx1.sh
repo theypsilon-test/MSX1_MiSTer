@@ -63,6 +63,7 @@ verilator \
 ./rtl/peripheral/mapper/mfrsd.sv          \
 ./rtl/peripheral/mapper/national.sv          \
 ./rtl/peripheral/mapper/eseRam.sv          \
+./rtl/peripheral/mapper/megaram.sv          \
 ./rtl/peripheral/dev/latch_port.sv        \
 ../rtl/peripheral/dev/opl3.sv              \
 ./rtl/peripheral/dev/scc.sv               \

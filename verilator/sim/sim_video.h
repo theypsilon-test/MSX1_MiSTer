@@ -30,6 +30,7 @@ public:
 	int stats_xMin;
 	int stats_yMax;
 	int stats_yMin;
+	int maxPixel;
 
 	ImTextureID texture_id;
 

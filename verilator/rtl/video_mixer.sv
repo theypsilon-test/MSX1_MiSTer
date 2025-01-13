@@ -8,7 +8,7 @@ module video_mixer
 	input            CLK_VIDEO, // should be multiple by (ce_pix*4)
 	output reg       CE_PIXEL,  // output pixel clock enable
 
-	input            ce_pix /*verilator public_flat*/,    // input pixel clock or clock_enable
+	input            ce_pix /* verilator public */,    // input pixel clock or clock_enable
 
 	input            scandoubler,
 	input            hq2x, 	    // high quality 2x scaling
@@ -16,15 +16,15 @@ module video_mixer
 	inout     [21:0] gamma_bus,
 
 	// color
-	input [DWIDTH:0] R /*verilator public_flat*/,
-	input [DWIDTH:0] G /*verilator public_flat*/,
-	input [DWIDTH:0] B /*verilator public_flat*/,
+	input [DWIDTH:0] R /* verilator public */,
+	input [DWIDTH:0] G /* verilator public */,
+	input [DWIDTH:0] B /* verilator public */,
 
 	// Positive pulses.
-	input            HSync /*verilator public_flat*/,
-	input            VSync /*verilator public_flat*/,
-	input            HBlank /*verilator public_flat*/,
-	input            VBlank /*verilator public_flat*/,
+	input            HSync /* verilator public */,
+	input            VSync /* verilator public */,
+	input            HBlank /* verilator public */,
+	input            VBlank /* verilator public */,
 
 	// Freeze engine
 	// HDMI: displays last frame 

@@ -2,7 +2,8 @@ module mapper_eseRam (
     cpu_bus_if.device_mp    cpu_bus,                // Interface for CPU communication
     block_info              block_info,             // Struct containing mapper configuration and parameters
     mapper_out              out,
-    ext_sd_card_if.device_mp    ext_SD_card_bus
+    ext_sd_card_if.device_mp    ext_SD_card_bus,
+    input                      megaSD_enable
 );
 
     assign out.ram_cs  = '0;

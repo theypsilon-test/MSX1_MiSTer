@@ -62,7 +62,7 @@ double time_ms;
 double old_time;
 double stats_frameTime;
 #endif
-float stats_fps;
+//float stats_fps;
 int stats_xMax;
 int stats_yMax;
 int stats_xMin;
@@ -194,6 +194,7 @@ SimVideo::SimVideo(int width, int height, int rotate)
 	old_time = 0;
 	stats_frameTime = 0;
 	stats_fps = 0.0;
+	maxPixel = 0;
 	stats_xMax = -1000;
 	stats_yMax = -1000;
 	stats_xMin = 1000;
@@ -399,29 +400,22 @@ void SimVideo::StartFrame() {
 #endif
 }
 
-int divs = 0;
-
 void SimVideo::Clock(bool hblank, bool vblank, bool hsync, bool vsync, uint32_t colour) {
 
 	bool de = !(hblank || vblank);
 
 	// Next line on rising hsync
 	if (!vblank) {
-		if (!last_hsync && hsync) {
+		if (!last_hsync && hsync && hblank) {
 			// Increment line and reset pixel count
-			count_line++;
+			count_line+=2;
+			maxPixel = count_pixel;
 			count_pixel = 0;
 		}
 		else {
 			// Increment pixel counter when not blanked
 			if (de) {
-				//divs++;
 				count_pixel++;
-				/*
-				if (divs == 2) {
-					count_pixel++;
-					divs = 0;
-				}*/
 			}
 		}
 	}
@@ -430,7 +424,7 @@ void SimVideo::Clock(bool hblank, bool vblank, bool hsync, bool vsync, uint32_t 
 	if (!last_vsync && vsync) {
 		frame_ready = 1;
 		count_frame++;
-		count_line = 0;
+		count_line = 2;
 #ifdef WIN32
 		GetSystemTime(&actualtime);
 		time_ms = (actualtime.wSecond * 1000) + actualtime.wMilliseconds;
@@ -448,7 +442,7 @@ void SimVideo::Clock(bool hblank, bool vblank, bool hsync, bool vsync, uint32_t 
 	if (de) {
 
 		int ox = count_pixel - 1;
-		int oy = count_line - 1;
+		int oy = count_line - 2;
 		int x = ox, xs = output_width, y = oy;
 
 		if (output_rotate == -1) {
@@ -476,10 +470,10 @@ void SimVideo::Clock(bool hblank, bool vblank, bool hsync, bool vsync, uint32_t 
 
 		// Generate texture address
 		uint32_t vga_addr = (y * xs) + x;
-
+		uint32_t vga_addr2 = ((y+1)* xs) + x;
 		// Write pixel to texture
 		output_ptr[vga_addr] = colour;
-
+		output_ptr[vga_addr2] = colour;
 	}
 
 	// Track bounds (debug)

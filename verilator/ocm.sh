@@ -50,19 +50,16 @@ verilator \
 ../rtl/video/VDPv/vdp.sv                   \
 ../rtl/video/VDPv/vdp_colordec.sv          \
 ../rtl/video/VDPv/vdp_command.sv           \
-../rtl/video/VDPv/vdp_doublebuf.sv         \
 ../rtl/video/VDPv/vdp_graphic123m.sv       \
 ../rtl/video/VDPv/vdp_graphic4567.sv       \
 ../rtl/video/VDPv/vdp_hvcounter.sv         \
 ../rtl/video/VDPv/vdp_interrupt.sv         \
-../rtl/video/VDPv/vdp_linebuf.sv           \
 ../rtl/video/VDPv/vdp_ntsc_pal.sv          \
 ../rtl/video/VDPv/vdp_register.sv          \
 ../rtl/video/VDPv/vdp_spinforam.sv         \
 ../rtl/video/VDPv/vdp_sprite.sv            \
 ../rtl/video/VDPv/vdp_ssg.sv               \
 ../rtl/video/VDPv/vdp_text12.sv            \
-../rtl/video/VDPv/vdp_vga.sv               \
 ../rtl/video/VDPv/vdp_wait_control.sv      \
 ../rtl/video/VDPv/vdp_ram.sv               \
 \

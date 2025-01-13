@@ -45,6 +45,7 @@ bool single_step = 0;
 bool multi_step = 0;
 int multi_step_amount = 1024;
 int pix_ratio = 0;
+bool last_PIX_CE = false;
 
 // Debug GUI 
 // ---------
@@ -116,15 +117,15 @@ SimBus bus(console);
 
 // Video
 // -----
-//#define VGA_WIDTH 256 //320
-//#define VGA_HEIGHT 192 //240
-#define VGA_WIDTH 320
-#define VGA_HEIGHT 240
+#define VGA_WIDTH 582 //320
+#define VGA_HEIGHT 384 //240
+//#define VGA_WIDTH 320
+//#define VGA_HEIGHT 240
 #define VGA_ROTATE 0
 #define VGA_SCALE_X vga_scale
 #define VGA_SCALE_Y vga_scale
 SimVideo video(VGA_WIDTH, VGA_HEIGHT, VGA_ROTATE);
-float vga_scale = 1.5;
+float vga_scale = 1;
 
 // Memory
 
@@ -186,15 +187,9 @@ void ChangeStatus(void) {
 	//status[0] |= static_cast<uint64_t>(currentSramA & 0x7) << 26;
 	status_tmp |= static_cast<uint64_t>(currentSlotB & 0x0F) << 29;
 	//status[0] |= static_cast<uint64_t>(currentMapperB & 0x7) << 32;
+	status_tmp |= static_cast < uint64_t>(1) << 41;		//Border
+	
 
-
-	//status[1] = 0;
-	//status[0] = 0;
-	//status[0] |= static_cast<uint64_t>(currentSlotA & 0x0F) << 17;
-	//status[0] |= static_cast<uint64_t>(currentMapperA & 0xF) << 20;
-	//status[0] |= static_cast<uint64_t>(currentSramA & 0x7) << 26;
-	//status[0] |= static_cast<uint64_t>(currentSlotB & 0x0F) << 29;
-	//status[0] |= static_cast<uint64_t>(currentMapperB & 0x7) << 32;
 	status[0] = static_cast<uint32_t>(status_tmp & 0xFFFFFFFF);
 	status[1] = static_cast<uint32_t>(status_tmp >> 32);
 	console.AddLog("New Status1 0x%016" PRIx64, status_tmp);
@@ -290,27 +285,16 @@ int verilate() {
 			if (clk_sys.IsRising()) {
 				Rams.AfterEval();
 				DDR.AfterEval();
-				//	errors = debuger.AfterEval(main_time);
-				
-				
-				if (top->emu->video_mixer__DOT__ce_pix) {
-					//if (pix_ratio == 0) {
-						uint32_t colour = 0xFF000000 | top->emu->video_mixer__DOT__B << 16 | top->emu->video_mixer__DOT__G << 8 | top->emu->video_mixer__DOT__R;
-						video.Clock(top->emu->video_mixer__DOT__HBlank, top->emu->video_mixer__DOT__VBlank, top->emu->video_mixer__DOT__HSync, top->emu->video_mixer__DOT__VSync, colour);
-						pix_ratio = 0;
-					//}
-					//else {
-					//	pix_ratio++;
-					//}
-				}
-/*
-				if (top->emu->MSX->vdp_vdp18->ce_pix) {
-					uint32_t colour = 0xFF000000 | top->emu->MSX->vdp_vdp18->rgb_b_o << 16 | top->emu->MSX->vdp_vdp18->rgb_g_o << 8 | top->emu->MSX->vdp_vdp18->rgb_r_o;
-					video.Clock(top->emu->MSX->vdp_vdp18->hblank_o, top->emu->MSX->vdp_vdp18->vblank_o, top->emu->MSX->vdp_vdp18->hsync_n_o, top->emu->MSX->vdp_vdp18->vsync_n_o, colour);
-				}
-*/
 			}
-		
+
+			if (top->emu->video_mixer->ce_pix && last_PIX_CE == false) {
+				uint32_t colour = 0xFF000000 | top->emu->video_mixer->B << 16 | top->emu->video_mixer->G << 8 | top->emu->video_mixer->R;
+				video.Clock(top->emu->video_mixer->HBlank, top->emu->video_mixer->VBlank, top->emu->video_mixer->HSync, top->emu->video_mixer->VSync, colour);
+			} 
+			
+			//last_PIX_CE = top->emu->video_mixer__DOT__ce_pix;
+			last_PIX_CE = top->emu->video_mixer->ce_pix;
+
 			if (Trace) {
 				if (!tfp->isOpen()) tfp->open(Trace_File);
 				tfp->dump(main_time); //Trace
@@ -511,11 +495,11 @@ int main(int argc, char** argv, char** env) {
 	
 	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
 	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_EMPTY.msx", 2, true, 0x30300000, &DDR);
-	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_REDUCE.msx", 2, true, 0x30300000, &DDR);
+	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_REDUCE.msx", 2, true, 0x30300000, &DDR);
 	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/OCM/ocm.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-20.msx", 1, true, 0x30000000, &DDR);
-	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
+	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/Philips/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
 	//bus.QueueDownload("./rom/cas/joycol.cas", 5, true, 0x31700000, &DDR);
 	
@@ -534,7 +518,7 @@ int main(int argc, char** argv, char** env) {
 	//bus.QueueDownload("./rom/ROMpack/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, true);
 	//bus.QueueDownload("./rom/Philips_NMS_8245.msx", 1, false);
-
+	top->emu->hps_io->forced_scandoubler = 1;
 	ChangeStatus();	//Nastav status (defaultní hodnotu)
 #ifdef WIN32
 	MSG msg;
@@ -760,7 +744,7 @@ int main(int argc, char** argv, char** env) {
 		ImGui::SetNextItemWidth(200);
 		ImGui::SliderInt("Rotate", &video.output_rotate, -1, 1); ImGui::SameLine();
 		ImGui::Checkbox("Flip V", &video.output_vflip);
-		ImGui::Text("main_time: %d frame_count: %d sim FPS: %f", main_time, video.count_frame, video.stats_fps);
+		ImGui::Text("main_time: %d frame_count: %d sim FPS: %f maxPixel: %d", main_time, video.count_frame, video.stats_fps, video.maxPixel);
 		//ImGui::Text("pixel: %06d line: %03d", video.count_pixel, video.count_line);
 
 		// Draw VGA output

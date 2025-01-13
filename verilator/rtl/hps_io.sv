@@ -73,7 +73,7 @@ module hps_io #(parameter CONF_STR, CONF_STR_BRAM=1, PS2DIV=0, WIDE=0, VDNUM=1, 
 	output reg [15:0] ps2_mouse_ext = 0, // 15:8 - reserved(additional buttons), 7:0 - wheel movements
 
 	output      [1:0] buttons,
-	output            forced_scandoubler,
+	output            forced_scandoubler /* verilator public */,
 	output            direct_video,
 	input             video_rotated,
 

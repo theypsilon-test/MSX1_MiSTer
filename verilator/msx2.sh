@@ -89,6 +89,7 @@ verilator \
 ../rtl/peripheral/dev/msx2_ram.sv         \
 ./rtl/peripheral/mapper/national.sv       \
 ./rtl/peripheral/mapper/eseRam.sv         \
+./rtl/peripheral/mapper/megaram.sv          \
 ./rtl/peripheral/dev/ocm.sv               \
 ./rtl/peripheral/dev/tms.sv               \
 ../rtl/peripheral/dev/v99.sv              \
