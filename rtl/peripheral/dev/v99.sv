@@ -48,7 +48,7 @@ module dev_v99 (
 
     wire  [7:0] q;
     wire  [5:0] R, G, B;
-    wire        interrupt_n, HS_n, VS_n, hblank, vblank, DE;  
+    wire        interrupt_n, hblank, vblank, DE, VideoHS_n, VideoVS_n;
     wire        DLClk, DHClk;  
     wire        vram_we;
     wire  [7:0] vram_data;
@@ -61,8 +61,8 @@ module dev_v99 (
     assign video_bus.R      = io_device[0].enable ? {R,R[5:4]}                         : '0;
     assign video_bus.G      = io_device[0].enable ? {G,G[5:4]}                         : '0;
     assign video_bus.B      = io_device[0].enable ? {B,B[5:4]}                         : '0;
-    assign video_bus.HS     = io_device[0].enable ? ~HS_n                              : '0;
-    assign video_bus.VS     = io_device[0].enable ? ~VS_n                              : '0;
+    assign video_bus.HS     = io_device[0].enable ? ~VideoHS_n                                 : '0;
+    assign video_bus.VS     = io_device[0].enable ? ~VideoVS_n                                 : '0;
     assign video_bus.DE     = io_device[0].enable ? DE                                 : '0;
     assign video_bus.hblank = io_device[0].enable ? hblank_cor                         : '0;
     assign video_bus.vblank = io_device[0].enable ? vblank                             : '0;
@@ -109,17 +109,13 @@ module dev_v99 (
         .PVIDEOG(G),
         .PVIDEOB(B),
         .PVIDEODE(DE),
-        .BLANK_O(),
         .HBLANK(hblank),
         .VBLANK(vblank),
-        .PVIDEOHS_N(HS_n),
-        .PVIDEOVS_N(VS_n),
+        .PVIDEOHS_N(VideoHS_n),
+        .PVIDEOVS_N(VideoVS_n),
         .PVIDEOCS_N(),
         .PVIDEODHCLK(DHClk),
         .PVIDEODLCLK(DLClk),
-        .DISPRESO(/*msxConfig.scandoubler*/ 0), //TODO
-        .LEGACY_VGA(1), //TODO
-        .RATIOMODE(3'b000), //TODO
         .NTSC_PAL_TYPE('1),
         .FORCED_V_MODE('0),
         .BORDER(border)

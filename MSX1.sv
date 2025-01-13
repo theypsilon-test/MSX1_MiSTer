@@ -214,6 +214,7 @@ MSX::io_device_mem_ref_t io_memory[8];
 MSX::slot_expander_t slot_expander[4];
 
 wire             forced_scandoubler;
+wire             scandoubler;
 wire      [21:0] gamma_bus;
 wire       [1:0] buttons;
 wire     [127:0] status;
@@ -525,11 +526,12 @@ wire [2:0] scale = status[5:3];
 wire [2:0] sl    = scale != 0 ? scale - 1'd1 : 3'd0;
 
 assign VGA_SL = sl[1:0];
-assign CLK_VIDEO   = clock_bus.base_mp.clk;
+assign CLK_VIDEO   = clk_sdram;
+assign scandoubler = forced_scandoubler || scale != 0;
 
 reg  en216p;
 always @(posedge CLK_VIDEO) begin
-	en216p <= ((HDMI_WIDTH == 1920) && (HDMI_HEIGHT == 1080) && !forced_scandoubler && scale != 0);
+	en216p <= ((HDMI_WIDTH == 1920) && (HDMI_HEIGHT == 1080) && !scandoubler);
 end
 
 video_freak video_freak
@@ -544,11 +546,11 @@ video_freak video_freak
 	.SCALE(status[8:6])
 );
 
-video_mixer #(.GAMMA(1), .LINE_LENGTH(284)) video_mixer
+video_mixer #(.GAMMA(1), .LINE_LENGTH(582)) video_mixer
 (
    .CLK_VIDEO(CLK_VIDEO),
    .hq2x(scale==1),
-   .scandoubler(scale != 0 || forced_scandoubler),
+   .scandoubler(scandoubler),
    .gamma_bus(gamma_bus),
    
    .ce_pix(video_bus.display_mp.ce_pix),

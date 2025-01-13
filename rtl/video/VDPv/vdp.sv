@@ -263,7 +263,6 @@ module VDP (
     input logic [15:0]  PRAMDBI,
     output logic [7:0]  PRAMDBO,
     input logic         VDPSPEEDMODE,
-    input logic [2:0]   RATIOMODE,
     input logic         CENTERYJK_R25_N,
     output logic [5:0]  PVIDEOR,
     output logic [5:0]  PVIDEOG,
@@ -274,13 +273,10 @@ module VDP (
     output logic        PVIDEOCS_N,
     output logic        PVIDEODHCLK,
     output logic        PVIDEODLCLK,
-    output logic        BLANK_O,
     output logic        HBLANK,
     output logic        VBLANK,
-    input logic         DISPRESO,
     input logic         NTSC_PAL_TYPE,
     input logic         FORCED_V_MODE,
-    input logic         LEGACY_VGA,
     input logic         BORDER,
     input logic [4:0]   VDP_ID,
     input logic [6:0]   OFFSET_Y
@@ -330,7 +326,6 @@ logic PREWINDOW_SP;
 logic BWINDOW_X;
 logic BWINDOW_Y;
 logic BWINDOW;
-logic BWINDOW_VGA;
 logic FF_HBLANK;
 logic FF_VBLANK;
 
@@ -343,7 +338,6 @@ logic [8:0] PREDOTCOUNTER_YP;
 
 // VDP REGISTER ACCESS
 logic [16:0] VDPVRAMACCESSADDR;
-logic DISPMODEVGA;
 logic VDPVRAMREADINGR;
 logic VDPVRAMREADINGA;
 logic [2:0] VDPR0DISPNUM;
@@ -480,18 +474,6 @@ logic [5:0] IVIDEOG_VDP;
 logic [5:0] IVIDEOB_VDP;
 logic IVIDEOVS_N;
 
-logic [5:0] IVIDEOR_NTSC_PAL;
-logic [5:0] IVIDEOG_NTSC_PAL;
-logic [5:0] IVIDEOB_NTSC_PAL;
-logic IVIDEOHS_N_NTSC_PAL;
-logic IVIDEOVS_N_NTSC_PAL;
-
-logic [5:0] IVIDEOR_VGA;
-logic [5:0] IVIDEOG_VGA;
-logic [5:0] IVIDEOB_VGA;
-logic IVIDEOHS_N_VGA;
-logic IVIDEOVS_N_VGA;
-
 logic [16:0] IRAMADR;
 logic [7:0] PRAMDAT;
 logic XRAMSEL;
@@ -517,7 +499,6 @@ assign PRAMDAT = (XRAMSEL == 1'b0) ? PRAMDBI[7:0] : PRAMDBI[15:8];
 assign PRAMDATPAIR = (XRAMSEL == 1'b1) ? PRAMDBI[7:0] : PRAMDBI[15:8];
 
 // DISPLAY COMPONENTS LOGIC
-assign DISPMODEVGA = DISPRESO;
 assign VDPR9PALMODE = (NTSC_PAL_TYPE == 1'b1) ? REG_R9_PAL_MODE : FORCED_V_MODE;
 
 assign IVIDEOR = (BWINDOW == 1'b0) ? 6'b000000 : IVIDEOR_VDP;
@@ -535,50 +516,17 @@ VDP_NTSC_PAL U_VDP_NTSC_PAL (
     .VIDEOVSIN_N    (IVIDEOVS_N),
     .HCOUNTERIN     (H_CNT),
     .VCOUNTERIN     (V_CNT),
-    .VIDEOROUT      (IVIDEOR_NTSC_PAL),
-    .VIDEOGOUT      (IVIDEOG_NTSC_PAL),
-    .VIDEOBOUT      (IVIDEOB_NTSC_PAL),
-    .VIDEOHSOUT_N   (IVIDEOHS_N_NTSC_PAL),
-    .VIDEOVSOUT_N   (IVIDEOVS_N_NTSC_PAL)
+    .VIDEOROUT      (PVIDEOR),
+    .VIDEOGOUT      (PVIDEOG),
+    .VIDEOBOUT      (PVIDEOB),
+    .VIDEOHSOUT_N   (PVIDEOHS_N),
+    .VIDEOVSOUT_N   (PVIDEOVS_N)
 );
 
-VDP_VGA U_VDP_VGA (
-    .CLK21M         (CLK21M),
-    .RESET          (RESET),
-    .VIDEORIN       (IVIDEOR),
-    .VIDEOGIN       (IVIDEOG),
-    .VIDEOBIN       (IVIDEOB),
-    .VIDEOVSIN_N    (IVIDEOVS_N),
-    .HCOUNTERIN     (H_CNT),
-    .VCOUNTERIN     (V_CNT),
-    .PALMODE        (VDPR9PALMODE),
-    .INTERLACEMODE  (REG_R9_INTERLACE_MODE),
-    .LEGACY_VGA     (LEGACY_VGA),
-    .VIDEOROUT      (IVIDEOR_VGA),
-    .VIDEOGOUT      (IVIDEOG_VGA),
-    .VIDEOBOUT      (IVIDEOB_VGA),
-    .VIDEODEOUT     (BWINDOW_VGA),
-    .VIDEOHSOUT_N   (IVIDEOHS_N_VGA),
-    .VIDEOVSOUT_N   (IVIDEOVS_N_VGA),
-    .BLANK_O        (BLANK_O),
-    .RATIOMODE      (RATIOMODE)
-);
-
-// CHANGE DISPLAY MODE BY EXTERNAL INPUT PORT.
-assign PVIDEOR   = (DISPMODEVGA == 1'b0) ? IVIDEOR_NTSC_PAL : IVIDEOR_VGA;
-assign PVIDEOG   = (DISPMODEVGA == 1'b0) ? IVIDEOG_NTSC_PAL : IVIDEOG_VGA;
-assign PVIDEOB   = (DISPMODEVGA == 1'b0) ? IVIDEOB_NTSC_PAL : IVIDEOB_VGA;
-
-assign PVIDEODE  = (DISPMODEVGA == 1'b0) ? BWINDOW : BWINDOW_VGA;
-
-// H SYNC SIGNAL
-assign PVIDEOHS_N = (DISPMODEVGA == 1'b0) ? IVIDEOHS_N_NTSC_PAL : IVIDEOHS_N_VGA;
-
-// V SYNC SIGNAL
-assign PVIDEOVS_N = (DISPMODEVGA == 1'b0) ? IVIDEOVS_N_NTSC_PAL : IVIDEOVS_N_VGA;
+assign PVIDEODE  = BWINDOW;
 
 // THESE SIGNALS BELOW ARE OUTPUT DIRECTLY REGARDLESS OF DISPLAY MODE.
-assign PVIDEOCS_N = ~(IVIDEOHS_N_NTSC_PAL ^ IVIDEOVS_N_NTSC_PAL);
+assign PVIDEOCS_N = ~(PVIDEOHS_N ^ PVIDEOVS_N);
 
 assign HBLANK = FF_HBLANK;
 assign VBLANK = FF_VBLANK;
