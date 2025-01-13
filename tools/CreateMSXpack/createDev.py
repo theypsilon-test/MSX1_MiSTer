@@ -5,7 +5,7 @@ import logging
 from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_8bit, convert_to_int
 
 # Nastavení logování
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 ROM_DIR = 'ROM_test'

@@ -481,8 +481,8 @@ def create_msx_config(config, file_name, path, files_with_sha1, constants):
     
     with open(file_path, "wb") as outfile:
         create_msx_config_header(config.get('type', ('MSX1',{})), config.get('video_standard', ('PAL',{})), outfile)
-        create_msx_config_primary(config.get('primary', {}), outfile, files_with_sha1, constants)
         create_msx_config_device(config.get('devices', []), outfile, files_with_sha1, constants)
+        create_msx_config_primary(config.get('primary', {}), outfile, files_with_sha1, constants)
         create_msx_config_kbd_layout(config.get('kbd_layout', None), outfile, constants) 
              
 def create_msx_conf(file_name, path, files_with_sha1, constants):

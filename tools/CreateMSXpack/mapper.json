@@ -24,5 +24,6 @@
   "MFRSD1" : 22,
   "MFRSD0" : 23,
   "NATIONAL" : 24,
-  "ESE_RAM" : 25
+  "ESE_RAM" : 25,
+  "MEGARAM" : 26
 }

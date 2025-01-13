@@ -109,6 +109,11 @@
       <mapper>HARRY_FOX</mapper>   
     </block>
   </fw>
+  <fw name="MEGARAM">
+    <block>
+      <mapper>MEGARAM</mapper>   
+    </block>
+  </fw>
   <fw name="Zemina80">
     <block>
       <mapper>ZEMINA80</mapper>   
