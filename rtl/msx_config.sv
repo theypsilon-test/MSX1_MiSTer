@@ -1,9 +1,8 @@
 parameter CONF_STR_SLOT_A = {
-    "H2O[19:17],SLOT A,ROM,SCC,SCC+,FM-PAC,MegaFlashROM SCC+ SD,GameMaster2,FDC,Empty;",
-    "h2O[19:17],SLOT A,ROM,SCC,SCC+,FM-PAC,MegaFlashROM SCC+ SD,GameMaster2,Empty;"
+    "O[20:17],Slot1,ROM,SCC,SCC+,FM-PAC,MegaSCC+ 1MB, MegaFlashROM SCC+ SD,GameMaster2,Empty;"
 };
 parameter CONF_STR_SLOT_B = {
-    "O[31:29],SLOT B,ROM,SCC,SCC+,FM-PAC,Empty;"
+    "O[32:29],Slot2,FDC,ROM,SCC,SCC+,FM-PAC,MegaSCC+ 2MB,MegaRAM ASCII-8K 1MB,MegaRAM ASCII-16K 2MB,Empty;"
 };
 
 module msx_config
@@ -17,27 +16,67 @@ module msx_config
     output                    ROM_A_load_hide, //3 
     output                    ROM_B_load_hide, //4
     output MSX::user_config_t msxConfig,
-    output                    reload
+    output                    reload,
+    input                     ocmMode
 );
-wire [2:0] slot_A_select   = HPS_status[19:17];
-wire [2:0] slot_B_select   = HPS_status[31:29];
 
-cart_typ_t typ_A;
-assign typ_A = cart_typ_t'(slot_A_select < CART_TYP_FDC  ? slot_A_select   :
-                           disable_menu_FDC               ? CART_TYP_EMPTY : 
-                                                            CART_TYP_FDC ) ;
+wire [3:0] slot_A_select   = HPS_status[20:17];
+wire [3:0] slot_B_select   = HPS_status[32:29];
 
-assign cart_conf[0].typ                = typ_A;
-assign cart_conf[1].typ                = slot_B_select < CART_TYP_MFRSD ? cart_typ_t'(slot_B_select) : CART_TYP_EMPTY;
+    cart_typ_t cart_A;
+    always_comb begin : Slot1
+        case(HPS_status[20:17])
+            4'd0: cart_conf[0].typ = CART_TYP_ROM;
+            4'd1: cart_conf[0].typ = CART_TYP_SCC;
+            4'd2: cart_conf[0].typ = CART_TYP_SCC2;
+            4'd3: cart_conf[0].typ = CART_TYP_FM_PAC;
+            4'd4: cart_conf[0].typ = ocmMode ? MEGARAM : CART_MEGASCC1;
+            4'd5: cart_conf[0].typ = CART_TYP_MFRSD;
+            4'd6: cart_conf[0].typ = CART_TYP_GM2;
+            default: cart_conf[0].typ = CART_TYP_EMPTY;
+        endcase
+    end
 
-assign msxConfig.cas_audio_src = cas_audio_src_t'(HPS_status[40]);
-assign msxConfig.border = HPS_status[41];
+    cart_typ_t cart_B;
+    always_comb begin : Slot2
+        case(HPS_status[32:29])
+            4'd0: cart_conf[1].typ = disable_menu_FDC ? CART_TYP_EMPTY : CART_TYP_FDC;
+            4'd1: cart_conf[1].typ = CART_TYP_ROM;
+            4'd2: cart_conf[1].typ = CART_TYP_SCC;
+            4'd3: cart_conf[1].typ = CART_TYP_SCC2;
+            4'd4: cart_conf[1].typ = CART_TYP_FM_PAC;
+            4'd5: cart_conf[1].typ = ocmMode ? MEGARAM : CART_MEGASCC2;
+            4'd6: cart_conf[1].typ = ocmMode ? MEGARAM : CART_MEGA_ASCII_8;
+            4'd7: cart_conf[1].typ = ocmMode ? MEGARAM : CART_MEGA_ASCII_16;
+            default: cart_conf[1].typ = CART_TYP_EMPTY;
+        endcase
+    end
+    
+    logic       ocm_slot1;
+    logic [1:0] ocm_slot2;
+    
+    assign      ocm_slot1 = ~(HPS_status[20:17] == 4'd4);
+    
+    always_comb begin : Slot2_OCM
+        case (HPS_status[32:29])
+            4'd5:    ocm_slot2 = 2'b10;
+            4'd6:    ocm_slot2 = 2'b00;
+            4'd7:    ocm_slot2 = 2'b01;
+            default: ocm_slot2 = 2'b11;
+        endcase
+    end
+
+assign msxConfig.cas_audio_src         = cas_audio_src_t'(HPS_status[40]);
+assign msxConfig.border                = HPS_status[41];
+
+
+assign msxConfig.ocm_dip = {1'b0, ~HPS_status[11], ocm_slot2, ocm_slot1, 2'b00, HPS_status[15]};
 
 assign ROM_A_load_hide    = cart_conf[0].typ != CART_TYP_ROM;
 assign ROM_B_load_hide    = cart_conf[1].typ != CART_TYP_ROM;
 
-logic  [5:0] lastConfig;
-wire [5:0] act_config = {cart_conf[1].typ, cart_conf[0].typ};
+logic  [7:0] lastConfig;
+wire [7:0] act_config = {cart_conf[1].typ, cart_conf[0].typ};
 
 always @(posedge clk) begin
     if (reload) lastConfig <= act_config;

@@ -212,7 +212,7 @@ MSX::lookup_SRAM_t lookup_SRAM[4];
 MSX::io_device_t   io_device[16][3];
 MSX::io_device_mem_ref_t io_memory[8];
 MSX::slot_expander_t slot_expander[4];
-
+/*verilator tracing_on*/
 wire             forced_scandoubler;
 wire             scandoubler;
 wire      [21:0] gamma_bus;
@@ -242,22 +242,25 @@ wire      [15:0] sdram_sz;
 wire      [64:0] rtc;
 wire             reset;
 wire             hard_reset;
+/*verilator tracing_off*/
 //[0]     RESET
 //[2:1]   Aspect ratio
 //[5:3]   Scandoubler
 //[8:6]   Scale
 //[9]     Tape rewind
 //[10]    Reset & Detach
-//[11]    RESERVA
-//[12]    RESERVA
+//[11]    OCM INTERNAL MAPPER SIZE
+//[12]    OCM Reset after mount
 //[14:13] VideoMode
-//[16:15] RESERVA
-//[19:17] SLOT A CART TYPE
-//[23:20] RESERVA
+//[15]    OCM CPU SPEED
+//[16]    OCM CPU TYPE
+//[20:17] SLOT A CART TYPE
+//21      Reset 
+//[23:22] RESERVA
 //[25:24] RESERVA
 //[28:26] RESERVA 
-//[31:29] SLOT B CART TYPE
-//[34:32] RESERVA
+//[32:29] SLOT B CART TYPE
+//[34:33] RESERVA
 //[37:35] RESERVA
 //[38]    SRAM SAVE
 //[39]    SRAM LOAD
@@ -270,21 +273,28 @@ localparam CONF_STR = {
    "FC1,MSX,Load ROM PACK,30000000;",
    "FC2,MSX,Load FW  PACK,30300000;",
    "FC6,DB,Load DB MAPPERS,31600000;",
+   "-;",
    CONF_STR_SLOT_A,
-   "H3FS3,ROM,Load,30C00000;",
+   "D1FS3,ROM,Load,30C00000;",
    "-;",
    CONF_STR_SLOT_B,
-   "H4F4,ROM,Load,31100000;",
+   "D2F4,ROM,Load,31100000;",
+   "-;",
+   "d0S5,DSK,Mount Drive A:;",
+   "SC4,VHD,Load SD card;",
+   "h3O[12],Reset after Mount,No,Yes;",
    "H6-;",
    "H6R[38],SRAM Save;",
    "H6R[39],SRAM Load;",
-   "h1-;",
-   "h1S5,DSK,Mount Drive A:;",
-   "SC4,VHD,Load SD card;",
    "-;",
+   "h3O[11],Internal Mapper,2048KB RAM,4096KB RAM;",
+   
+   "h3O[15],CPU speed,Normal,Turbo(+F11);",
+	"h3O[16],CPU type,Z80,R800;",
+
    "O[40],Tape Input,File,ADC;",
-   "H0F5,CAS,Cas File,31700000;",
-   "H0T9,Tape Rewind;",
+   "H7F5,CAS,Cas File,31700000;",
+   "H7T9,Tape Rewind;",
    "-;",
    "P1,Video settings;",
    "P1O[2:1],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
@@ -292,9 +302,9 @@ localparam CONF_STR = {
    "P1O[8:6],Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer,HV-Integer;",
    "P1O[41],Border,No,Yes;",
    "-;",
-   "T[0],Reset;",
+   "T[21],Reset;",
    "R[10],Reset & Detach ROM Cartridge;",					
-   "R[0],Reset and close OSD;",
+   "R[21],Reset and close OSD;",
    "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING,Exceeded number of IO_DEVICE;",
    "V,v",`BUILD_DATE 
 };
@@ -307,17 +317,17 @@ wire [1:0] sdram_size;
 wire [7:0] info;
 wire info_req;
 
-assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
-
-
 wire disable_menu_FDC = io_device[DEV_WD2793][0].param[7] && io_device[DEV_WD2793][0].enable; //Enable FDC to CART menu
-assign status_menumask[1] = io_device[DEV_WD2793][0].enable;
-assign status_menumask[2] = disable_menu_FDC;
-assign status_menumask[3] = ROM_A_load_hide;
-assign status_menumask[4] = ROM_B_load_hide;
+assign status_menumask[0] = io_device[DEV_WD2793][0].enable;
+assign status_menumask[1] = ROM_A_load_hide || io_device[DEV_OCM_BOOT][0].enable ;
+assign status_menumask[2] = ROM_B_load_hide || io_device[DEV_OCM_BOOT][0].enable ;
+assign status_menumask[3] = io_device[DEV_OCM_BOOT][0].enable;
+assign status_menumask[4] = '0;
 assign status_menumask[5] = '0;
+
 assign status_menumask[6] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
-assign status_menumask[15:7] = '0;
+assign status_menumask[7] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
+assign status_menumask[15:8] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 
 assign info_req = error != ERR_NONE;
