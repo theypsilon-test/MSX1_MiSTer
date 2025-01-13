@@ -295,7 +295,7 @@ localparam CONF_STR = {
    "T[0],Reset;",
    "R[10],Reset & Detach ROM Cartridge;",					
    "R[0],Reset and close OSD;",
-   "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING;",
+   "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING,Exceeded number of IO_DEVICE;",
    "V,v",`BUILD_DATE 
 };
 /*verilator tracing_on*/

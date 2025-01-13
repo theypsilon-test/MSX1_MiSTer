@@ -380,7 +380,7 @@ module memory_upload
                             end else begin
                                 $display("LOAD IO_DEVICE FAILED ID:%x port:%x mask %x param %x size %x addr: %x (DDR addr %x)",
                                         conf[1], conf[2], conf[3], conf[4], {3'b0, conf[5], 14'd0}, ram_addr, ddr3_addr);
-                                error <= ERR_MISSING_SOURECE;
+                                error <= ERR_MISSING_SOURCE;
                                 state <= STATE_IDLE;
                             end
 
