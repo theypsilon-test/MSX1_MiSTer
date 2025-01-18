@@ -1,44 +1,34 @@
 module mapper_megaram (
     cpu_bus_if.device_mp     cpu_bus,        // Interface for CPU communication
     mapper_out               out,            // Interface for mapper output
-    block_info               block_info,     // Struct containing mapper configuration and parameters 
+    block_info               block_info,     // Struct containing mapper configuration and parameters
+    device_bus               device_out,      // Interface for device output 
     input                    ocm_slot1_mode,
     input              [1:0] ocm_slot2_mode
 );
-
-//TODO někde importovat
-    logic [1:0] mapsel;
 
     logic       cs, DecSccA, DecSccB, Dec1FFE;
     logic       SccBankL, SccBankM;
     logic [7:0] SccBank0, SccBank1, SccBank2, SccBank3, SccModeA, SccModeB;
     logic [1:0] SccSel;
 
-    // block_info.id říká v jakém slotu je
-    assign cs = (block_info.typ == MAPPER_MEGARAM) && cpu_bus.mreq;
+    logic [1:0] mapsel;
+    always_comb begin
+        case(block_info.typ)
+            MAPPER_MEGARAM:     mapsel = block_info.id ? ocm_slot2_mode : {ocm_slot1_mode, 1'b0};
+            MAPPER_MEGASCC:     mapsel = 2'b10;
+            MAPPER_MEGAASCII8:  mapsel = 2'b01;
+            MAPPER_MEGAASCII16: mapsel = 2'b11;
+            default: mapsel = 2'b00;
+        endcase        
+    end
+
+    assign cs = cpu_bus.mreq && mapsel != 2'b00;
 
     assign DecSccA = cpu_bus.addr[15:11] == 5'b10011 && ~SccModeB[5] && SccBank2[5:0] == 6'b111111;      
     assign DecSccB = cpu_bus.addr[15:11] == 5'b10111 &&  SccModeB[5] && SccBank3[7];                     
     assign Dec1FFE = cpu_bus.addr[12:1] == 12'b111111111111;
-/*
-    assign SccSel  = ~cpu.addr[8] && ~SccModeB[4] && ~mapsel[0] && (DecSccA || DecSccB) ? 2'b10 :          // memory access (scc_wave)
-                   ((cpu.addr[15:14] == 2'b01  &&  mapsel[0]   &&              ~cpu.wr) ||                 // 4000-7FFFh(R/-, ASC8K/16K)
-                    (cpu.addr[15:14] == 2'b10  &&  mapsel[0]   &&              ~cpu.wr) ||                 // 8000-BFFFh(R/-, ASC8K/16K)
-                    (cpu.addr[15:13] == 3'b010 &&  mapsel[0]   &&  SccBank0[7]        ) ||                 // 4000-5FFFh(R/W, ASC8K/16K)
-                    (cpu.addr[15:13] == 3'b100 &&  mapsel[0]   &&  SccBank2[7]        ) ||                 // 8000-9FFFh(R/W, ASC8K/16K)
-                    (cpu.addr[15:13] == 3'b101 &&  mapsel[0]   &&  SccBank3[7]        ) ||                 // A000-BFFFh(R/W, ASC8K/16K)
-                    (cpu.addr[15:13] == 3'b010 && ~SccModeA[6] &&              ~cpu.wr) ||                 // 4000-5FFFh(R/-, SCC)
-                    (cpu.addr[15:13] == 3'b011 &&                              ~cpu.wr) ||                 // 6000-7FFFh(R/-, SCC)
-                    (cpu.addr[15:13] == 3'b100 &&                 ~DecSccA &&  ~cpu.wr) ||                 // 8000-9FFFh(R/-, SCC)
-                    (cpu.addr[15:13] == 3'b101 && ~SccModeA[6] && ~DecSccB &&  ~cpu.wr) ||                 // A000-BFFFh(R/-, SCC)
-                    (cpu.addr[15:13] == 3'b010 &&  SccModeA[4]                        ) ||                 // 4000-5FFFh(R/W) ESCC-RAM
-                    (cpu.addr[15:13] == 3'b011 &&  SccModeA[4] && ~Dec1FFE            ) ||                 // 6000-7FFDh(R/W) ESCC-RAM
-                    (cpu.addr[15:14] == 2'b01  &&  SccModeB[4]                        ) ||                 // 4000-7FFFh(R/W) SNATCHER
-                    (cpu.addr[15:13] == 3'b100 &&  SccModeB[4]                        ) ||                 // 8000-9FFFh(R/W) SNATCHER
-                    (cpu.addr[15:13] == 3'b101 &&  SccModeB[4] && ~Dec1FFE            )) ? 2'b01 :         // A000-BFFDh(R/W) SNATCHER  
-                                                                                          2'b00;          // MEGA-ROM bank register access
 
-*/
     always_comb begin 
         if (~cpu_bus.addr[8] && ~SccModeB[4] && ~mapsel[0] && (DecSccA || DecSccB)) begin
             SccSel = 2'b10; // memory access (scc_wave)
@@ -77,6 +67,9 @@ module mapper_megaram (
             SccBankL    <= '0;
             SccBankM    <= '0;
         end else begin
+            if (cs && cpu_bus.wr && cpu_bus.req) begin
+                $display("ID: %d mapsel: %d", block_info.id, mapsel);
+            end
             if (cs && cpu_bus.wr && cpu_bus.req && SccSel == 2'b00) begin
                 if (~mapsel[0]) begin
                     if (~SccModeB[4]) begin
@@ -138,5 +131,12 @@ module mapper_megaram (
             
         end
     end
+
+    assign device_out.en    = cs && SccSel[1];
+    
+
+
+    //TODO namapovat RAM
+    //TODO mapper může být ve dvou slotech
 
 endmodule

@@ -384,7 +384,7 @@ msx_config msx_config
    .ROM_A_load_hide(ROM_A_load_hide),
    .ROM_B_load_hide(ROM_B_load_hide),
    .msxConfig(msxConfig),
-   .ocmMode(io_device[DEV_WD2793][0].enable)
+   .ocmMode(io_device[DEV_OCM_BOOT][0].enable)
 );
 /////////////////   CLOCKS   /////////////////
 /*verilator tracing_on*/

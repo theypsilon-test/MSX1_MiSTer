@@ -37,6 +37,7 @@ module mappers (
     device_bus fm_pac_device_out();     // Device bus output for FM-PAC mapper
     device_bus konami_SCC_device_out(); // Device bus output for SCC mapper
     device_bus mfrsd_device_out();      // Device bus output for MFRSD1 mapper
+    device_bus mega_ram_device_out();   // Device bus output for Megaram mapper
 
     ext_sd_card_if ext_SD_card_mfrsd();
     ext_sd_card_if ext_SD_card_ese();
@@ -183,6 +184,7 @@ module mappers (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(mega_ram_out),
+        .device_out(mega_ram_device_out),
         .ocm_slot1_mode(ocm_slot1_mode),
         .ocm_slot2_mode(ocm_slot2_mode)
     );
@@ -255,7 +257,7 @@ module mappers (
     assign device_bus.typ   = cpu_bus.mreq ? block_info.device : DEV_NONE;
     
     assign device_bus.we    = fm_pac_device_out.we;
-    assign device_bus.en    = fm_pac_device_out.en | konami_SCC_device_out.en | mfrsd_device_out.en;
+    assign device_bus.en    = fm_pac_device_out.en | konami_SCC_device_out.en | mfrsd_device_out.en | mega_ram_device_out.en;
     assign device_bus.mode  = konami_SCC_device_out.mode & mfrsd_device_out.mode;
     assign device_bus.param = konami_SCC_device_out.param & mfrsd_device_out.param;
 

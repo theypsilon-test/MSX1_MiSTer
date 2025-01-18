@@ -55,14 +55,14 @@ wire [3:0] slot_B_select   = HPS_status[32:29];
     logic       ocm_slot1;
     logic [1:0] ocm_slot2;
     
-    assign      ocm_slot1 = ~(HPS_status[20:17] == 4'd4);
+    assign      ocm_slot1 = HPS_status[20:17] == 4'd4;
     
     always_comb begin : Slot2_OCM
         case (HPS_status[32:29])
-            4'd5:    ocm_slot2 = 2'b10;
-            4'd6:    ocm_slot2 = 2'b00;
-            4'd7:    ocm_slot2 = 2'b01;
-            default: ocm_slot2 = 2'b11;
+            4'd5:    ocm_slot2 = 2'b10;     // MegaSCC+ 2MB
+            4'd6:    ocm_slot2 = 2'b01;     // MegaRAM ASCII-8K 1MB
+            4'd7:    ocm_slot2 = 2'b11;     // MegaRAM ASCII-16K 2MB
+            default: ocm_slot2 = 2'b00;
         endcase
     end
 
@@ -70,7 +70,7 @@ assign msxConfig.cas_audio_src         = cas_audio_src_t'(HPS_status[40]);
 assign msxConfig.border                = HPS_status[41];
 
 
-assign msxConfig.ocm_dip = {1'b0, ~HPS_status[11], ocm_slot2, ocm_slot1, 2'b00, HPS_status[15]};
+assign msxConfig.ocm_dip  = {1'b0, ~HPS_status[11], ocm_slot2, ocm_slot1, 2'b00, HPS_status[15]};
 
 assign ROM_A_load_hide    = cart_conf[0].typ != CART_TYP_ROM;
 assign ROM_B_load_hide    = cart_conf[1].typ != CART_TYP_ROM;

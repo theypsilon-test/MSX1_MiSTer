@@ -110,8 +110,9 @@
     </block>
   </fw>
   <fw name="MEGARAM">
-    <block>
-      <mapper>MEGARAM</mapper>   
+    <block start="1" count="2">
+      <mapper>MEGARAM</mapper>
+      <device>SCC</device>   
     </block>
   </fw>
   <fw name="Zemina80">
