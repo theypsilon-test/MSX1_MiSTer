@@ -131,12 +131,42 @@ module mapper_megaram (
             
         end
     end
+    
+    logic [26:0] ram_addr;
+
+    always_comb begin
+        case (cpu_bus.addr[14:13])
+            2'b00: begin
+                ram_addr[26:0] = {6'd0, SccBank2[7:0], cpu_bus.addr[12:0]};
+            end
+            2'b01: begin
+                ram_addr[26:0] = {6'd0, SccBank3[7:0], cpu_bus.addr[12:0]};
+            end
+            2'b10: begin
+                ram_addr[26:0] = {6'd0, SccBank0[7:0], cpu_bus.addr[12:0]};
+            end
+            2'b11: begin
+                ram_addr[26:0] = {6'd0, SccBank1[7:0], cpu_bus.addr[12:0]};
+            end
+        endcase
+        if (mapsel == 2'b01) begin
+            ram_addr[20] = 1'b0;
+        end else if (mapsel == 2'b11) begin
+            ram_addr[20] = cpu_bus.addr[14] ? SccBankL : SccBankM;
+        end
+    end
+
 
     assign device_out.en    = cs && SccSel[1];
     
+    wire oe;
+    
+    assign oe         = cs && SccSel == 2'b01;
 
+    assign out.addr   = oe ? ram_addr : {27{1'b1}};
+    assign out.ram_cs = oe;
+    assign out.rnw    = ~(cpu_bus.wr && oe);
 
-    //TODO namapovat RAM
     //TODO mapper může být ve dvou slotech
 
 endmodule
