@@ -84,9 +84,9 @@
 LIBRARY IEEE;
     USE IEEE.STD_LOGIC_1164.ALL;
     USE IEEE.STD_LOGIC_UNSIGNED.ALL;
-    USE WORK.VDP_PACKAGE.ALL;
+    USE WORK.VDP_PACKAGE_o.ALL;
 
-ENTITY VDP_REGISTER IS
+ENTITY VDP_REGISTER_o IS
     PORT(
         RESET                       : IN    STD_LOGIC;
         CLK21M                      : IN    STD_LOGIC;
@@ -200,10 +200,10 @@ ENTITY VDP_REGISTER IS
         FORCED_V_MODE               : IN    STD_LOGIC;
         VDP_ID                      : IN    STD_LOGIC_VECTOR(  4 DOWNTO 0 )
     );
-END VDP_REGISTER;
+END VDP_REGISTER_o;
 
-ARCHITECTURE RTL OF VDP_REGISTER IS
-    COMPONENT RAM
+ARCHITECTURE RTL OF VDP_REGISTER_o IS
+    COMPONENT RAM_o
         PORT(
             ADR     : IN    STD_LOGIC_VECTOR(  7 DOWNTO 0 );
             CLK     : IN    STD_LOGIC;
@@ -363,7 +363,7 @@ BEGIN
         END IF;
     END PROCESS;
 
-    U_PALETTEMEMRB: RAM
+    U_PALETTEMEMRB: RAM_o
     PORT MAP(
         ADR         => PALETTEADDR,
         CLK         => CLK21M,
@@ -372,7 +372,7 @@ BEGIN
         DBI         => PALETTEDATARB_OUT
     );
 
-    U_PALETTEMEMG: RAM
+    U_PALETTEMEMG: RAM_o
     PORT MAP(
         ADR         => PALETTEADDR,
         CLK         => CLK21M,

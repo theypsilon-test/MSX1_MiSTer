@@ -77,7 +77,7 @@ LIBRARY IEEE;
     USE IEEE.STD_LOGIC_1164.ALL;
     USE IEEE.STD_LOGIC_UNSIGNED.ALL;
 
-ENTITY VDP_DOUBLEBUF IS
+ENTITY VDP_DOUBLEBUF_o IS
     PORT (
         CLK         : IN    STD_LOGIC;
         XPOSITIONW  : IN    STD_LOGIC_VECTOR(  9 DOWNTO 0 );
@@ -91,10 +91,10 @@ ENTITY VDP_DOUBLEBUF IS
         DATAGOUT    : OUT   STD_LOGIC_VECTOR(  5 DOWNTO 0 );
         DATABOUT    : OUT   STD_LOGIC_VECTOR(  5 DOWNTO 0 )
     );
-END VDP_DOUBLEBUF;
+END VDP_DOUBLEBUF_o;
 
-ARCHITECTURE RTL OF VDP_DOUBLEBUF IS
-    COMPONENT VDP_LINEBUF
+ARCHITECTURE RTL OF VDP_DOUBLEBUF_o IS
+    COMPONENT VDP_LINEBUF_o
          PORT (
             ADDRESS     : IN    STD_LOGIC_VECTOR(  9 DOWNTO 0 );
             INCLOCK     : IN    STD_LOGIC;
@@ -116,7 +116,7 @@ ARCHITECTURE RTL OF VDP_DOUBLEBUF IS
     SIGNAL OUTB_O   : STD_LOGIC_VECTOR(5 DOWNTO 0);
 BEGIN
     -- EVEN LINE
-    U_BUF_RE: VDP_LINEBUF
+    U_BUF_RE: VDP_LINEBUF_o
     PORT MAP(
         ADDRESS     => ADDR_E,
         INCLOCK     => CLK,
@@ -125,7 +125,7 @@ BEGIN
         Q           => OUTR_E
     );
 
-    U_BUF_GE: VDP_LINEBUF
+    U_BUF_GE: VDP_LINEBUF_o
     PORT MAP(
         ADDRESS     => ADDR_E,
         INCLOCK     => CLK,
@@ -134,7 +134,7 @@ BEGIN
         Q           => OUTG_E
     );
 
-    U_BUF_BE: VDP_LINEBUF
+    U_BUF_BE: VDP_LINEBUF_o
     PORT MAP(
         ADDRESS     => ADDR_E,
         INCLOCK     => CLK,
@@ -143,7 +143,7 @@ BEGIN
         Q           => OUTB_E
     );
     -- ODD LINE
-    U_BUF_RO: VDP_LINEBUF
+    U_BUF_RO: VDP_LINEBUF_o
     PORT MAP(
         ADDRESS     => ADDR_O,
         INCLOCK     => CLK,
@@ -152,7 +152,7 @@ BEGIN
         Q           => OUTR_O
     );
 
-    U_BUF_GO: VDP_LINEBUF
+    U_BUF_GO: VDP_LINEBUF_o
     PORT MAP(
         ADDRESS     => ADDR_O,
         INCLOCK     => CLK,
@@ -161,7 +161,7 @@ BEGIN
         Q           => OUTG_O
     );
 
-    U_BUF_BO: VDP_LINEBUF
+    U_BUF_BO: VDP_LINEBUF_o
     PORT MAP(
         ADDRESS     => ADDR_O,
         INCLOCK     => CLK,

@@ -64,9 +64,9 @@ LIBRARY IEEE;
     USE IEEE.STD_LOGIC_1164.ALL;
     USE IEEE.STD_LOGIC_UNSIGNED.ALL;
     USE IEEE.STD_LOGIC_ARITH.ALL;
-    USE WORK.VDP_PACKAGE.ALL;
+    USE WORK.VDP_PACKAGE_o.ALL;
 
-ENTITY VDP_SSG IS
+ENTITY VDP_SSG_o IS
     PORT(
         RESET                   : IN    STD_LOGIC;
         CLK21M                  : IN    STD_LOGIC;
@@ -104,11 +104,11 @@ ENTITY VDP_SSG IS
         CENTERYJK_R25_N         : IN    STD_LOGIC;
         OFFSET_Y                : IN    STD_LOGIC_VECTOR(  6 DOWNTO 0 )
     );
-END VDP_SSG;
+END VDP_SSG_o;
 
-ARCHITECTURE RTL OF VDP_SSG IS
+ARCHITECTURE RTL OF VDP_SSG_o IS
 
-    COMPONENT VDP_HVCOUNTER
+    COMPONENT VDP_HVCOUNTER_o
         PORT(
             RESET               : IN    STD_LOGIC;
             CLK21M              : IN    STD_LOGIC;
@@ -179,7 +179,7 @@ BEGIN
     -----------------------------------------------------------------------------
     --  SUB COMPONENTS
     -----------------------------------------------------------------------------
-    U_HVCOUNTER: VDP_HVCOUNTER
+    U_HVCOUNTER: VDP_HVCOUNTER_o
     PORT MAP (
         RESET               => RESET                ,
         CLK21M              => CLK21M               ,

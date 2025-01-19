@@ -249,9 +249,9 @@ LIBRARY IEEE;
     USE IEEE.STD_LOGIC_1164.ALL;
     USE IEEE.STD_LOGIC_UNSIGNED.ALL;
     USE IEEE.STD_LOGIC_ARITH.ALL;
-    USE WORK.VDP_PACKAGE.ALL;
+    USE WORK.VDP_PACKAGE_o.ALL;	
 
-ENTITY VDP IS
+ENTITY VDP_o IS
     PORT(
         -- VDP CLOCK ... 21.477MHZ
         CLK21M              : IN    STD_LOGIC;
@@ -306,10 +306,10 @@ ENTITY VDP IS
         -- DEBUG OUTPUT
     --  DEBUG_OUTPUT        : OUT   STD_LOGIC_VECTOR( 15 DOWNTO 0 ) -- ★
     );
-END VDP;
+END VDP_o;
 
-ARCHITECTURE RTL OF VDP IS
-    COMPONENT VDP_SSG
+ARCHITECTURE RTL OF VDP_o IS
+    COMPONENT VDP_SSG_o
         PORT(
             RESET                   : IN    STD_LOGIC;
             CLK21M                  : IN    STD_LOGIC;
@@ -348,7 +348,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_INTERRUPT
+    COMPONENT VDP_INTERRUPT_o
         PORT(
             RESET                   : IN    STD_LOGIC;
             CLK21M                  : IN    STD_LOGIC;
@@ -365,7 +365,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_SPRITE
+    COMPONENT VDP_SPRITE_o
         PORT(
             -- VDP CLOCK ... 21.477MHZ
             CLK21M                      : IN    STD_LOGIC;
@@ -414,7 +414,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT RAM
+    COMPONENT RAM_o
         PORT(
             ADR     : IN    STD_LOGIC_VECTOR(  7 DOWNTO 0 );
             CLK     : IN    STD_LOGIC;
@@ -424,7 +424,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_NTSC_PAL
+    COMPONENT VDP_NTSC_PAL_o
         PORT(
             CLK21M              : IN    STD_LOGIC;
             RESET               : IN    STD_LOGIC;
@@ -447,7 +447,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_VGA
+    COMPONENT VDP_VGA_o
         PORT(
             CLK21M              : IN    STD_LOGIC;
             RESET               : IN    STD_LOGIC;
@@ -476,7 +476,7 @@ ARCHITECTURE RTL OF VDP IS
             );
     END COMPONENT;
 
-    COMPONENT VDP_COMMAND
+    COMPONENT VDP_COMMAND_o
         PORT(
             RESET               : IN    STD_LOGIC;
             CLK21M              : IN    STD_LOGIC;
@@ -514,7 +514,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_WAIT_CONTROL
+    COMPONENT VDP_WAIT_CONTROL_o
         PORT(
             RESET           : IN    STD_LOGIC;
             CLK21M          : IN    STD_LOGIC;
@@ -533,7 +533,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_COLORDEC
+    COMPONENT VDP_COLORDEC_o
         PORT(
             RESET               : IN    STD_LOGIC;
             CLK21M              : IN    STD_LOGIC;
@@ -579,7 +579,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_TEXT12
+    COMPONENT VDP_TEXT12_o
         PORT(
             -- VDP CLOCK ... 21.477MHZ
             CLK21M                      : IN    STD_LOGIC;
@@ -612,7 +612,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_GRAPHIC123M
+    COMPONENT VDP_GRAPHIC123M_o
         PORT(
             CLK21M                      : IN    STD_LOGIC;      --  21.477MHZ
             RESET                       : IN    STD_LOGIC;
@@ -643,7 +643,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_GRAPHIC4567
+    COMPONENT VDP_GRAPHIC4567_o
         PORT(
             -- VDP CLOCK ... 21.477MHZ
             CLK21M                  : IN    STD_LOGIC;
@@ -683,7 +683,7 @@ ARCHITECTURE RTL OF VDP IS
         );
     END COMPONENT;
 
-    COMPONENT VDP_REGISTER
+    COMPONENT VDP_REGISTER_o
         PORT(
             RESET                       : IN    STD_LOGIC;
             CLK21M                      : IN    STD_LOGIC;
@@ -1042,7 +1042,7 @@ BEGIN
     IVIDEOB <=  (OTHERS => '0') WHEN( BWINDOW = '0' )ELSE
                 IVIDEOB_VDP;
 
-    U_VDP_NTSC_PAL: VDP_NTSC_PAL
+    U_VDP_NTSC_PAL: VDP_NTSC_PAL_o
     PORT MAP(
         CLK21M              => CLK21M,
         RESET               => RESET,
@@ -1061,7 +1061,7 @@ BEGIN
         VIDEOVSOUT_N        => IVIDEOVS_N_NTSC_PAL
     );
 
-    U_VDP_VGA: VDP_VGA
+    U_VDP_VGA: VDP_VGA_o
     PORT MAP(
         CLK21M              => CLK21M,
         RESET               => RESET,
@@ -1123,7 +1123,7 @@ BEGIN
 --                  'Z';    -- OCM original setting
                     '1';    -- MIST board ( http://github.com/robinsonb5/OneChipMSX )
 
-    U_INTERRUPT: VDP_INTERRUPT
+    U_INTERRUPT: VDP_INTERRUPT_o
     PORT MAP (
         RESET                   => RESET                            ,
         CLK21M                  => CLK21M                           ,
@@ -1153,7 +1153,7 @@ BEGIN
     -----------------------------------------------------------------------------
     -- SYNCHRONOUS SIGNAL GENERATOR
     -----------------------------------------------------------------------------
-    U_SSG: VDP_SSG
+    U_SSG: VDP_SSG_o
     PORT MAP(
         RESET                   => RESET                    ,
         CLK21M                  => CLK21M                   ,
@@ -1329,7 +1329,7 @@ BEGIN
         IF (RESET = '1') THEN
 
             IRAMADR <= (OTHERS => '1');
-            PRAMDBO <= (OTHERS => 'Z');
+            PRAMDBO <= (OTHERS => '0');
             PRAMOE_N <= '1';
             PRAMWE_N <= '1';
 
@@ -1450,7 +1450,7 @@ BEGIN
                 ELSE
                     VDPVRAMACCESSADDR <= VDPVRAMACCESSADDRV + 1;
                 END IF;
-                PRAMDBO <= (OTHERS => 'Z');
+                PRAMDBO <= (OTHERS => '0');
                 PRAMOE_N <= '0';
                 PRAMWE_N <= '1';
                 VDPVRAMRDACK <= NOT VDPVRAMRDACK;
@@ -1478,7 +1478,7 @@ BEGIN
                 ELSE
                     IRAMADR <= VDPCMDVRAMACCESSADDR;
                 END IF;
-                PRAMDBO <= (OTHERS => 'Z');
+                PRAMDBO <= (OTHERS => '0');
                 PRAMOE_N <= '0';
                 PRAMWE_N <= '1';
                 VDPCMDVRAMREADINGR <= NOT VDPCMDVRAMREADINGA;
@@ -1487,13 +1487,13 @@ BEGIN
                 IRAMADR <= PRAMADRSPRITE;
                 PRAMOE_N <= '0';
                 PRAMWE_N <= '1';
-                PRAMDBO <= (OTHERS => 'Z');
+                PRAMDBO <= (OTHERS => '0');
             ELSE
                 -- VRAM_ACCESS_DRAW
                 -- VRAM READ FOR SCREEN IMAGE BUILDING
                 CASE DOTSTATE IS
                     WHEN "10" =>
-                        PRAMDBO <= (OTHERS => 'Z');
+                        PRAMDBO <= (OTHERS => '0');
                         PRAMOE_N <= '0';
                         PRAMWE_N <= '1';
                         IF( TEXT_MODE = '1' )THEN
@@ -1506,7 +1506,7 @@ BEGIN
                             IRAMADR <= PRAMADRG4567;
                         END IF;
                     WHEN "01" =>
-                        PRAMDBO <= (OTHERS => 'Z' );
+                        PRAMDBO <= (OTHERS => '0' );
                         PRAMOE_N <= '0';
                         PRAMWE_N <= '1';
                         IF( (VDPMODEGRAPHIC6 = '1') OR (VDPMODEGRAPHIC7 = '1') )THEN
@@ -1527,7 +1527,7 @@ BEGIN
     -----------------------------------------------------------------------
     -- COLOR DECODING
     -------------------------------------------------------------------------
-    U_VDP_COLORDEC: VDP_COLORDEC
+    U_VDP_COLORDEC: VDP_COLORDEC_o
     PORT MAP(
         RESET               => RESET                ,
         CLK21M              => CLK21M               ,
@@ -1575,7 +1575,7 @@ BEGIN
     -----------------------------------------------------------------------------
     -- MAKE COLOR CODE
     -----------------------------------------------------------------------------
-    U_VDP_TEXT12: VDP_TEXT12
+    U_VDP_TEXT12: VDP_TEXT12_o
     PORT MAP(
         CLK21M                      => CLK21M,
         RESET                       => RESET,
@@ -1599,7 +1599,7 @@ BEGIN
         PCOLORCODE                  => COLORCODET12
     );
 
-    U_VDP_GRAPHIC123M: VDP_GRAPHIC123M
+    U_VDP_GRAPHIC123M: VDP_GRAPHIC123M_o
     PORT MAP(
         CLK21M                      => CLK21M,
         RESET                       => RESET,
@@ -1622,7 +1622,7 @@ BEGIN
         PCOLORCODE                  => COLORCODEG123M
     );
 
-    U_VDP_GRAPHIC4567: VDP_GRAPHIC4567
+    U_VDP_GRAPHIC4567: VDP_GRAPHIC4567_o
     PORT MAP(
         CLK21M                      => CLK21M,
         RESET                       => RESET,
@@ -1655,7 +1655,7 @@ BEGIN
     -----------------------------------------------------------------------------
     -- SPRITE MODULE
     -----------------------------------------------------------------------------
-    U_SPRITE: VDP_SPRITE
+    U_SPRITE: VDP_SPRITE_o
     PORT MAP(
         CLK21M                      => CLK21M,
         RESET                       => RESET,
@@ -1694,7 +1694,7 @@ BEGIN
     -----------------------------------------------------------------------------
     -- VDP REGISTER ACCESS
     -----------------------------------------------------------------------------
-    U_VDP_REGISTER: VDP_REGISTER
+    U_VDP_REGISTER: VDP_REGISTER_o
     PORT MAP(
         RESET                       => RESET                        ,
         CLK21M                      => CLK21M                       ,
@@ -1811,7 +1811,7 @@ BEGIN
     -----------------------------------------------------------------------------
     -- VDP COMMAND
     -----------------------------------------------------------------------------
-    U_VDP_COMMAND: VDP_COMMAND
+    U_VDP_COMMAND: VDP_COMMAND_o
     PORT MAP(
         RESET               => RESET                ,
         CLK21M              => CLK21M               ,
@@ -1844,7 +1844,7 @@ BEGIN
         REG_R25_CMD         => REG_R25_CMD
     );
 
-    U_VDP_WAIT_CONTROL: VDP_WAIT_CONTROL
+    U_VDP_WAIT_CONTROL: VDP_WAIT_CONTROL_o
     PORT MAP (
         RESET               => RESET                ,
         CLK21M              => CLK21M               ,
