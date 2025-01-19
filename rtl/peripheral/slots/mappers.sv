@@ -28,7 +28,7 @@ module mappers (
     mapper_out generic8k_out();         // Outputs from generic 8k mapper
     mapper_out generic16k_out();        // Outputs from generic 16k mapper
     mapper_out harryFox_out();          // Outputs from Harry Fox mapper
-    mapper_out zeimna80_out();          // Outputs from Zemina 80 in 1 mapper
+    mapper_out zemina80_out();          // Outputs from Zemina 80 in 1 mapper
     mapper_out zemina90_out();          // Outputs from Zemina 90 in 1 mapper
     mapper_out mfrsd_out();             // Outputs from MFRSD3 mapper
     mapper_out ese_ram_out();           // Outputs from ESE RAM mapper
@@ -142,7 +142,7 @@ module mappers (
     mapper_zemina80 mapper_zemina80 (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
-        .out(zeimna80_out)
+        .out(zemina80_out)
     );
 
     // Instantiate the Zemina90in1 mapper
@@ -209,7 +209,7 @@ module mappers (
                             & generic8k_out.addr 
                             & generic16k_out.addr
                             & harryFox_out.addr 
-                            & zeimna80_out.addr 
+                            & zemina80_out.addr 
                             & zemina90_out.addr 
                             & mfrsd_out.addr
                             & national_out.addr
@@ -240,7 +240,7 @@ module mappers (
                                 | generic8k_out.ram_cs 
                                 | generic16k_out.ram_cs
                                 | harryFox_out.ram_cs 
-                                | zeimna80_out.ram_cs 
+                                | zemina80_out.ram_cs 
                                 | zemina90_out.ram_cs 
                                 | mfrsd_out.ram_cs
                                 | national_out.ram_cs
