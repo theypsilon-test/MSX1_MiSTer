@@ -45,10 +45,10 @@ module mapper_megaram (
     input                    ocm_slot1_mode,
     input              [1:0] ocm_slot2_mode
 );
-    
+
     logic       SccBankL[2], SccBankM[2];
     logic [7:0] SccBank0[2], SccBank1[2], SccBank2[2], SccBank3[2], SccModeA[2], SccModeB[2];
-    
+
     logic [1:0] SccSel, mapsel;
     logic       cs, DecSccA, DecSccB, Dec1FFE;
     always_comb begin
@@ -58,16 +58,16 @@ module mapper_megaram (
             MAPPER_MEGAASCII8:  mapsel = 2'b01;
             MAPPER_MEGAASCII16: mapsel = 2'b11;
             default: mapsel = 2'b00;
-        endcase        
+        endcase
     end
 
     assign cs = cpu_bus.mreq && mapsel != 2'b00;
 
-    assign DecSccA = cpu_bus.addr[15:11] == 5'b10011 && ~SccModeB[block_info.id][5] && SccBank2[block_info.id][5:0] == 6'b111111;      
-    assign DecSccB = cpu_bus.addr[15:11] == 5'b10111 &&  SccModeB[block_info.id][5] && SccBank3[block_info.id][7];                     
+    assign DecSccA = cpu_bus.addr[15:11] == 5'b10011 && ~SccModeB[block_info.id][5] && SccBank2[block_info.id][5:0] == 6'b111111;
+    assign DecSccB = cpu_bus.addr[15:11] == 5'b10111 &&  SccModeB[block_info.id][5] && SccBank3[block_info.id][7];
     assign Dec1FFE = cpu_bus.addr[12:1] == 12'b111111111111;
 
-    always_comb begin 
+    always_comb begin
         if (~cpu_bus.addr[8] && ~SccModeB[block_info.id][4] && ~mapsel[0] && (DecSccA || DecSccB)) begin
             SccSel = 2'b10; // memory access (scc_wave)
         end else if (
@@ -105,9 +105,6 @@ module mapper_megaram (
             SccBankL    <= '{'0, '0};
             SccBankM    <= '{'0, '0};
         end else begin
-            if (cs && cpu_bus.wr && cpu_bus.req) begin
-                $display("ID: %d mapsel: %d", block_info.id, mapsel);
-            end
             if (cs && cpu_bus.wr && cpu_bus.req && SccSel == 2'b00) begin
                 if (~mapsel[0]) begin
                     if (~SccModeB[block_info.id][4]) begin
@@ -127,9 +124,9 @@ module mapper_megaram (
                     if (Dec1FFE) begin
                         case(cpu_bus.addr[15:13])
                             3'b011: // Mapped I/O port access on 7FFE-7FFFh ... Register write
-                                if (SccModeB[block_info.id][5:4] == 2'b00) begin SccModeA[block_info.id] <= cpu_bus.data; $display("SET SccModeA %x", cpu_bus.data); end
+                                if (SccModeB[block_info.id][5:4] == 2'b00) SccModeA[block_info.id] <= cpu_bus.data;
                             3'b101: // Mapped I/O port access on BFFE-BFFFh ... Register write
-                                if (~SccModeA[block_info.id][6] && ~SccModeA[block_info.id][4]) begin SccModeB[block_info.id] <= cpu_bus.data;  $display("SET SccModeB %x", cpu_bus.data); end
+                                if (~SccModeA[block_info.id][6] && ~SccModeA[block_info.id][4]) SccModeB[block_info.id] <= cpu_bus.data;
                             default:;
                         endcase
                     end
@@ -142,7 +139,7 @@ module mapper_megaram (
                                SccBank1[block_info.id] <= {cpu_bus.data[7], cpu_bus.data[5:0], 1'b1};
                             end
                         end else begin
-                            if (cpu_bus.addr[11]) begin 
+                            if (cpu_bus.addr[11]) begin
                                 SccBank1[block_info.id] <= cpu_bus.data; // ASC8K / 6800-6FFFh
                             end else begin
                                 SccBank0[block_info.id] <= cpu_bus.data; // ASC8K / 6000-67FFh
@@ -157,7 +154,7 @@ module mapper_megaram (
                                SccBank3[block_info.id] <= {cpu_bus.data[7], cpu_bus.data[5:0], 1'b1};
                             end
                         end else begin
-                            if (cpu_bus.addr[11]) begin 
+                            if (cpu_bus.addr[11]) begin
                                 SccBank3[block_info.id] <= cpu_bus.data; // ASC8K / 7800-7FFFh
                             end else begin
                                 SccBank2[block_info.id] <= cpu_bus.data; // ASC8K / 7000-77FFh
@@ -166,10 +163,10 @@ module mapper_megaram (
                     end
                 end
             end
-            
+
         end
     end
-    
+
     logic [26:0] ram_addr;
 
     always_comb begin
@@ -194,11 +191,10 @@ module mapper_megaram (
         end
     end
 
-
     assign device_out.en    = cs && SccSel[1];
-    
+
     wire oe;
-    
+
     assign oe         = cs && SccSel == 2'b01;
 
     assign out.addr   = oe ? ram_addr : {27{1'b1}};
