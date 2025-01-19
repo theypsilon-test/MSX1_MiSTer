@@ -744,7 +744,7 @@ always_ff @(posedge CLK21M or posedge RESET) begin
                         if (REG_R1_SP_ZOOM == 1'b0 || DOTCOUNTERX[0] == 1'b1) begin
                             SPDRAWPATTERN <= {SPDRAWPATTERN[14:0], 1'b0}; // Shift left
                         end
-                        SPDRAWXV = SPDRAWXV + 1'b1;
+                        SPDRAWXV = SPDRAWX + 1'b1;
                     end
                     SPDRAWX <= SPDRAWXV;
                     SPLINEBUFDRAWX <= SPDRAWXV[7:0]; // Store X position in line buffer

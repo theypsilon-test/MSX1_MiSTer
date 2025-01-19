@@ -170,7 +170,7 @@ module VDP_REGISTER (
     output logic REG_R25_YJK,
     output logic REG_R25_MSK,
     output logic REG_R25_SP2,
-    output logic [5:0] REG_R26_H_SCROLL,
+    output logic [8:3] REG_R26_H_SCROLL,
     output logic [2:0] REG_R27_H_SCROLL,
 
     // MODE
@@ -222,11 +222,11 @@ module VDP_REGISTER (
     logic FF_R1_DISP_ON;
     logic [1:0] FF_R1_DISP_MODE;
     logic FF_R25_SP2;
-    logic [5:0] FF_R26_H_SCROLL;
+    logic [8:3] FF_R26_H_SCROLL;
     logic [3:0] REG_R18_VERT;
     logic [3:0] REG_R18_HORZ;
-    logic [2:0] REG_R0_DISP_MODE;
-    logic [2:0] FF_R0_DISP_MODE;
+    logic [3:1] REG_R0_DISP_MODE;
+    logic [3:1] FF_R0_DISP_MODE;
     logic FF_SPVDPS0RESETREQ;
 
     logic W_EVEN_DOTSTATE;
@@ -247,9 +247,9 @@ module VDP_REGISTER (
     assign VDPMODEGRAPHIC5         = {REG_R0_DISP_MODE, REG_R1_DISP_MODE[0], REG_R1_DISP_MODE[1]} == 5'b10000;
     assign VDPMODEGRAPHIC6         = {REG_R0_DISP_MODE, REG_R1_DISP_MODE[0], REG_R1_DISP_MODE[1]} == 5'b10100;
     assign VDPMODEGRAPHIC7         = {REG_R0_DISP_MODE, REG_R1_DISP_MODE[0], REG_R1_DISP_MODE[1]} == 5'b11100;
-    assign VDPMODEISHIGHRES        = (REG_R0_DISP_MODE[2:1] == 2'b10) && (REG_R1_DISP_MODE == 2'b00);
-    assign SPMODE2                 = (REG_R1_DISP_MODE == 2'b00) && (REG_R0_DISP_MODE[2] || REG_R0_DISP_MODE[1]);
-    assign VDPMODEISVRAMINTERLEAVE = (REG_R0_DISP_MODE[2] && REG_R0_DISP_MODE[1]);
+    assign VDPMODEISHIGHRES        = (REG_R0_DISP_MODE[3:2] == 2'b10) && (REG_R1_DISP_MODE == 2'b00);
+    assign SPMODE2                 = (REG_R1_DISP_MODE == 2'b00) && (REG_R0_DISP_MODE[3] || REG_R0_DISP_MODE[2]);
+    assign VDPMODEISVRAMINTERLEAVE = (REG_R0_DISP_MODE[3] && REG_R0_DISP_MODE[1]);
 
 
 
@@ -281,7 +281,7 @@ module VDP_REGISTER (
         end
     end
 
-    assign W_IS_BITMAP_MODE = (REG_R0_DISP_MODE[2:0] == 3'b011 || REG_R0_DISP_MODE[2]);
+    assign W_IS_BITMAP_MODE = (REG_R0_DISP_MODE == 3'b011 || REG_R0_DISP_MODE[3]);
 
     always_ff @(posedge CLK21M) begin
         if (W_IS_BITMAP_MODE && FF_R9_2PAGE_MODE) begin
