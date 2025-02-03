@@ -64,6 +64,8 @@ end
 
 wire area_philips   = (cpu_bus.addr[13:3] == 11'b11111111111) && io_device[0].param == 8'h00;
 wire area_national  = (cpu_bus.addr[13:7] ==  7'b1111111) && io_device[0].param == 8'h01;
+wire area_philips   = (cpu_bus.addr[13:3] == 11'b11111111111) && io_device[0].param[1:0] == 2'h0;
+wire area_national  = (cpu_bus.addr[13:7] ==  7'b1111111) && io_device[0].param[1:0] == 2'h1;
 wire area_device    = area_philips || area_national;
 wire device_cs      = cs && area_device && cpu_bus.mreq;
 
