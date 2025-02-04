@@ -64,7 +64,7 @@
 );
 
 device_bus device_bus();
-cpu_bus_if cpu_bus(clock_bus.clk, clock_bus.ce_3m58_n, reset);
+cpu_bus_if cpu_bus(clock_bus.clk, reset);
 sd_bus sd_bus();
 sd_bus_control sd_bus_control();
 
@@ -91,20 +91,62 @@ assign audio            = compr[audio_mix[16:14]];
 //  -----------------------------------------------------------------------------
 wire [7:0] d_to_cpu;
 wire cpu_interrupt;
-tv80n Z80
+
+
+logic cpu_clk;
+always_comb begin
+   case(cpu_clock_sel)
+      2'b00: cpu_clk = clock_bus.ce_3m58_n;
+      2'b01: cpu_clk = clock_bus.ce_10m7_n;
+      2'b10: cpu_clk = clock_bus.ce_5m39_n;
+      2'b11: cpu_clk = clock_bus.ce_3m58_n;
+      endcase
+end
+wire m1_n, mreq_n, iorq_n, rd_n, wr_n, rfsh_n;
+
+assign cpu_bus.cpu_mp.mreq    = ~mreq_n;
+assign cpu_bus.cpu_mp.iorq    = ~iorq_n;
+assign cpu_bus.cpu_mp.m1      = ~m1_n;
+assign cpu_bus.cpu_mp.rd      = ~rd_n;
+assign cpu_bus.cpu_mp.wr      = ~wr_n;
+assign cpu_bus.cpu_mp.rfsh    = ~rfsh_n;
+assign cpu_bus.cpu_mp.cpu_clk = cpu_clk;
+assign cpu_bus.cpu_mp.req     = ~((iorq_n & mreq_n) | (wr_n & rd_n) | iack);
+
+logic iack;
+always @(posedge cpu_bus.clk) begin
+   if (cpu_bus.reset) 
+   iack <= 0;
+   else begin
+   if (iorq_n && mreq_n)
+      iack <= 0;
+   else
+      if (cpu_bus.cpu_mp.req)
+         iack <= 1;
+   end
+end
+  
+
+TV80a #(.Mode(0), .R800_MULU(1), .IOWait(1)) Z80
 (
-   .cpu_bus(cpu_bus.cpu_mp),
-   .cpu_regs(cpu_regs),
-   .opcode(opcode),
-   .opcode_num(opcode_num),
-   .opcode_out(opcode_out),
-   .opcode_PC_start(opcode_PC_start),
-   .wait_n(wait_n),
-   .int_n(~cpu_interrupt),
-   .nmi_n(1'b1),
-   .busrq_n(1'b1),
-   .busak_n(),
-   .di(d_to_cpu)
+   .RESET_n(~reset),
+   .R800_mode('0),
+   .CLK_n(cpu_clk),
+   .WAIT_n(wait_n),
+   .INT_n(~cpu_interrupt),
+   .NMI_n('1),
+   .BUSRQ_n('1),
+   .M1_n(m1_n),
+   .MREQ_n(mreq_n),
+   .IORQ_n(iorq_n),
+   .RD_n(rd_n),
+   .WR_n(wr_n),
+   .RFSH_n(rfsh_n),
+   .HALT_n(),
+   .BUSAK_n(),
+   .A(cpu_bus.cpu_mp.addr),
+   .DI(d_to_cpu),
+   .DO(cpu_bus.cpu_mp.data)
 );
 //  -----------------------------------------------------------------------------
 //  -- WAIT CPU
@@ -176,6 +218,7 @@ wire        keybeep;
 wire        reset_lock, reset_request, ocm_megaSD_enable;
 wire [1:0]  ocm_slot2_mode;
 wire        ocm_slot1_mode;
+wire [1:0]  cpu_clock_sel;
 devices devices
 (
    .clock_bus(clock_bus),
