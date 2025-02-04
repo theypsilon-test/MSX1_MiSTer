@@ -26,7 +26,7 @@
    input                    tape_in,
    //MSX config
    input             [64:0] rtc_time,
-   input MSX::user_config_t msxConfig,
+   input MSX::user_config_t msx_user_config,
    input                    sram_save,
    input                    sram_load,
    //IOCTL
@@ -151,26 +151,24 @@ TV80a #(.Mode(0), .R800_MULU(1), .IOWait(1)) Z80
 //  -----------------------------------------------------------------------------
 //  -- WAIT CPU
 //  -----------------------------------------------------------------------------
-wire exwait_n = 1;
+logic wait_n, dev_cpu_wait;
+logic [2:0] wait_count = 0;
+logic last_m1;
 
-logic wait_n = 1'b0;
-always @(posedge clock_bus.clk, negedge exwait_n, negedge u1_2_q) begin
-   if (~exwait_n)
-      wait_n <= 1'b0;
-   else if (~u1_2_q)
-      wait_n <= 1'b1;
-   else if (clock_bus.ce_3m58_p)
-      wait_n <= ~cpu_bus.device_mp.m1;
+always_ff @(negedge cpu_bus.cpu_clk) begin
+   last_m1 <= cpu_bus.device_mp.m1;
+   if (~last_m1 && cpu_bus.device_mp.m1) begin
+      wait_count <= msx_config.wait_count;
+   end else if (wait_count != 3'd0) begin
+      wait_count <= wait_count - 3'b01;
+   end
 end
 
-logic u1_2_q = 1'b0;
-always @(posedge clock_bus.clk, negedge exwait_n) begin
-   if (~exwait_n)
-      u1_2_q <= 1'b1;
-   else if (clock_bus.ce_3m58_p)
-      u1_2_q <= wait_n;
-end
+assign wait_n = wait_count == 3'd00 && ~dev_cpu_wait;
 
+//  -----------------------------------------------------------------------------
+//  -- Slots 
+//  -----------------------------------------------------------------------------
 wire [1:0] active_slot;
 
 assign active_slot =    //~map_valid                             ? default_slot   :

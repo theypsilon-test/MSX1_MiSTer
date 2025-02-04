@@ -4,9 +4,9 @@ module clock
    clock_bus_if.generator_mp clock_bus
 );
 
-reg  [1:0] clkdiv4 =  2'd1;
-reg  [2:0] clkdiv6 =  3'd5;
-reg [21:0] div     = 22'd2147727;
+logic [1:0] clkdiv4 =  2'd1;
+logic [2:0] clkdiv6 =  3'd5;
+logic [21:0] div     = 22'd2147727;
 
 always @(posedge clock_bus.clk, posedge reset) begin
    if (reset) 

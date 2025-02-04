@@ -1,5 +1,7 @@
 typedef enum logic [3:0] {DEVICE_NONE, DEVICE_ROM } device_typ_t;
 typedef enum logic {CAS_AUDIO_FILE,CAS_AUDIO_ADC} cas_audio_src_t;
+typedef enum logic [1:0] {Z80, R800, UNKN1, UNKN2} cpu_t;
+
 typedef enum logic [3:0] {CART_TYP_SCC, CART_TYP_SCC2, CART_TYP_FM_PAC, CART_TYP_MFRSD, CART_TYP_GM2, CART_TYP_FDC, CART_MEGASCC1, CART_MEGASCC2, CART_MEGA_ASCII_8, CART_MEGA_ASCII_16, MEGARAM, CART_TYP_ROM, CART_TYP_EMPTY } cart_typ_t;
 typedef enum logic [3:0] {DEV_NONE, DEV_OPL3, DEV_SCC, DEV_WD2793, DEV_MSX2_RAM, DEV_LATCH_PORT, DEV_KANJI, DEV_OCM_BOOT, DEV_VDP_TMS, DEV_VDP_V99xx, DEV_RTC, DEV_PSG, DEV_PPI } device_t;
 typedef enum logic [4:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTYPE, MAPPER_ASCII8, MAPPER_KOEI, MAPPER_WIZARDY, MAPPER_KONAMI, 
@@ -69,9 +71,9 @@ endinterface
 
 interface cpu_bus_if(
     input       clk,
-    input       clk_en,
     input       reset
 );
+    wire        cpu_clk;
     wire        mreq;
     wire        iorq;
     wire        rd;
@@ -85,8 +87,8 @@ interface cpu_bus_if(
 
     modport cpu_mp (
         input   clk,
-        input   clk_en,
         input   reset,
+        output  cpu_clk,
         output  mreq,
         output  iorq,
         output  rd,
@@ -101,7 +103,7 @@ interface cpu_bus_if(
     
     modport device_mp (
         input   clk,
-        input   clk_en,
+        input   cpu_clk,
         input   reset,
         input   mreq,
         input   iorq,
@@ -344,4 +346,11 @@ package MSX;
        logic       we;
        logic       rq;
     } kb_memory_t;
+
+    typedef struct {
+        cpu_t cpu;
+        logic [2:0] wait_count;
+        logic [2:0] cpu_clock_sel;
+    } msx_config_t;
+
 endpackage
