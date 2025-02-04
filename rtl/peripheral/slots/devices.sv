@@ -47,7 +47,7 @@ module devices (
     input MSX::io_device_t  io_device[16][3],                       // Array of IO devices
     input MSX::io_device_mem_ref_t io_memory[8],                    // Array of memory references
     input MSX::kb_memory_t  kb_upload_memory,
-    input MSX::user_config_t msxConfig,
+    input MSX::user_config_t msx_user_config,
     input            [10:0] ps2_key,
     input            [64:0] rtc_time,
     output    signed [15:0] sound,                                  // Combined audio output
@@ -64,6 +64,8 @@ module devices (
     output                  keybeep,
     output                  reset_lock,
     output                  reset_request,
+    output                  cpu_wait,
+    output            [1:0] cpu_clock_sel,
     output                  ocm_megaSD_enable,
     output                  ocm_slot1_mode,
     output [1:0]            ocm_slot2_mode
@@ -116,6 +118,7 @@ module devices (
     dev_opl3 opl3 (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
+        .clock_bus(clock_bus),
         .io_device(io_device[DEV_OPL3]),
         .sound(opl3_sound)
     );
@@ -125,6 +128,7 @@ module devices (
     wire signed [15:0] scc_sound;
     dev_scc scc (
         .cpu_bus(cpu_bus),
+        .clock_bus(clock_bus),
         .device_bus(device_bus),
         .io_device(io_device[DEV_SCC]),
         .sound(scc_sound),
@@ -154,6 +158,7 @@ module devices (
     wire wd2793_data_oe_rq;
     dev_WD2793 WD2793 (
         .cpu_bus(cpu_bus),
+        .clock_bus(clock_bus),
         .device_bus(device_bus),
         .io_device(io_device[DEV_WD2793]),
         .sd_bus(sd_bus),
@@ -188,11 +193,14 @@ module devices (
         .ram_cs(ocm_ram_cs),
         .ram_addr(ocm_ram_addr),
         .data(ocm_data),
-        .ff_dip_req(msxConfig.ocm_dip),
+        .ps2_key(ps2_key),
+        .ff_dip_req(msx_user_config.ocm_dip),
         .mapper_limit(ocm_mapper_limit),
         .rst_key_lock(ocm_reset_lock),
         .swio_reset(ocm_reset_request),
         .megaSD_enable(ocm_megaSD_enable),
+        .cpu_wait(cpu_wait),
+        .cpu_clock_sel(cpu_clock_sel),
         .Slot1Mode(ocm_slot1_mode),                             
         .Slot2Mode(ocm_slot2_mode)
     );
@@ -207,7 +215,7 @@ module devices (
         .io_device(io_device[DEV_VDP_TMS]),
         .data(tms_data),
         .interrupt(tms_interrupt),
-        .border(msxConfig.border)
+        .border(msx_user_config.border)
     );
     
     wire  [7:0] v99_data;
@@ -220,7 +228,7 @@ module devices (
         .io_device(io_device[DEV_VDP_V99xx]),
         .data(v99_data),
         .interrupt(v99_interrupt),
-        .border(msxConfig.border)
+        .border(msx_user_config.border)
     );
 
     wire [7:0] rtc_data;

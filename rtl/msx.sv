@@ -47,6 +47,7 @@
    input MSX::lookup_SRAM_t lookup_SRAM[4],
    input MSX::io_device_t   io_device[16][3],
    input MSX::io_device_mem_ref_t io_memory[8],
+   input MSX::msx_config_t  msx_config,
    //KBD
    input MSX::kb_memory_t   kb_upload_memory,
    //SD FDC
@@ -244,9 +245,11 @@ devices devices
    .tape_motor_on(tape_motor_on),
    .slot_config(slot_config),
    .keybeep(keybeep),
-   .msxConfig(msxConfig),
+   .msx_user_config(msx_user_config),
    .reset_lock(reset_lock),
    .reset_request(reset_request),
+   .cpu_wait(dev_cpu_wait),
+   .cpu_clock_sel(cpu_clock_sel),
    .ocm_megaSD_enable(ocm_megaSD_enable),
    .ocm_slot1_mode(ocm_slot1_mode),
    .ocm_slot2_mode(ocm_slot2_mode)

@@ -23,6 +23,8 @@ module memory_upload
     input  MSX::config_cart_t   cart_conf[2],
     output MSX::io_device_t     io_device[16][3],
     output MSX::io_device_mem_ref_t io_memory[8],
+    output MSX::msx_config_t    msx_config,
+
     input                       sdram_ready,
     output logic                load_sram,
     output error_t              error,
@@ -274,6 +276,9 @@ module memory_upload
                         ram_addr   <= '0;
                         io_ref_mem <= '0;
                         read_cnt   <= CONF_SIZE;
+                        msx_config.cpu           <= Z80;
+                        msx_config.wait_count    <= 3'd1;
+                        msx_config.cpu_clock_sel <= '0;
                         if (ioctl_size[1] > 0) begin
                             state      <= STATE_READ_CONF;
                             next_state <= STATE_CHECK_FW_CONF;
@@ -319,6 +324,9 @@ module memory_upload
                         state                  <= STATE_READ_CONF;
                         next_state             <= STATE_LOAD_CONF;
                         ddr3_request           <= '1;
+                        msx_config.cpu           <= cpu_t'(conf[3][7:6]);
+                        msx_config.wait_count    <= conf[3][5:3];
+                        msx_config.cpu_clock_sel <= conf[3][2:0];
                     end else begin
                         error <= ERR_BAD_MSX_CONF;
                         state <= STATE_IDLE;
@@ -738,7 +746,7 @@ module memory_upload
                     read_cnt   <= 5;
                     state      <= STATE_READ_CONF;
                     next_state <= STATE_LOAD_CONF;
-                    $display("CART_CONFIG DDR ADDR %x", {conf[2][3:0], conf[1], conf[0]});
+                    $display("CART_CONFIG DDR ADDR %x", {4'b0, 4'h3, conf[2][3:0], conf[1], conf[0]});
                 end
                 STATE_LOAD_KBD_LAYOUT: begin
                     if (~kb_upload_memory.we) begin

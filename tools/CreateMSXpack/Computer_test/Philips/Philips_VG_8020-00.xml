@@ -1,7 +1,8 @@
 <?xml version="1.0" ?>
 <msxConfig>
-  <type>MSX1</type>
-  <video_standard>PAL</video_standard> 
+  <cpu>Z80</cpu>                   <!-- Z80 --> 
+  <wait_count>1</wait_count>     <!-- 0 - 3 -->  
+  <cpu_frequency>0</cpu_frequency> <!-- 0-3.58, 1-5.39, 2-10.7-->
   <device mask="0xFE" port="0x98" param="0x0">TMS99xx</device> <!-- param bit0 PAL / NTSC-->
   <device mask="0xF8" port="0xA0" param="0x1">PSG</device> <!-- param bit 0 system PSG -->
   <device mask="0xF8" port="0xA8" param="0x0">PPI</device> <!-- param bit 0 OCM config -->

@@ -113,23 +113,31 @@ def parse_msx_config(root):
 
     return results
 
-def create_msx_config_header(type, video_standard, outfile):
+def create_msx_config_header(config, outfile):
+    #type, video_standard,
     """
     Writes the MSX configuration header to the output file.
-    :param type: Type MSX computer
-    :param video_standard: Video standard PAL/NTSC
+    :param config: Config data
     :param outfile: Opened file object for writing.
     """
+    
+    #.get('type', ('MSX1',{})), config.get('video_standard', ('PAL',{}))
+    cpu = config.get('cpu', ('Z80',{}))[0]
+    wait_count = convert_to_int(config.get('wait_count', ('0',{}))[0])
+    cpu_frequency = convert_to_int(config.get('cpu_frequency', ('0',{}))[0])
     conf = 0
-    if type[0] == 'MSX2' :
-        conf = 1
-    if type[0] == 'OCM' :
-        conf = 3  
-    else :
-        if video_standard[0] == 'PAL' : 
-            conf = conf + 4
-        if video_standard[0] == 'NTSC' : 
-            conf = conf + 8
+    
+    #CPU variants
+    if cpu == 'Z80' :
+        conf = conf | 0x00
+    elif cpu == 'R800' :
+        conf = conf | 0x40
+
+    #Wait states
+    conf = conf | (wait_count & 0x7) << 3
+    
+    #CPU frequency
+    conf = conf | (cpu_frequency & 0x7)
 
     data = struct.pack('BBBBBBBB', ord('M'), ord('S'), ord('x'), conf, 0, 0, 0, 0)
     outfile.write(data)
@@ -480,7 +488,8 @@ def create_msx_config(config, file_name, path, files_with_sha1, constants):
     file_path = os.path.join(file_path, file_name + '.msx')
     
     with open(file_path, "wb") as outfile:
-        create_msx_config_header(config.get('type', ('MSX1',{})), config.get('video_standard', ('PAL',{})), outfile)
+        #create_msx_config_header(config.get('type', ('MSX1',{})), config.get('video_standard', ('PAL',{})), outfile)
+        create_msx_config_header(config, outfile)
         create_msx_config_device(config.get('devices', []), outfile, files_with_sha1, constants)
         create_msx_config_primary(config.get('primary', {}), outfile, files_with_sha1, constants)
         create_msx_config_kbd_layout(config.get('kbd_layout', None), outfile, constants) 

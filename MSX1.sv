@@ -204,7 +204,7 @@ vram_bus_if vram_bus();
 
 /*verilator tracing_off*/
 MSX::cpu_regs_t    cpu_regs;
-MSX::user_config_t msxConfig;
+MSX::user_config_t msx_user_config;
 MSX::config_cart_t cart_conf[2];
 MSX::block_t       slot_layout[64];
 MSX::lookup_RAM_t  lookup_RAM[16];
@@ -212,6 +212,8 @@ MSX::lookup_SRAM_t lookup_SRAM[4];
 MSX::io_device_t   io_device[16][3];
 MSX::io_device_mem_ref_t io_memory[8];
 MSX::slot_expander_t slot_expander[4];
+MSX::msx_config_t msx_config;
+
 /*verilator tracing_on*/
 wire             forced_scandoubler;
 wire             scandoubler;
@@ -326,7 +328,7 @@ assign status_menumask[4] = '0;
 assign status_menumask[5] = '0;
 
 assign status_menumask[6] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
-assign status_menumask[7] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
+assign status_menumask[7] = msx_user_config.cas_audio_src == CAS_AUDIO_ADC;
 assign status_menumask[15:8] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 
@@ -372,7 +374,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 /////////////////   CONFIG   /////////////////
 wire [5:0] mapper_A, mapper_B;
 wire       reload, ROM_A_load_hide, ROM_B_load_hide;
-msx_config msx_config 
+user_config user_config 
 (
    .clk(clock_bus.base_mp.clk),
    .reset(reset),
@@ -383,7 +385,7 @@ msx_config msx_config
    .reload(reload),
    .ROM_A_load_hide(ROM_A_load_hide),
    .ROM_B_load_hide(ROM_B_load_hide),
-   .msxConfig(msxConfig),
+   .msx_user_config(msx_user_config),
    .ocmMode(io_device[DEV_OCM_BOOT][0].enable)
 );
 /////////////////   CLOCKS   /////////////////
@@ -435,7 +437,7 @@ msx MSX
    .opcode_out(opcode_out),
    .opcode_PC_start(opcode_PC_start),
    .tape_motor_on(motor),
-   .tape_in(msxConfig.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
+   .tape_in(msx_user_config.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
    .rtc_time(rtc),
    .sram_save(status[38]),
    .sram_load(status[39]),
@@ -457,6 +459,7 @@ msx MSX
    .lookup_SRAM(lookup_SRAM),
    .io_device(io_device),
    .io_memory(io_memory),
+   .msx_config(msx_config),
    .joy(joy),
    .kb_upload_memory(kb_upload_memory),
    .*
@@ -635,6 +638,7 @@ memory_upload memory_upload(
     .load_sram(load_sram),
     .io_device(io_device),
     .io_memory(io_memory),
+    .msx_config(msx_config),
     .error(error),
     .reset(upload_reset)
 );

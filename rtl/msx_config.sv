@@ -5,7 +5,7 @@ parameter CONF_STR_SLOT_B = {
     "O[32:29],Slot2,FDC,ROM,SCC,SCC+,FM-PAC,MegaSCC+ 2MB,MegaRAM ASCII-8K 1MB,MegaRAM ASCII-16K 2MB,Empty;"
 };
 
-module msx_config
+module user_config
 (
     input                     clk,
     input                     reset,
@@ -15,7 +15,7 @@ module msx_config
     output MSX::config_cart_t cart_conf[2],
     output                    ROM_A_load_hide, //3 
     output                    ROM_B_load_hide, //4
-    output MSX::user_config_t msxConfig,
+    output MSX::user_config_t msx_user_config,
     output                    reload,
     input                     ocmMode
 );
@@ -66,11 +66,11 @@ wire [3:0] slot_B_select   = HPS_status[32:29];
         endcase
     end
 
-assign msxConfig.cas_audio_src         = cas_audio_src_t'(HPS_status[40]);
-assign msxConfig.border                = HPS_status[41];
+assign msx_user_config.cas_audio_src         = cas_audio_src_t'(HPS_status[40]);
+assign msx_user_config.border                = HPS_status[41];
 
 
-assign msxConfig.ocm_dip  = {1'b0, ~HPS_status[11], ocm_slot2, ocm_slot1, 2'b00, HPS_status[15]};
+assign msx_user_config.ocm_dip  = {1'b0, ~HPS_status[11], ocm_slot2, ocm_slot1, 2'b00, HPS_status[15]};
 
 assign ROM_A_load_hide    = cart_conf[0].typ != CART_TYP_ROM;
 assign ROM_B_load_hide    = cart_conf[1].typ != CART_TYP_ROM;
