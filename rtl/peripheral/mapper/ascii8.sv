@@ -91,7 +91,7 @@ module mapper_ascii8 (
     wire [26:0] ram_addr  = {6'b0, bank_base, cpu_bus.addr[12:0]};
     wire        ram_valid = (out.addr < {2'b00, block_info.rom_size});
 
-    wire sram_cs   = cs & sram_en;
+    wire sram_cs   = cs & sram_en & (cpu_bus.rd || cpu_bus.wr);
     wire ram_cs    = cs & ram_valid & ~sram_en & cpu_bus.rd;
 
     assign out.sram_cs = sram_cs;

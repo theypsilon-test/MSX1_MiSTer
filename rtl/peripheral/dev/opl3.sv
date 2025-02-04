@@ -38,6 +38,7 @@
 module dev_opl3 (
     cpu_bus_if.device_mp   cpu_bus,
     device_bus             device_bus,
+    clock_bus_if.base_mp   clock_bus,
     input MSX::io_device_t io_device[3],
     output signed [15:0]   sound
 );
@@ -68,7 +69,7 @@ module dev_opl3 (
             jt2413 OPL3_i (
                 .clk(cpu_bus.clk),
                 .rst(cpu_bus.reset),
-                .cen(cpu_bus.clk_en),
+                .cen(clock_bus.ce_3m58_n),
                 .din(cpu_bus.data),
                 .addr(cpu_bus.addr[0]),
                 .cs_n(~(cs_enable || cs_dev_bus)),

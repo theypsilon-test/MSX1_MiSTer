@@ -47,7 +47,7 @@ module mapper_eseRam (
   
     wire cs;
 
-    assign cs = block_info.typ == MAPPER_ESE_RAM & cpu_bus.mreq;
+    assign cs = block_info.typ == MAPPER_ESE_RAM & cpu_bus.mreq && (cpu_bus.rd || cpu_bus.wr);
 
     logic [7:0] bank[4];
 

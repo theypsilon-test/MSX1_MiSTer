@@ -71,7 +71,7 @@ module mapper_national (
         end
     end
     
-    wire bank_rd  = control[2] && cpu_bus.addr[14:3] == 12'hFFF && ~cpu_bus.addr[0];
+    wire bank_rd  = control[2] && cpu_bus.addr[14:3] == 12'hFFF && ~cpu_bus.addr[0] && cpu_bus.rd;
     wire [26:0] ram_addr = {5'b0, bank[cpu_bus.addr[15:14]], cpu_bus.addr[13:0]};
 
     // Assign the final outputs for the mapper

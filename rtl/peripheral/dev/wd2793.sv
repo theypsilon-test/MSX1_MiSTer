@@ -38,6 +38,7 @@
 module dev_WD2793
 (
    cpu_bus_if.device_mp cpu_bus,
+   clock_bus_if.base_mp clock_bus,
    device_bus           device_bus,
    input  MSX::io_device_t io_device[3],
    sd_bus               sd_bus,
@@ -62,8 +63,6 @@ always @(posedge cpu_bus.clk) begin
    end
 end
 
-wire area_philips   = (cpu_bus.addr[13:3] == 11'b11111111111) && io_device[0].param == 8'h00;
-wire area_national  = (cpu_bus.addr[13:7] ==  7'b1111111) && io_device[0].param == 8'h01;
 wire area_philips   = (cpu_bus.addr[13:3] == 11'b11111111111) && io_device[0].param[1:0] == 2'h0;
 wire area_national  = (cpu_bus.addr[13:7] ==  7'b1111111) && io_device[0].param[1:0] == 2'h1;
 wire area_device    = area_philips || area_national;
@@ -146,7 +145,7 @@ wire drq, intrq;
 wd1793 #(.RWMODE(1), .EDSK(0)) wd2793_i
 (
    .clk_sys(cpu_bus.clk),
-   .ce(cpu_bus.clk_en),
+   .ce(clock_bus.ce_3m58_n),
    .reset(cpu_bus.reset),
    .io_en(wdcs),
    .rd(cpu_bus.rd),

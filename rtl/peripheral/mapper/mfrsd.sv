@@ -203,7 +203,7 @@ module mapper_mfrsd2 (
     wire cs = (block_info.typ == MAPPER_MFRSD2) && cpu_bus.mreq && config_reg.isMemoryMapperEnabled &&  config_reg.isSlotExpanderEnabled;
 
     // Output assignments
-    assign out.ram_cs = cs;  // RAM chip select signal
+    assign out.ram_cs = cs && (cpu_bus.rd || cpu_bus.wr);  // RAM chip select signal
 
     // Calculate the address by adding the offset to the base address (only if chip select is active)
     assign out.addr = cs ? {5'b0, data_to_mapper, cpu_bus.addr[13:0]} : {27{1'b1}};

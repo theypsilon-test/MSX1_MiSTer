@@ -4,7 +4,7 @@ module mapper_offset (
     mapper_out              out            // Interface for mapper output
 );
     // Chip select is valid if the mapper type is OFFSET and memory request (mreq) is active
-    wire cs = (block_info.typ == MAPPER_OFFSET) & cpu_bus.mreq;
+    wire cs = (block_info.typ == MAPPER_OFFSET) && cpu_bus.mreq && (cpu_bus.rd || cpu_bus.wr);
 
     // Calculate address mapping
     wire [26:0] ram_addr  = {11'b0, block_info.offset_ram, cpu_bus.addr[13:0]};

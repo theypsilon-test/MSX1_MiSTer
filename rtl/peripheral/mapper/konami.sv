@@ -49,7 +49,7 @@ module mapper_konami (
     wire [26:0] ram_addr = {6'b0, bank_base, cpu_bus.addr[12:0]};
 
     // Output enable signal (only if mapped and chip select is active)
-    wire oe = cs && mapped;
+    wire oe = cs && mapped && cpu_bus.rd;
 
     // Output assignments to the `out` interface
     assign out.addr   = oe ? ram_addr : '1;    // Output address, or '1 if not enabled

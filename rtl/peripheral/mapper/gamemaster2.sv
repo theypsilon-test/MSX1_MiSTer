@@ -50,7 +50,7 @@ module mapper_gamemaster2 (
     wire [26:0] sram_addr = {14'b0, bank_base[5],   cpu_bus.addr[11:0]};  // SRAM address
 
     // Enable SRAM if bit 4 of the bank register is set; otherwise, enable RAM for read operations
-    wire sram_en = bank_base[4];
+    wire sram_en = bank_base[4] && (cpu_bus.rd || cpu_bus.wr);
     wire ram_en  = ~sram_en && cpu_bus.rd && rom_mapped;
 
     // Output control signals

@@ -37,6 +37,7 @@
 
 module dev_scc (
     cpu_bus_if.device_mp   cpu_bus,
+    clock_bus_if.base_mp   clock_bus,
     device_bus             device_bus,
     input MSX::io_device_t io_device[3],
     output   signed [15:0] sound,
@@ -70,9 +71,9 @@ module dev_scc (
         for (i = 0; i < 2; i++) begin : SCC_INSTANCES
             scc_wave SCC_i (
                 .clk(cpu_bus.clk),
-                .clkena(cpu_bus.clk_en),
+                .clkena(clock_bus.ce_3m58_n),
                 .reset(cpu_bus.reset),
-                .req(cs && device_bus.num == i),
+                .req(cs && (cpu_bus.rd || cpu_bus.wr) && device_bus.num == i),
                 .ack(),
                 .wrt(cpu_bus.wr && cpu_bus.req),
                 .adr(cpu_bus.addr[7:0]),

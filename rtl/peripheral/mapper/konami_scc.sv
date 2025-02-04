@@ -86,7 +86,7 @@ module mapper_konami_scc (
     wire [26:0] ram_addr = {6'b0, bank_base, cpu_bus.addr[12:0]};
 
     // Output enable signal: active only if address is mapped and not in SCC area
-    wire oe = cs && mapped && ~scc_area && (is_ram_segment || sccType == 1'b0);
+    wire oe = cs && mapped && ~scc_area && (is_ram_segment || sccType == 1'b0) && (cpu_bus.rd || cpu_bus.wr);
 
     // Output assignments to the `out` interface
     assign out.addr   = oe ? ram_addr : {27{1'b1}};   // Output address, or '1 if not enabled

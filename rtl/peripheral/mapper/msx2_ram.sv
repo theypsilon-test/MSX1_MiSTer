@@ -5,7 +5,7 @@ module mapper_msx2_ram (
     input [7:0]             data_to_mapper
 );
 
-    wire cs = (block_info.typ == MAPPER_MSX2) & cpu_bus.mreq;
+    wire cs = (block_info.typ == MAPPER_MSX2) && cpu_bus.mreq && (cpu_bus.wr || cpu_bus.rd);
 
     // Output assignments
     assign out.ram_cs = cs;  // RAM chip select signal

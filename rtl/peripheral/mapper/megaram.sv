@@ -195,7 +195,7 @@ module mapper_megaram (
 
     wire oe;
 
-    assign oe         = cs && SccSel == 2'b01;
+    assign oe         = cs && SccSel == 2'b01 && (cpu_bus.rd || cpu_bus.wr);
 
     assign out.addr   = oe ? ram_addr : {27{1'b1}};
     assign out.ram_cs = oe;

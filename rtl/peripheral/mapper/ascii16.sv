@@ -102,7 +102,7 @@ module mapper_ascii16 (
 
     wire ram_valid = (ram_addr < {2'b00, block_info.rom_size});
 
-    wire sram_cs = cs & sram_en;
+    wire sram_cs = cs & sram_en & (cpu_bus.rd || cpu_bus.wr);
     wire ram_cs  = cs & ram_valid & ~sram_en & cpu_bus.rd;
 
     assign out.sram_cs = sram_cs;
