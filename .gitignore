@@ -65,3 +65,5 @@ verilator_modules/obj_dir/
 *.obj
 verilator_modules/x64/
 tools/debugger/trace_viewer.exe
+verilator/sim/x64/Debug/
+verilator/sim/x64/Release/

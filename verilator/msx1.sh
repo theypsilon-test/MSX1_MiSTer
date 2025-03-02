@@ -27,11 +27,11 @@ verilator \
 ../rtl/peripheral/clock.sv \
 ../rtl/msx_config.sv \
 ../rtl/msx.sv \
-../rtl/cpu/tv80_alu.v \
-../rtl/cpu/tv80_core.v \
-../rtl/cpu/tv80_mcode.v \
-../rtl/cpu/tv80_reg.v \
-../rtl/cpu/tv80n.sv \
+../rtl/cpu/tv80_alu.sv \
+../rtl/cpu/tv80.sv \
+../rtl/cpu/tv80_mcode.sv \
+../rtl/cpu/tv80_reg.sv \
+../rtl/cpu/tv80a.sv \
 ../rtl/peripheral/jt8255.v \
 ../rtl/peripheral/keyboard.sv \
 ../rtl/peripheral/slots/memory_upload.sv   \
@@ -84,3 +84,6 @@ verilator \
 ./sys/sd_card.sv                          \
 ./rtl/tape.sv                             \
 ./rtl/nvram_backup.sv                     \
+\
+../rtl/video/debugOverlay/bram.sv \
+../rtl/video/debugOverlay/overlay.sv \

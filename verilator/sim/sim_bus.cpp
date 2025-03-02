@@ -7,7 +7,7 @@
 #include "sim_console.h"
 #include "verilated.h"
 
-#define SIM_SD_CARD
+//#define SIM_SD_CARD
 #define SIM_SPEED_DDR_LOAD 1
 
 #ifndef _MSC_VER

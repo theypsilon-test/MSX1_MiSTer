@@ -174,7 +174,7 @@ assign BUTTONS = 0;
 
 localparam VDNUM = 6;
 
-MSX::user_config_t msxConfig;
+MSX::user_config_t msx_user_config;
 MSX::config_cart_t cart_conf[2];
 MSX::block_t       slot_layout[64];
 MSX::lookup_RAM_t  lookup_RAM[16];
@@ -249,7 +249,7 @@ localparam CONF_STR = {
 
 wire [7:0] status_menumask;
 wire [1:0] sdram_size;
-assign status_menumask[0] = msxConfig.cas_audio_src == CAS_AUDIO_ADC;
+assign status_menumask[0] = msx_user_config.cas_audio_src == CAS_AUDIO_ADC;
 assign status_menumask[1] = 
 assign status_menumask[3] = ROM_A_load_hide;
 assign status_menumask[4] = ROM_B_load_hide;
@@ -309,7 +309,7 @@ msx_config msx_config
    .sram_A_select_hide(sram_A_select_hide),
    .ROM_A_load_hide(ROM_A_load_hide),
    .ROM_B_load_hide(ROM_B_load_hide),
-   .msxConfig(msxConfig)
+   .msx_user_config(msx_user_config)
 );
 
 /////////////////   CLOCKS   /////////////////
@@ -355,7 +355,7 @@ msx MSX
    .DE(blank_n),
    .VS(vsync),
    .cas_motor(motor),
-   .cas_audio_in(msxConfig.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
+   .cas_audio_in(msx_user_config.cas_audio_src == CAS_AUDIO_FILE  ? CAS_dout : tape_in),
    .rtc_time(rtc),
    .sram_save(status[38]),
    .sram_load(status[39]),
@@ -597,7 +597,7 @@ memory_upload memory_upload(
 
 
 /*
-MSX::user_config_t msxConfig;
+MSX::user_config_t msx_user_config;
 MSX::config_cart_t cart_conf[2];
 
 assign sdram_we = upload_ram_ce & upload_sdram_rq;

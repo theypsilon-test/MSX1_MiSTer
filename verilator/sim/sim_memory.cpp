@@ -258,7 +258,7 @@ void SimMemoryRam::BeforeEval(void) {
 			}
 		}
 	}
-}
+}	
 
 void SimMemoryRam::AfterEval(void) {
 	if (this->addr != NULL && *this->addr <= mem_size && *we == 1) {

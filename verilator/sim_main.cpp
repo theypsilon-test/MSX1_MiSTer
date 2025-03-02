@@ -1,7 +1,7 @@
 //#define SIM_AUDIO
 #define SIM_INPUT
 //#define SIM_DEBUG_PLAY
-#define SIM_SD_CARD
+//#define SIM_SD_CARD
 
 #include <verilated.h>
 #include "Vemu__Syms.h"
@@ -81,8 +81,9 @@ const char* mapperA[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC",
 const char* mapperB[] = { "auto","none","ASCII8","ASCII16","Konami","KonamiSCC","KOEI","linear64","R-TYPE","WIZARDRY" };
 const char* sramA[] = { "auto","1kB","2kB","4kB","8kB","16kB","32kB","none" };
 //int currentSlotA = 4;
+//int currentSlotB = 5;
 int currentSlotA = 0;
-int currentSlotB = 0;
+int currentSlotB = 1;
 int currentMapperA = 0;
 int currentMapperB = 0;
 int currentSramA = 0;
@@ -239,7 +240,7 @@ int verilate() {
 		}
 
 #ifdef SIM_SD_CARD
-		if (main_time == 63010000)
+		if (main_time == 56950000)
 		{
 			bus.MountImage("c:/Project/_OBSAH/boot.vhd",4);
 		}
@@ -321,7 +322,7 @@ int verilate() {
 		}
 		*/
 		main_time++;
-		//if (main_time == 50000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
+		if (main_time == 56953000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 60000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 44000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
 		//if (main_time == 73000000) Trace = 1; // 19000000 RESET//60000000 cca zobrazení videa
@@ -491,16 +492,18 @@ int main(int argc, char** argv, char** env) {
 	//31700000 CAS 
 	//40000000 Maximum					
 
-	bus.QueueDownload("..tools/CreateCRC/mappers.db", 6, true, 0x31600000, &DDR);
+	bus.QueueDownload("../tools/CreateCRC/mappers.db", 6, true, 0x31600000, &DDR);
 	
 	//bus.QueueDownload("./rom/FWpack/CART_FW_EN.msx", 2, true, 0x30300000, &DDR);
 	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_EMPTY.msx", 2, true, 0x30300000, &DDR);
-	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_REDUCE.msx", 2, true, 0x30300000, &DDR);
-	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/OCM/ocm.msx", 1, true, 0x30000000, &DDR);
-	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
+	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/CART_FW_REDUCE.msx", 2, true, 0x30300000, &DDR);
+	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/OCM/ocm.msx", 1, true, 0x30000000, &DDR);
+	bus.QueueDownload("../tools/CreateMSXpack/MSX_test/Sanyo/Sanyo_PHC-70FD.msx", 1, true, 0x30000000, &DDR);
+	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/Philips/Philips_VG_8020-00.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/ROMpack/Philips_VG_8020-20.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("../tools/CreateMSXpack/MSX_test/Philips/Philips_NMS_8245.msx", 1, true, 0x30000000, &DDR);
 	//bus.QueueDownload("./rom/Deep Dungeon 1 - Scaptrust [ASCII8SRAM2] .rom", 3, true, 0x30C00000, &DDR); //27FD8F9A
+	bus.QueueDownload("../rom/Undeadline - T&ESOFT [ASCII8].rom", 3, true, 0x30C00000, &DDR);
 	//bus.QueueDownload("./rom/cas/joycol.cas", 5, true, 0x31700000, &DDR);
 	
 	//bus.QueueDownload("./rom/Mappers/mappers.db", 6, true, 0x31600000, &DDR);
@@ -535,8 +538,7 @@ int main(int argc, char** argv, char** env) {
 	bool done = false;
 	while (!done)
 	{
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
+		SDL_Event event;while (SDL_PollEvent(&event))
 		{
 			ImGui_ImplSDL2_ProcessEvent(&event);
 			if (event.type == SDL_QUIT)
