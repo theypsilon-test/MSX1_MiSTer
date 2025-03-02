@@ -12,5 +12,6 @@
   "RTC":10,
   "PSG":11,
   "PPI":12,
-  "RESET_STATUS":13
+  "RESET_STATUS":13,
+  "TC8566AF":14
 }

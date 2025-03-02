@@ -309,6 +309,15 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
                         elif attributes["style"] == "National" :
                             parameter = 0x81
                     params[1] = parameter
+                
+                if (typ == "TC8566AF") :
+                    parameter = 0x80
+                    if "ioRegs" in attributes:
+                        if attributes["ioRegs"] == "7FF2" :
+                            parameter = 0x81
+                        elif attributes["ioRegs"] == "7FF8" :
+                            parameter = 0x82
+                    params[1] = parameter
 
                 if "param" in attributes:
                     params[1] = convert_to_8bit(attributes['param'])

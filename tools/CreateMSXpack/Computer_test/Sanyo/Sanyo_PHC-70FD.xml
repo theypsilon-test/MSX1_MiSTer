@@ -36,6 +36,13 @@
       </block>
     </secondary>
 
+    <secondary slot="2">
+      <block start="1" count="1">
+        <memory SHA1="9efa744be8355675e7bfdd3976bbbfaf85d62e1d" filename="phc-70fd_disk.rom">ROM</memory>
+        <device ioRegs="7FF8">TC8566AF</device>
+      </block>
+    </secondary>
+        
     <secondary slot="3">
       <block start="1" count="1">
         <memory SHA1="aad42ba4289b33d8eed225d42cea930b7fc5c228" filename="phc-70fd_fmbasic.rom">ROM</memory> <!-- MSX Music -->
