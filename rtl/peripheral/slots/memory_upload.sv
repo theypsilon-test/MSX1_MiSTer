@@ -321,9 +321,9 @@ module memory_upload
                 end
                 STATE_CHECK_CONF: begin
                     if ({conf[0], conf[1], conf[2]} == {"M", "S", "x"}) begin
-                        state                  <= STATE_READ_CONF;
-                        next_state             <= STATE_LOAD_CONF;
-                        ddr3_request           <= '1;
+                        state                    <= STATE_READ_CONF;
+                        next_state               <= STATE_LOAD_CONF;
+                        ddr3_request             <= '1;
                         msx_config.cpu           <= cpu_t'(conf[3][7:6]);
                         msx_config.wait_count    <= conf[3][5:3];
                         msx_config.cpu_clock_sel <= conf[3][2:0];
@@ -707,11 +707,18 @@ module memory_upload
                     end                 
                 end
                 STATE_SEARCH_CRC32_INIT: begin
-                    // TODO: Pokud není k dispozici CRC32 DB, nastav mapper offset a pokračuj. Nezapomeň na obnovení ddr3_addr.
-                    state     <= STATE_SEARCH_CRC32;
-                    ddr3_addr <= DDR3_CRC32_TABLE_ADDR;                     // Adresa CRC32 tabulky
-                    ddr3_rd   <= 1'b1;                                      // Prefetch
-                    crc_en    <= 1'b0;                                      // Zastavení počítání CRC
+                    if (ioctl_size[4] == 0) begin
+                        $display("NO CRC32 DB");
+                        ddr3_addr <= save_addr;
+                        ddr3_rd   <= '1;
+                        error     <= ERR_NO_CRC_DB;
+                        state     <= STATE_STOP;
+                    end else begin
+                        state     <= STATE_SEARCH_CRC32;
+                        ddr3_addr <= DDR3_CRC32_TABLE_ADDR;                     // Adresa CRC32 tabulky
+                        ddr3_rd   <= 1'b1;                                      // Prefetch
+                        crc_en    <= 1'b0;                                      // Zastavení počítání CRC32  
+                    end
                 end
                 STATE_SEARCH_CRC32: begin
                     temp[ddr3_addr[2:0]] = ddr3_dout;
@@ -734,6 +741,7 @@ module memory_upload
                             // TODO: Nastav linear mapper a pokračuj.
                             ddr3_addr <= save_addr;
                             ddr3_rd   <= '1;
+                            error     <= ERR_NO_CRC_FOUND;
                             state     <= STATE_STOP;
                         end else begin
                             ddr3_rd <= 1'b1;

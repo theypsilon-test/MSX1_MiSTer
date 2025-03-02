@@ -307,7 +307,7 @@ localparam CONF_STR = {
    "T[21],Reset;",
    "R[10],Reset & Detach ROM Cartridge;",					
    "R[21],Reset and close OSD;",
-   "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING,Exceeded number of IO_DEVICE;",
+   "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING,Exceeded number of IO_DEVICE,No CRC32 DB,Not find CRC32 in DB;",
    "V,v",`BUILD_DATE 
 };
 /*verilator tracing_on*/
@@ -415,7 +415,6 @@ wire  [7:0] ram_din, ram_dout;
 wire        ram_rnw, sdram_ce, bram_ce;
 wire        sd_tx, sd_rx;
 wire  [7:0] d_to_sd, d_from_sd;
-
 wire [31:0] opcode;
 wire [1:0]  opcode_num;
 wire        opcode_out;
