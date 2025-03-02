@@ -78,7 +78,7 @@ module devices (
 
     // Výstupy kombinující jednotlivé zařízení
     assign sound = opl3_sound + scc_sound + psg_sound;
-    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data & ocm_data;
+    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data & ocm_data & reset_status_data;
     assign data_oe_rq = wd2793_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
 
@@ -124,7 +124,6 @@ module devices (
     );
 
     wire [7:0] scc_data;
-    wire       scc_output_rq;
     wire signed [15:0] scc_sound;
     dev_scc scc (
         .cpu_bus(cpu_bus),
@@ -265,4 +264,12 @@ module devices (
         .slot_config(slot_config),
         .keybeep(keybeep)
     ); 
+
+    wire [7:0] reset_status_data;
+    dev_reset_status dev_reset_status (
+        .cpu_bus(cpu_bus),
+        .io_device(io_device[DEV_RESET_STATUS]),
+        .data(reset_status_data)
+    );
+
 endmodule

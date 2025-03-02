@@ -11,5 +11,6 @@
   "V99xx": 9,
   "RTC":10,
   "PSG":11,
-  "PPI":12
+  "PPI":12,
+  "RESET_STATUS":13
 }

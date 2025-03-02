@@ -2,7 +2,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) m
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) memory_upload.sv                   ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) psg.sv                             ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) halnote.sv                         ]
-set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) reset_status.sv                    ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) crc32.sv                           ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) devices.sv                         ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) subslot.sv                         ]
