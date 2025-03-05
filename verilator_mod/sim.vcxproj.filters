@@ -21,33 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sim\imgui\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sim\imgui\imgui_tables.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sim\imgui\imgui_impl_win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sim\imgui\imgui_impl_dx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sim\imgui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sim\imgui\imgui.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sim\imgui\ImGuiFileDialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sim\imgui\implot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sim\imgui\implot_items.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sim\vinc\verilated.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -69,35 +42,8 @@
     <ClCompile Include="sim\vinc\verilated_threads.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sim\test.cpp">
-      <Filter>Source Files\Test</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sim\imgui\imconfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sim\imgui\imgui_impl_dx11.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sim\imgui\imgui_impl_win32.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sim\imgui\imgui_internal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sim\imgui\imgui_memory_editor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sim\imgui\ImGuiFileDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sim\imgui\ImGuiFileDialogConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sim\imgui\implot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="sim\vinc\verilated.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -112,9 +58,6 @@
     </ClInclude>
     <ClInclude Include="sim\sim_main.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sim\tests.h">
-      <Filter>Header Files\Test</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

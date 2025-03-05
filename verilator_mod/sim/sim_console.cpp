@@ -1,46 +1,46 @@
 #include "sim_console.h"
 #include <string>
-#include "imgui.h"
 
 // Demonstrate creating a simple console window, with scrolling, filtering, completion and history.
 // For the console example, here we are using a more C++ like approach of declaring a class to hold the data and the functions.
 
 char                  InputBuf[256];
-ImVector<const char*> Commands;
-ImVector<char*>       History;
-int                   HistoryPos;    // -1: new line, 0..History.Size-1 browsing history.
-ImGuiTextFilter       Filter;
+//ImVector<const char*> Commands;
+//ImVector<char*>       History;
+//int                   HistoryPos;    // -1: new line, 0..History.Size-1 browsing history.
+//ImGuiTextFilter       Filter;
 bool                  AutoScroll;
 bool                  ScrollToBottom;
 
 
-ImVector<char*>       Items;
-static char* Strdup(const char* str) { size_t len = strlen(str) + 1; void* buf = malloc(len); IM_ASSERT(buf); return (char*)memcpy(buf, (const void*)str, len); }
+//ImVector<char*>       Items;
+//static char* Strdup(const char* str) { size_t len = strlen(str) + 1; void* buf = malloc(len); IM_ASSERT(buf); return (char*)memcpy(buf, (const void*)str, len); }
 
-void DebugConsole::AddLog(const char* fmt, ...) IM_FMTARGS(2)
+void DebugConsole::AddLog(const char* fmt, ...)
 {
 	// FIXME-OPT
 	char buf[1024];
+	/*
 	va_list args;
 	va_start(args, fmt);
 	vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
 	buf[IM_ARRAYSIZE(buf) - 1] = 0;
 	va_end(args);
-	Items.push_back(Strdup(buf));
+	Items.push_back(Strdup(buf));*/
 }
 
 DebugConsole::DebugConsole()
 {
 	ClearLog();
 	memset(InputBuf, 0, sizeof(InputBuf));
-	HistoryPos = -1;
-	Commands.push_back("HELP");
-	Commands.push_back("HISTORY");
-	Commands.push_back("CLEAR");
+//	HistoryPos = -1;
+//	Commands.push_back("HELP");
+//	Commands.push_back("HISTORY");
+//	Commands.push_back("CLEAR");
 	AutoScroll = true;
 	ScrollToBottom = false;
-	AddLog("Sim start");
-	AddLog("");
+//	AddLog("Sim start");
+//	AddLog("");
 }
 
 DebugConsole::~DebugConsole()
@@ -57,11 +57,13 @@ static void  Strtrim(char* str) { char* str_end = str + strlen(str); while (str_
 
 void DebugConsole::ClearLog()
 {
+	/*
 	for (int i = 0; i < Items.Size; i++)
 		free(Items[i]);
 	Items.clear();
+	*/
 }
-
+/*
 void DebugConsole::Draw(const char* title, bool* p_open, ImVec2 size)
 {
 	ImGui::SetWindowSize(title, size, ImGuiCond_Once);
@@ -311,3 +313,4 @@ int     DebugConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
 	}
 	return 0;
 };
+*/
