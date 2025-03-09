@@ -21,9 +21,9 @@ module top
    input  [63:0] img_size       /* verilator public */,
 
    //SD block level access
-   output [31:0] sd_lba[6]      /* verilator public */,
+   output logic [31:0] sd_lba[6]      /* verilator public */,
    output  [5:0] sd_blk_cnt[6]  /* verilator public */,
-   output  [5:0] sd_rd          /* verilator public */,
+   output  logic [5:0] sd_rd          /* verilator public */,
    output  [5:0] sd_wr          /* verilator public */,
    input   [5:0] sd_ack         /* verilator public */,
    
@@ -34,7 +34,28 @@ module top
    input         sd_buff_wr     /* verilator public */
 );
 
+initial begin
+   sd_lba = '{32'd0, 32'd0, 32'd0, 32'd0, 32'd0, 32'd0};
+   sd_rd = 6'b0;
+end
 
+logic [3:0] cnt = 4'd1;
+logic last_mount = 0;
+always_ff @(posedge fclk) begin
+   if (!last_mount && img_mounted[3]) begin
+      cnt <= '1;
+   end else begin
+      if (img_mounted[3]) begin
+         if (cnt > '0) begin
+            cnt <= cnt - 1'b1;
+         end else begin
+            sd_lba[3] <= 32'd1;
+            sd_rd[3] <= '1;
+         end
+      end
+   end
+   last_mount <= img_mounted[3];
+end
 
 tc8566af tc8566af (
    .RDn(RDn),

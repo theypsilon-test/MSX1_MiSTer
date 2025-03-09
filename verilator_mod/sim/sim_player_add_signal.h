@@ -17,7 +17,7 @@ void SimPlayer<VNUM>::addSignal(std::string name, SignalType type,  void* ptr, u
 }
 
 template <size_t VNUM>
-void SimPlayer<VNUM>::addSignalArr(std::string name, SignalType type, void *ptr[VNUM], uint32_t size) {
+void SimPlayer<VNUM>::addSignalArr(std::string name, SignalType type, void* ptr, uint32_t size) {
 	signalReccord<VNUM> record;
 	uint64_t mask = size >= 64 ? -1 : (1ULL << size) - 1;
 	record.type = type;
@@ -50,22 +50,21 @@ void SimPlayer<VNUM>::addSignal(std::string name, QData* ptr, uint64_t size) {
 
 template <size_t VNUM>
 void SimPlayer<VNUM>::addSignalArrVNUM(std::string name, CData(*ptr)[VNUM], uint32_t size) {
-	//addSignalArr(name, CDataArr_t, reinterpret_cast<void* [VNUM]>(ptr), size);
+	addSignalArr(name, CDataArr_t, static_cast<void*>(ptr), size);
 }
-
 
 template <size_t VNUM>
 void SimPlayer<VNUM>::addSignalArrVNUM(std::string name, SData(*ptr)[VNUM], uint32_t size) {
-	//addSignalArr(name, SDataArr_t, reinterpret_cast<void* [VNUM]>(ptr), size);
+	addSignalArr(name, SDataArr_t, static_cast<void*>(ptr), size);
 }
 
 template <size_t VNUM>
 void SimPlayer<VNUM>::addSignalArrVNUM(std::string name, IData(*ptr)[VNUM], uint32_t size) {
-	//addSignalArr(name, IDataArr_t, reinterpret_cast<void*[VNUM]>(ptr), size);
+	addSignalArr(name, IDataArr_t, static_cast<void*>(ptr), size);
 }
 
 
 template <size_t VNUM>
 void SimPlayer<VNUM>::addSignalArrVNUM(std::string name, QData(*ptr)[VNUM], uint32_t size) {
-	//addSignalArr(name, QDataArr_t, reinterpret_cast<void* [VNUM]>(ptr), size);
+	addSignalArr(name, QDataArr_t, static_cast<void*>(ptr), size);
 }

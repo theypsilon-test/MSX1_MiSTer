@@ -42,9 +42,12 @@ int verilate() {
 	if (!Verilated::gotFinish()) {
 
 		bool command_execute = player->tick();
-
+		player->HPSpreEvalTick();
+		
 		top->eval();
 		
+		player->HPSpostEvalTick();
+
 		if (Trace) {
 			if (!tfp->isOpen()) {
 				tfp->open(Trace_File);
@@ -91,7 +94,7 @@ int main(int argc, char** argv, char** env) {
 
 	//SD block level access
 	player->addSignalArrVNUM("sd_lba", &top->sd_lba, 32);
-	player->addSignalArrVNUM("sd_blk_cnt",&top->sd_blk_cnt, 6);
+	//player->addSignalArrVNUM("sd_blk_cnt",&top->sd_blk_cnt, 6);
 	player->addSignal("sd_rd", &top->sd_rd, 6);
 	player->addSignal("sd_wr", &top->sd_wr, 6);
 	player->addSignal("sd_ack", &top->sd_ack, 6);
@@ -99,7 +102,7 @@ int main(int argc, char** argv, char** env) {
 	// SD byte level access. Signals for 2-PORT altsyncram.
 	player->addSignal("sd_buff_addr", &top->sd_buff_addr, 14);
 	player->addSignal("sd_buff_dout", &top->sd_buff_dout, 8);
-	player->addSignalArrVNUM("sd_buff_din", &top->sd_buff_din, 8);
+	//player->addSignalArrVNUM("sd_buff_din", &top->sd_buff_din, 8);
 	player->addSignal("sd_buff_wr", &top->sd_buff_wr, 1);
 
 	player->loadTestFiles();

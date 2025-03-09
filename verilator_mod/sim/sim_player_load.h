@@ -154,6 +154,7 @@ void SimPlayer<VNUM>::processLine(const std::string& line, std::vector<commandRe
 	}
 	else if (command == "MISTER") {
 		if (params[0] == "LOADIMG") {
+			
 			std::ifstream file(params[1], std::ios::binary | std::ios::ate);
 			if (!file) {
 				std::cerr << "Chyba: Nelze otevøít soubor!" << std::endl;
@@ -173,14 +174,17 @@ void SimPlayer<VNUM>::processLine(const std::string& line, std::vector<commandRe
 
 			file.close();
 			uint32_t vnum = parse_number(params[2], input_params);
+			image rec;
+			rec.size = size;
+			rec.clock_id = signalMap[params[3]];
+			rec.pos = 0;
+			rec.buffer = buffer;
+			rec.last_clk = false;
+			rec.last_rd = false;
+			images[vnum] = rec;
 			processLine("SIGNAL img_size " + std::to_string(size), commands, params);
 			processLine("SIGNAL img_mounted[" + std::to_string(vnum) + "] 1", commands, params);
 			processLine("WAIT 4", commands, params);
-			processLine("WAIT 4", commands, params);
-
-
-			//následuje sekvence pøíkazù na top modulu;
-
 		}
 		else {
 			std::cerr << "Neznámý pøíkaz pro MISTER: " << command << "\n";

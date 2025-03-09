@@ -37,10 +37,10 @@ struct type_Data
 	void* ptr;
 	uint64_t mask;
 };
-template <size_t VNUM>
+
 struct type_DataArr
 {
-	void *ptr [VNUM];
+	void *ptr;
 	uint64_t mask;
 };
 struct type_Image
@@ -57,7 +57,7 @@ struct signalReccord
 	union
 	{
 		type_Data signal;
-		type_DataArr<VNUM> signals;
+		type_DataArr signals;
 	};
 };
 
@@ -111,6 +111,12 @@ struct playList
 struct image
 {
 	uint32_t size;
+	uint16_t clock_id;
+	uint32_t pos;
+	uint32_t lba;
+
+	bool last_clk;
+	bool last_rd;
 	char* buffer;
 };
 
@@ -121,7 +127,7 @@ struct SimPlayer
 public:
 	SimPlayer();
 	void addSignal(std::string name, SignalType type, void* ptr, uint32_t size);
-	void addSignalArr(std::string name, SignalType type, void *ptr [VNUM], uint32_t size);
+	void addSignalArr(std::string name, SignalType type, void *ptr, uint32_t size);
 	void addSignal(std::string name, CData* ptr, uint32_t size);
 	void addSignalArrVNUM(std::string name, CData(*ptr)[VNUM], uint32_t size);
 	void addSignal(std::string name, SData* ptr, uint32_t size);
@@ -133,6 +139,8 @@ public:
 	void addSignal(std::string name, signalReccord<VNUM> record);
 	void loadTestFiles(void);
 	bool tick(void);
+	void HPSpreEvalTick(void);
+	void HPSpostEvalTick(void);
 	
 private:
 	void processTestFile(const fs::path& filePath, std::vector<commandRecord>& commands, const std::array<std::string, 10>& input_params);
@@ -146,13 +154,14 @@ private:
 
 #include "sim_player_add_signal.h"
 #include "sim_player_load.h"
+#include "sim_player_HPS.h"
 
 namespace fs = std::filesystem;
 
 
 template <size_t VNUM>
 SimPlayer<VNUM>::SimPlayer() {
-
+	images.resize(VNUM);
 }
 
 
@@ -319,7 +328,9 @@ bool SimPlayer<VNUM>::tick(void) {
 				playLists[i].position++;
 				break;
 			}
+		
 		} while (!chunk_end);
-			}
+	}
+
 	return command_execute && !stop;
 }
