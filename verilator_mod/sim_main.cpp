@@ -12,15 +12,10 @@
 #include <fstream>
 using namespace std;
 
-// Simulation control
-// ------------------
-int batchSize = 150000;
-bool run_enable = true;
-
 // Verilog module
 // --------------
 Vtop* top = NULL;
-SimPlayer* player = NULL;
+SimPlayer<6>* player = NULL;
 
 vluint64_t main_time = 0;	// Current simulation time.
 double sc_time_stamp() {	// Called by $time in Verilog.
@@ -73,22 +68,40 @@ int main(int argc, char** argv, char** env) {
 
 	// Create core and initialise
 	top = new Vtop();
-	player = new SimPlayer();
-	player->addSignal("A0",     &top->A0    , 0x1);
-	player->addSignal("RDn",    &top->RDn   , 0x1);
-	player->addSignal("WRn",    &top->WRn   , 0x1);
-	player->addSignal("CSn",    &top->CSn   , 0x1);
-	player->addSignal("WDAT",   &top->WDAT  , 0xFF);
-	player->addSignal("RDAT",   &top->RDAT  , 0xFF);
-	player->addSignal("DATOE",  &top->DATOE , 0x1);
-	player->addSignal("DACKn",  &top->DACKn , 0x1);
-	player->addSignal("DRQ",    &top->DRQ   , 0x1);
-	player->addSignal("TC",     &top->TC    , 0x1);
-	player->addSignal("INTn",   &top->INTn  , 0x1);
-	player->addSignal("WAITIN", &top->WAITIN, 0x1);
-	player->addSignal("sclk",   &top->sclk  , 0x1);
-	player->addSignal("fclk",   &top->fclk  , 0x1);
-	player->addSignal("rstn",   &top->rstn  , 0x1);
+	player = new SimPlayer<6>();										// 6 VNUM zaøízení
+	player->addSignal("A0", &top->A0, 1);
+	player->addSignal("RDn", &top->RDn, 1);
+	player->addSignal("WRn", &top->WRn, 1);
+	player->addSignal("CSn", &top->CSn, 1);
+	player->addSignal("WDAT", &top->WDAT, 8);
+	player->addSignal("RDAT", &top->RDAT, 8);
+	player->addSignal("DATOE", &top->DATOE, 1);
+	player->addSignal("DACKn", &top->DACKn, 1);
+	player->addSignal("DRQ", &top->DRQ, 1);
+	player->addSignal("TC", &top->TC, 1);
+	player->addSignal("INTn", &top->INTn, 1);
+	player->addSignal("WAITIN", &top->WAITIN, 1);
+	player->addSignal("sclk", &top->sclk, 1);
+	player->addSignal("fclk", &top->fclk, 1);
+	player->addSignal("rstn", &top->rstn, 1);
+
+	// Mister IMAGE
+	player->addSignal("img_mounted", &top->img_mounted, 6);
+	player->addSignal("img_size", &top->img_size, 64);
+
+	//SD block level access
+	player->addSignalArrVNUM("sd_lba", &top->sd_lba, 32);
+	player->addSignalArrVNUM("sd_blk_cnt",&top->sd_blk_cnt, 6);
+	player->addSignal("sd_rd", &top->sd_rd, 6);
+	player->addSignal("sd_wr", &top->sd_wr, 6);
+	player->addSignal("sd_ack", &top->sd_ack, 6);
+
+	// SD byte level access. Signals for 2-PORT altsyncram.
+	player->addSignal("sd_buff_addr", &top->sd_buff_addr, 14);
+	player->addSignal("sd_buff_dout", &top->sd_buff_dout, 8);
+	player->addSignalArrVNUM("sd_buff_din", &top->sd_buff_din, 8);
+	player->addSignal("sd_buff_wr", &top->sd_buff_wr, 1);
+
 	player->loadTestFiles();
 
 
@@ -103,23 +116,14 @@ int main(int argc, char** argv, char** env) {
 //	Verilated::setDebug(console);
 
 	MSG msg;
-	while (true)
+	bool run_enable;
+	do
 	{
-		tfp->flush();
-		tfp->close();
+		run_enable = verilate();
+	} while (run_enable);
 
-		for (int step = 0; step < batchSize; step++) {
-			run_enable = verilate();
-			if (!run_enable)
-				break;
-		}
-		if (!run_enable) {
-			tfp->flush();
-			tfp->close();
-			return 0;
-		}
-	}
-
+	tfp->flush();
+	tfp->close();
 	return 0;
 }
 	
