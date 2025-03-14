@@ -1,0 +1,130 @@
+module transmit
+(
+    input  logic        clk,
+    input  logic        bclk,   //Byt clock clk podělit 687
+    input  logic        reset,
+    output logic [12:0] buffer_addr,
+    input  logic  [7:0] buffer_q,
+    input  logic        track_ready,
+    input  logic  [6:0] track,
+    input  logic        side,
+    output logic        INDEXn,
+    output logic  [7:0] data
+);
+
+    assign buffer_addr = (512 * sector) + (track_state == SECTORS && track_position >= 60 ? (track_position-60) : 0);
+    
+    
+    typedef enum logic [1:0] { 
+        HEADER,
+        SECTORS,
+        GAPS
+    } track_layout_t;
+
+    logic [12:0] track_position;
+    logic  [3:0] sector;
+    track_layout_t track_state;
+
+    always_ff @(posedge clk or posedge reset) begin
+        if (reset) begin
+            track_position <= 0;
+            track_state <= HEADER;
+        end else begin
+            if (bclk && track_ready) begin
+                track_position <= track_position + 1;
+                case(track_state)
+                    HEADER: begin
+                        if (track_position == 145) begin
+                            track_position <= 0;
+                            track_state <= SECTORS;
+                            sector <= 0;
+                        end
+                    end
+                    SECTORS: begin
+                        if (track_position == 657) begin
+                            if (sector == 8) begin
+                                track_state <= GAPS;
+                                track_position <= 0;
+                            end else begin
+                                sector <= sector + 1;
+                                track_position <= 0;
+                            end
+                        end
+                    end
+                    GAPS: begin
+                        if (track_position == 181) begin
+                            track_state <= HEADER;
+                            track_position <= 0;
+                        end
+                    end
+                    default: ;
+                endcase
+            end
+        end
+    end
+
+
+
+    always_comb begin
+        INDEXn = 1;
+        case (track_state)
+            HEADER: begin
+                if (track_position < 80) begin
+                    data = 8'h4E;
+                end else if (track_position < 92) begin
+                    data = 8'h00;
+                    INDEXn = 0;
+                end else if (track_position < 95) begin
+                    data = 8'hC2;
+                    INDEXn = 0;
+                end else if (track_position < 96) begin
+                    data = 8'hFC;
+                    INDEXn = 0;
+                end else begin
+                    data = 8'h4E;
+                end
+            end
+            SECTORS: begin
+                if (track_position < 12) begin
+                    data = 8'h00;
+                end else if (track_position < 15) begin
+                    data = 8'hA1;
+                end else if (track_position < 16) begin
+                    data = 8'hFE;
+                end else if (track_position < 17) begin
+                    data = {1'b1,track};
+                end else if (track_position < 18) begin
+                    data = {7'd0,side};
+                end else if (track_position < 19) begin
+                    data = {4'd0, sector};
+                end else if (track_position < 20) begin
+                    data = 8'h02;
+                end else if (track_position < 22) begin
+                    data = 8'h00;   //CRC
+                end else if (track_position < 44) begin
+                    data = 8'h4E;
+                end else if (track_position < 56) begin
+                    data = 8'h00;
+                end else if (track_position < 59) begin
+                    data = 8'hA1;
+                end else if (track_position < 60) begin
+                    data = 8'hFB;
+                end else if (track_position < 572) begin
+                    data = buffer_q;
+                end else if (track_position < 574) begin
+                    data = 8'h00;   //CRC
+                end else begin
+                    data = 8'h4E;
+                end
+            end
+            default: begin
+                data = 8'h4E;
+            end
+        endcase
+    end
+
+
+
+//https://map.grauw.nl/articles/low-level-disk/
+
+endmodule
