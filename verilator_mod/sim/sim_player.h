@@ -114,6 +114,7 @@ struct image
 	uint16_t clock_id;
 	uint32_t pos;
 	uint32_t lba;
+	uint8_t  blk_cnt;
 
 	bool last_clk;
 	bool last_rd;

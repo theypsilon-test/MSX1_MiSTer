@@ -84,17 +84,18 @@ int main(int argc, char** argv, char** env) {
 	player->addSignal("TC", &top->TC, 1);
 	player->addSignal("INTn", &top->INTn, 1);
 	player->addSignal("WAITIN", &top->WAITIN, 1);
-	player->addSignal("sclk", &top->sclk, 1);
+	//player->addSignal("sclk", &top->sclk, 1);
 	player->addSignal("fclk", &top->fclk, 1);
 	player->addSignal("rstn", &top->rstn, 1);
 
 	// Mister IMAGE
 	player->addSignal("img_mounted", &top->img_mounted, 6);
+	player->addSignal("img_readonly", &top->img_readonly, 1);
 	player->addSignal("img_size", &top->img_size, 64);
 
 	//SD block level access
 	player->addSignalArrVNUM("sd_lba", &top->sd_lba, 32);
-	//player->addSignalArrVNUM("sd_blk_cnt",&top->sd_blk_cnt, 6);
+	player->addSignalArrVNUM("sd_blk_cnt",&top->sd_blk_cnt, 6);
 	player->addSignal("sd_rd", &top->sd_rd, 6);
 	player->addSignal("sd_wr", &top->sd_wr, 6);
 	player->addSignal("sd_ack", &top->sd_ack, 6);
@@ -105,6 +106,14 @@ int main(int argc, char** argv, char** env) {
 	//player->addSignalArrVNUM("sd_buff_din", &top->sd_buff_din, 8);
 	player->addSignal("sd_buff_wr", &top->sd_buff_wr, 1);
 
+	
+	// TEST FDD  
+	player->addSignal("USEL", &top->USEL, 2);
+	player->addSignal("MOTORn", &top->MOTORn, 1);
+	player->addSignal("STEPn", &top->STEPn, 1);
+	player->addSignal("SDIRn", &top->SDIRn, 1);
+	player->addSignal("SIDEn", &top->SIDEn, 1);
+
 	player->loadTestFiles();
 
 
@@ -113,6 +122,8 @@ int main(int argc, char** argv, char** env) {
 	//Prepare for Dump Signals
 	Verilated::traceEverOn(true); //Trace
 	top->trace(tfp, 99);
+	tfp->set_time_resolution("ns");
+	tfp->set_time_unit("ns");
 	if (Trace) tfp->open(Trace_File);//"simx.vcd"); //Trace
 
 	// Attach debug console to the verilated code

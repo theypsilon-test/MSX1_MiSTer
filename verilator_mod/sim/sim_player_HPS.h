@@ -8,10 +8,14 @@ void SimPlayer<VNUM>::HPSpreEvalTick(void) {
 	uint16_t sd_buff_dout_id = signalMap["sd_buff_dout"];
 	uint16_t sd_buff_addr_id = signalMap["sd_buff_addr"];
 	uint16_t sd_buff_wr_id = signalMap["sd_buff_wr"];
+	uint16_t sd_blk_cnt = signalMap["sd_blk_cnt"];
 
 	data = signals[sd_rd_id].signal;
 	sd_rd = (*reinterpret_cast<CData*>(data.ptr) & data.mask);
-
+	/*
+	if (sd_rd > 0) {
+		images[0].pos++;
+	}*/
 	for (size_t i = 0; i < images.size(); i++) {
 		if (images[i].size > 0) {
 			data = signals[images[i].clock_id].signal;
@@ -19,14 +23,14 @@ void SimPlayer<VNUM>::HPSpreEvalTick(void) {
 			if (images[i].last_clk == false && clk) {
 				if (images[i].last_rd == false && (sd_rd & (1 << i))) {
 					images[i].lba = *static_cast<IData(*)[VNUM]>(signals[sd_lba_id].signals.ptr)[i];
-
+					images[i].blk_cnt = *static_cast<CData(*)[VNUM]>(signals[sd_blk_cnt].signals.ptr)[i];
 					*reinterpret_cast<CData*>(signals[sd_ack_id].signal.ptr) = (*reinterpret_cast<CData*>(signals[sd_ack_id].signal.ptr) | (1 << i)) & signals[sd_ack_id].signal.mask;
 					*reinterpret_cast<CData*>(signals[sd_buff_dout_id].signal.ptr) = images[i].buffer[images[i].lba * 512 + images[i].pos] & signals[sd_buff_dout_id].signal.mask;
 					*reinterpret_cast<SData*>(signals[sd_buff_addr_id].signal.ptr) = images[i].pos & signals[sd_buff_addr_id].signal.mask;
 					*reinterpret_cast<CData*>(signals[sd_buff_wr_id].signal.ptr) = 1;
 					images[i].pos++;
 				}
-				else if (images[i].pos == 512) {
+				else if (images[i].pos == images[i].blk_cnt * 512) {
 					images[i].pos = 0;
 					*reinterpret_cast<CData*>(signals[sd_ack_id].signal.ptr) = *reinterpret_cast<CData*>(signals[sd_ack_id].signal.ptr) & (~(1 << i) & signals[sd_ack_id].signal.mask);
 					*reinterpret_cast<CData*>(signals[sd_buff_wr_id].signal.ptr) = 0;
