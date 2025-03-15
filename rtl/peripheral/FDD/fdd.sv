@@ -15,6 +15,8 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
     output logic            WPROTn,
 
     output logic      [7:0] data,               // Octal data
+    output logic     [11:0] curr_sec_info,
+    output logic            data_valid,
 
     //hps image
     input logic       [3:0] img_mounted,
@@ -110,8 +112,11 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
 
         .track(track),
         .side(~SIDEn),
+        
         .INDEXn(INDEXn),
-        .data(data)
+        .data(data),
+        .curr_sec_info(curr_sec_info),
+        .data_valid(data_valid)
     );
 
     logic bclk;

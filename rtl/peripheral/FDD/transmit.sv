@@ -9,11 +9,14 @@ module transmit
     input  logic  [6:0] track,
     input  logic        side,
     output logic        INDEXn,
-    output logic  [7:0] data
+    output logic  [7:0] data,
+    output logic [11:0] curr_sec_info,
+    output logic        data_valid
 );
 
-    assign buffer_addr = (512 * sector) + (track_state == SECTORS && track_position >= 60 ? (track_position-60) : 0);
-    
+    assign data_valid    = track_state == SECTORS && track_position >= 60 && track_position < 572;
+    assign buffer_addr   = (512 * sector) + (data_valid ? (track_position-60) : 0);
+    assign curr_sec_info = {track, side, sector};
     
     typedef enum logic [1:0] { 
         HEADER,
@@ -100,7 +103,7 @@ module transmit
                 end else if (track_position < 20) begin
                     data = 8'h02;
                 end else if (track_position < 22) begin
-                    data = 8'h00;   //CRC
+                    data = 8'h00;   // TODO CRC
                 end else if (track_position < 44) begin
                     data = 8'h4E;
                 end else if (track_position < 56) begin
@@ -112,7 +115,7 @@ module transmit
                 end else if (track_position < 572) begin
                     data = buffer_q;
                 end else if (track_position < 574) begin
-                    data = 8'h00;   //CRC
+                    data = 8'h00;   // TODO CRC
                 end else begin
                     data = 8'h4E;
                 end
