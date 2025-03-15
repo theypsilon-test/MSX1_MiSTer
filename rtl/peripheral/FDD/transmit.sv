@@ -10,14 +10,28 @@ module transmit
     input  logic        side,
     output logic        INDEXn,
     output logic  [7:0] data,
-    output logic [11:0] curr_sec_info,
+    output logic  [7:0] sec_id[6],
     output logic        data_valid
 );
 
+    localparam ID_TRACK  = 0;
+    localparam ID_SIDE   = 1;
+    localparam ID_SECTOR = 2;
+    localparam ID_LENGHT = 3;
+    localparam ID_CRC1   = 4;
+    localparam ID_CRC2   = 5;
+
     assign data_valid    = track_state == SECTORS && track_position >= 60 && track_position < 572;
     assign buffer_addr   = (512 * sector) + (data_valid ? (track_position-60) : 0);
-    assign curr_sec_info = {track, side, sector};
     
+    assign sec_id[ID_TRACK]  = {8'(track)};
+    assign sec_id[ID_SIDE]   = {8'(side)};
+    assign sec_id[ID_SECTOR] = {8'(next_sector)};
+    assign sec_id[ID_LENGHT] = 2;
+    assign sec_id[ID_CRC1]   = 0;
+    assign sec_id[ID_CRC2]   = 0;
+
+
     typedef enum logic [1:0] { 
         HEADER,
         SECTORS,
@@ -26,6 +40,8 @@ module transmit
 
     logic [12:0] track_position;
     logic  [3:0] sector;
+    logic  [3:0] next_sector = sector + 1;
+    
     track_layout_t track_state;
 
     always_ff @(posedge clk or posedge reset) begin
@@ -95,13 +111,13 @@ module transmit
                 end else if (track_position < 16) begin
                     data = 8'hFE;
                 end else if (track_position < 17) begin
-                    data = {1'b1,track};
+                    data = {1'd0,track};
                 end else if (track_position < 18) begin
                     data = {7'd0,side};
                 end else if (track_position < 19) begin
                     data = {4'd0, sector};
                 end else if (track_position < 20) begin
-                    data = 8'h02;
+                    data = sec_id[ID_LENGHT];
                 end else if (track_position < 22) begin
                     data = 8'h00;   // TODO CRC
                 end else if (track_position < 44) begin

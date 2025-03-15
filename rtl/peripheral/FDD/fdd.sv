@@ -4,6 +4,22 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
     input  logic            msclk,
     input  logic            reset,
 
+/*
+    output logic            INDEXn,     // Pin 8  Index
+    input  logic            MOTEAn,     // Pin 10 Motor Enable A
+    input  logic            DRVSBn,     // Pin 12 Drive Sel B
+    input  logic            DRVSAn,     // Pin 14 Drive Sel A
+    input  logic            MOTEBn,     // Pin 16 Motor enable B
+    input  logic            DIRn,       // Pin 18 Direction
+    input  logic            STEPn,      // Pin 20 Step
+    input  logic            WDATEn,     // Pin 22 Write data
+    input  logic            WGATEn,     // Pin 24 Floppy Write Enable
+    output logic            TRK00n,     // Pin 26 Track 0
+    output logic            WPTn,       // Pin 28 Write protect
+    output logic            RDATAn,     // Pin 30 Read data
+    input  logic            SIDE1n,     // Pin 32 Head select
+    output logic            DSKCHGn,    // Pin 34 Disk change/ready
+*/
     input  logic      [1:0] USEL,
     input  logic            MOTORn,
     output logic            READYn,
@@ -15,8 +31,9 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
     output logic            WPROTn,
 
     output logic      [7:0] data,               // Octal data
-    output logic     [11:0] curr_sec_info,
+    output logic      [7:0] sec_id[6],
     output logic            data_valid,
+    output logic            bclk,
 
     //hps image
     input logic       [3:0] img_mounted,
@@ -34,7 +51,8 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
     input  logic [13:0] sd_buff_addr,
     input  logic  [7:0] sd_buff_dout,
     output logic  [7:0] sd_buff_din[0:3],
-    input  logic        sd_buff_wr                   
+    input  logic        sd_buff_wr,
+    input  logic        TEST           
 );
 
 //input        layout,      // 0 = Track-Side-Sector, 1 - Side-Track-Sector
@@ -115,11 +133,10 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
         
         .INDEXn(INDEXn),
         .data(data),
-        .curr_sec_info(curr_sec_info),
+        .sec_id(sec_id),
         .data_valid(data_valid)
     );
 
-    logic bclk;
     sftgen bytRate (
         .len(568-1),
         .sft(bclk),
