@@ -1,5 +1,4 @@
-module ready #(TIMEOUT = 30, DELAY = 3)
-(
+module ready (
     input  logic        clk,
     input  logic        reset,
     input  logic  [1:0] USEL,
@@ -8,10 +7,9 @@ module ready #(TIMEOUT = 30, DELAY = 3)
     output logic        sides,
     output logic        WPROTn,
 
-
-    input logic       [3:0] img_mounted,
-    input logic             img_readonly,
-    input logic      [63:0] img_size
+    input logic   [3:0] img_mounted,
+    input logic         img_readonly,
+    input logic  [63:0] img_size
 );
 
     logic [3:0] reg_sides;
@@ -19,33 +17,32 @@ module ready #(TIMEOUT = 30, DELAY = 3)
     logic [3:0] reg_enable;
     logic [3:0] last_mounted;
     
+    initial begin
+        reg_sides = '{'0,'0,'0,'0};
+        reg_wprotect = '{'0,'0,'0,'0};
+        reg_enable = '{'0,'0,'0,'0};
+    end
+
     genvar i;
     generate
-        for (i=0; i < 4; i++) begin
-            always_ff @(posedge clk or posedge reset) begin
-                if (reset) begin
-                    reg_sides[i] <= 0;
-                    reg_wprotect[i] <= 0;
-                    reg_enable[i] <= 0;
-                end else begin
-                    
-                    last_mounted[i] <= img_mounted[i];
-                    
-                    if (img_mounted[i] && ~last_mounted[i]) begin
-                        if (img_size == 737280) begin
-                            reg_sides[i]    <= 1;
-                            reg_wprotect[i] <= img_readonly;
-                            reg_enable[i]   <= 1;
-                        end else 
-                        if (img_size == 368640) begin
-                            reg_sides[i]    <= 0;
-                            reg_wprotect[i] <= img_readonly;
-                            reg_enable[i]   <= 1;
-                        end else begin
-                            reg_sides[i]    <= 0;
-                            reg_wprotect[i] <= 1;
-                            reg_enable[i]   <= 0;
-                        end
+        for (i=0; i < 4; i++) begin : IMAGE_REDY_I
+            always_ff @(posedge clk) begin    
+                last_mounted[i] <= img_mounted[i];
+                
+                if (img_mounted[i] && ~last_mounted[i]) begin
+                    if (img_size == 737280) begin
+                        reg_sides[i]    <= 1;
+                        reg_wprotect[i] <= img_readonly;
+                        reg_enable[i]   <= 1;
+                    end else 
+                    if (img_size == 368640) begin
+                        reg_sides[i]    <= 0;
+                        reg_wprotect[i] <= img_readonly;
+                        reg_enable[i]   <= 1;
+                    end else begin
+                        reg_sides[i]    <= 0;
+                        reg_wprotect[i] <= 1;
+                        reg_enable[i]   <= 0;
                     end
                 end
             end

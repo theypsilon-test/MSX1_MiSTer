@@ -10,6 +10,7 @@ typedef enum logic [4:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTY
                           MAPPER_MFRSD3, MAPPER_MFRSD2, MAPPER_MFRSD1, MAPPER_MFRSD0, 
                           MAPPER_NATIONAL, MAPPER_ESE_RAM, 
                           MAPPER_MEGARAM, MAPPER_MEGASCC, MAPPER_MEGAASCII8, MAPPER_MEGAASCII16,
+                          MAPPER_TURBO_R_FDC,
                           MAPPER_UNUSED} mapper_typ_t;
 typedef enum logic [3:0] {BLOCK_RAM, BLOCK_ROM, BLOCK_SRAM, BLOCK_DEVICE, BLOCK_MAPPER, BLOCK_CART, BLOCK_REF_MEM, BLOCK_REF_DEV, BLOCK_IO_DEVICE, BLOCK_EXPANDER, BLOCK_REF_SHARED_MEM} block_t;
 typedef enum logic [2:0] {CONF_BLOCK, CONF_DEVICE, CONF_LAYOUT, CONF_CARTRIGE, CONF_BLOCK_FW, CONF_UNUSED5, CONF_UNUSED6, CONF_END} conf_t;
@@ -41,6 +42,7 @@ interface clock_bus_if(
     wire     ce_5m39_n;   
     wire     ce_3m58_p;
     wire     ce_3m58_n;
+    wire     ce_1k;
     wire     ce_10hz;
 
     modport generator_mp (
@@ -52,6 +54,7 @@ interface clock_bus_if(
         output  ce_5m39_n,   
         output  ce_3m58_p,
         output  ce_3m58_n,
+        output  ce_1k,
         output  ce_10hz
     );
 
@@ -64,7 +67,58 @@ interface clock_bus_if(
         input   ce_5m39_n,   
         input   ce_3m58_p,
         input   ce_3m58_n,
+        input   ce_1k,
         input   ce_10hz
+    );
+
+endinterface
+
+interface FDD_if();
+    wire [1:0] USEL;
+    wire       MOTORn;
+    wire       READYn;
+    wire       STEPn;
+    wire       SDIRn;   
+    wire       SIDEn;
+    wire       INDEXn;
+    wire       TRACK0n;
+    wire       WPROTn;
+
+    wire [7:0] data;
+    wire [7:0] sec_id[6];
+    wire       data_valid;
+    wire       bclk;
+
+    modport FDD_mp (
+        input   USEL,
+        input   MOTORn,
+        output  READYn,
+        input   STEPn,
+        input   SDIRn,
+        input   SIDEn,   
+        output  INDEXn,
+        output  TRACK0n,
+        output  WPROTn,
+        output  data,
+        output  sec_id,
+        output  data_valid,
+        output  bclk
+    );
+
+    modport FDC_mp (
+        output  USEL,
+        output  MOTORn,
+        input   READYn,
+        output  STEPn,
+        output  SDIRn,
+        output  SIDEn,   
+        input   INDEXn,
+        input   TRACK0n,
+        input   WPROTn,
+        input   data,
+        input   sec_id,
+        input   data_valid,
+        input   bclk
     );
 
 endinterface
@@ -215,6 +269,7 @@ interface device_bus;
     logic       mode;
     logic       param;
     logic [1:0] num;
+    logic [7:0] data;
 endinterface
 
 interface memory_bus;
@@ -260,6 +315,7 @@ interface image_info;
     logic        mounted;
     logic [31:0] size;
     logic        readonly;
+    logic        enable;
 endinterface
 
 package MSX;

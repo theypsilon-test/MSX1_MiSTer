@@ -35,7 +35,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-module wd279x_command_II  #(parameter WD279_57=1) 
+module wd279x_command_II  #(parameter WD279_57=1, TEST=0) 
 (
 	input  logic        clk,         // sys clock
 	input  logic        msclk,       // clock 1ms enable
@@ -60,7 +60,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 	
 	input  logic  [7:0] sec_id[6],
 	input  logic  		data_valid,
-	input  logic        TEST
+	input  logic        drq_out
 );
 
 	localparam ID_TRACK  = 0;
@@ -83,9 +83,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 
 	sector_state_t state;
 
-	assign status = {1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, reg_DRQ, busy}; //TODO signály z mechaniky
-
-	logic busy = state != STATE_IDLE;
+	logic busy;
 	logic reg_CRC_ERROR;
 	logic reg_LOST_DATA;
 	logic reg_RECORD_NOT_FOUND;
@@ -96,6 +94,9 @@ module wd279x_command_II  #(parameter WD279_57=1)
 	logic [4:0] wait_count;
 	logic [2:0] index_count;
 	logic       last_index;
+
+	assign status = {1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, reg_DRQ, busy}; //TODO signály z mechaniky
+	assign busy  = state != STATE_IDLE;
 
 	always_ff @(posedge clk) begin
 		reg_sector_write <= 0;
@@ -115,6 +116,8 @@ module wd279x_command_II  #(parameter WD279_57=1)
 			case(state)
 				STATE_IDLE: begin
 					if (command_start && command[7:6] == 2'b10) begin
+						$display("Time %t", $time);
+						$display("Command II m(%d) Track Side sector: %X %X %X", command[4], reg_track_in, command[3], reg_sector_in);
 						reg_CRC_ERROR <= 0;
 						reg_LOST_DATA <= 0;
 						reg_RECORD_NOT_FOUND <= 0;
@@ -148,8 +151,10 @@ module wd279x_command_II  #(parameter WD279_57=1)
 								reg_WRITE_PROTECTED <= 1;
 							end
 						end else begin
-							state <= STATE_CHECK_II;
-							index_count <= 0;
+							if (~data_valid) begin
+								state <= STATE_CHECK_II;
+								index_count <= 0;
+							end
 						end
 					end
 				STATE_CHECK_II: begin
@@ -158,11 +163,14 @@ module wd279x_command_II  #(parameter WD279_57=1)
 						state <= STATE_IDLE;
 						INTRQ <= 1;
 						reg_RECORD_NOT_FOUND <= 1;
+						$display("RECORD_NOT_FOUND");
 					end else
 						if (data_valid)
 							if (sec_id[ID_TRACK] == reg_track_in && sec_id[ID_SECTOR] == reg_sector_in)
-									if (WD279_57 == 1 ||  command[1] == 0 || sec_id[ID_SIDE][0] == command[3])
+									if (WD279_57 == 1 ||  command[1] == 0 || sec_id[ID_SIDE][0] == command[3]) begin
 										state <= command[5] ? STATE_WRITE : STATE_READ;
+										$display("RECORD FOUND");
+									end
 
 				end
 				STATE_READ: begin
@@ -175,10 +183,13 @@ module wd279x_command_II  #(parameter WD279_57=1)
 						if (command[4]) begin			//Multiple
 							reg_sector_out <= reg_sector_in + 1;
 							reg_sector_write <= 1;
+							$display("Command II m(%d) Track Side sector: %X %X %X NEXT", command[4], reg_track_in, command[3], reg_sector_in + 1);
 							state <= STATE_CHECK;
 						end else begin
-							INTRQ <= 1;
-							state <= STATE_IDLE;
+//							if (!drq_out) begin
+								INTRQ <= 1;
+								state <= STATE_IDLE;
+//							end
 						end
 					end
 				end

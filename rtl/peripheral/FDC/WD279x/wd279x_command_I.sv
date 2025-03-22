@@ -35,7 +35,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-module wd279x_command_I 
+module wd279x_command_I #(parameter TEST=0)
 (
 	input  logic        clk,         // sys clock
 	input  logic        msclk,       // clock 1ms enable
@@ -57,8 +57,7 @@ module wd279x_command_I
 	output logic  		reg_track_write,
 	
 	input  logic  [7:0] sec_id[6],
-	input  logic  		data_valid,
-	input  logic        TEST
+	input  logic  		data_valid
 );
 
 	localparam ID_TRACK  = 0;
@@ -81,15 +80,17 @@ module wd279x_command_I
 
 	step_state_t state;
 
-	assign status = {1'b0, 1'b0, 1'b0, reg_SEEK_ERROR, reg_CRC_ERROR, ~TRK00n, ~INDEXn, busy}; //TODO signály z mechaniky
-
-	logic busy = state != STATE_IDLE;
+	logic busy;
+	
 	logic reg_CRC_ERROR;
 	logic reg_SEEK_ERROR;
 	logic [7:0] track_rq;
 	logic [4:0] wait_count;
 	logic [2:0] index_count;
 	logic       last_index;
+
+	assign busy = state != STATE_IDLE;
+	assign status = {1'b0, 1'b0, 1'b0, reg_SEEK_ERROR, reg_CRC_ERROR, ~TRK00n, ~INDEXn, busy}; //TODO signály z mechaniky
 
 	always_ff @(posedge clk) begin
 		reg_track_write <= 0;

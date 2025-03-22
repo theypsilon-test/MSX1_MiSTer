@@ -14,6 +14,7 @@ module track_buffer
     //Image info
     input  logic        disk_mounted,
     input  logic        disk_readonly,
+    input  logic        disk_sides,
 
     //SD block level access
     output logic [31:0] sd_lba[0:3],
@@ -35,9 +36,9 @@ module track_buffer
 
     logic       load;
 
-    wire changed = {reg_track, reg_USEL, reg_side} != {track,  USEL, side};
+    wire changed = {reg_track, reg_USEL, reg_side} != {track,  USEL, side}; 
     
-    assign ready = !changed && !load && !load_busy;
+    assign ready = !changed && !load && !load_busy && disk_mounted;
 
     always_ff @(posedge clk) begin
         if (reset) begin
@@ -45,7 +46,7 @@ module track_buffer
         end else begin
             
             if (!load_busy && changed) load <= 1;
-            if (load_busy) load <= 0;
+            if (load_busy && sd_ack[reg_USEL]) load <= 0;
         end       
     end
 
@@ -59,8 +60,8 @@ module track_buffer
             if (!load_busy && load && disk_mounted) begin
                 {reg_track, reg_USEL, reg_side} <= {track,  USEL, side};
                 load_busy <= 1;
-                sd_lba[USEL] <=  (track * 9) + (side == 1'b1 ? 0 : 9);
-                sd_blk_cnt[USEL] <= 9 ;
+                sd_lba[USEL] <=  (track * (disk_sides ? 18 : 9)) + (side == 1'b1 ? 9 : 0);
+                sd_blk_cnt[USEL] <= 8 ;
                 sd_rd[USEL] <= 1;
             end
             if (sd_rd[reg_USEL] && sd_ack[reg_USEL] && load_busy) begin
@@ -72,12 +73,25 @@ module track_buffer
         end
     end
 
+    logic [7:0] dpram_sd_buff_din;
+    
+    //assign sd_buff_din[reg_USEL] = dpram_sd_buff_din;
+
+    always_ff @(posedge clk) begin
+        case (reg_USEL)
+            2'b00: sd_buff_din[0] <= dpram_sd_buff_din;
+            2'b01: sd_buff_din[1] <= dpram_sd_buff_din;
+            2'b10: sd_buff_din[2] <= dpram_sd_buff_din;
+            2'b11: sd_buff_din[3] <= dpram_sd_buff_din;
+        endcase
+    end
+
     track_dpram track_dpram (
         .clock(clk),
         .address_a(sd_buff_addr[12:0]),
         .data_a(sd_buff_dout),
         .wren_a(sd_buff_wr),
-        .q_a(sd_buff_din[reg_USEL]),
+        .q_a(dpram_sd_buff_din),
 
         .address_b(buffer_addr),
         .wren_b(0),

@@ -37,17 +37,17 @@
 
 module wd279x #(parameter WD279_57=1) 
 (
-	input        clk,         // sys clock
-	input        msclk,       // clock 1ms
-	input        MRn,	      // master reset
-	input        CSn,		  // i/o enable
-	input        REn,         // i/o read
-	input        WEn,         // i/o write
-	input  [1:0] A,           // i/o port addr
-	input  [7:0] DIN,         // i/o data in
-	output [7:0] DOUT,        // i/o data out
-	output       DRQ,         // DMA request
-	output  logic       INTRQ,
+	input  logic        clk,         // sys clock
+	input  logic        msclk,       // clock 1ms
+	input  logic        MRn,	      // master reset
+	input  logic        CSn,		  // i/o enable
+	input  logic        REn,         // i/o read
+	input  logic        WEn,         // i/o write
+	input  logic  [1:0] A,           // i/o port addr
+	input  logic  [7:0] DIN,         // i/o data in
+	output logic  [7:0] DOUT,  // i/o data out
+	output logic        DRQ,  // DMA request
+	output logic        INTRQ,
 
 	output logic 		STEPn,
 	output logic 		SDIRn,
@@ -60,10 +60,17 @@ module wd279x #(parameter WD279_57=1)
 	input  logic        bclk,
 	input  logic  [7:0] sec_id[6],
 	input  logic  		data_valid,
+	output logic		dbg_write,
+	output logic		dbg_read,
+	output logic        dbg_busy
 
-	input  logic        TEST,	//Zkrácené časy
-	output logic  [7:0] temp_status
+	//input  logic        TEST,	//Zkrácené časy
+	// output logic  [7:0] temp_status
 );
+
+	assign dbg_read = read_rq;
+	assign dbg_write = write_rq;
+	assign dbg_busy = busy;
 
 	localparam A_COMMAND         = 0;
 	localparam A_STATUS          = 0;
@@ -84,10 +91,36 @@ module wd279x #(parameter WD279_57=1)
 	logic       command_start;
 	logic       busy;
 
-	assign temp_status = status;
-	assign busy = command_start | status_command_type_I[0] | status_command_type_II[0];
-	assign DOUT = (~REn && A == A_DATA) ? reg_data : 
-				  (~REn && A == A_STATUS) ? status : 8'hFF;
+	//integer file;  // File handle
+	integer fileData;  // File handle
+	//integer adr;  // File handle
+
+    initial begin
+        // Otevře soubor pro zápis (rewrite mode)
+      //  file = $fopen("wd2797.txt", "w");
+		//fileData = $fopen("wd2797data.txt", "w");
+
+        //if (file == 0) begin
+        //    $display("Chyba: Nelze otevřít soubor!");
+        //    $stop;
+        //end
+		//adr = 0;
+	end
+
+//	assign temp_status = status;
+	assign busy = command_start | status[0];
+	assign DRQ = reg_DRQ;
+
+	always_comb begin
+		DOUT = '1;
+		if (!(REn || CSn))
+			case (A)
+				A_DATA:   DOUT = reg_data;
+				A_STATUS: DOUT = status;
+				A_SECTOR: DOUT = reg_sector;
+				A_TRACK:  DOUT = reg_track;
+			endcase
+	end
 
 	always_comb begin
 		casez (reg_cmd[7:4])
@@ -98,40 +131,34 @@ module wd279x #(parameter WD279_57=1)
 		endcase
 	end
 
-	logic last_REn, last_WEn;
+	logic last_REn, last_WEn, write_rq, read_rq;
 	always_ff @(posedge clk) begin
 		last_REn <= REn;
 		last_WEn <= WEn;
 	end
+
+	assign write_rq = ~CSn && last_WEn && ~WEn;
+	assign read_rq  = ~CSn && last_REn && ~REn;
+	
 	
 	//Command register
 	logic INTRQ_cmd_res;
-	logic interrupt;
-	always_ff @(posedge clk) begin
+		always_ff @(posedge clk) begin
 		INTRQ_cmd_res <= 0;
-		interrupt <= 0;
+		command_start <= 0;
 		if (~MRn)	begin
 			reg_cmd <= 8'h03;
 			command_start <= 1;
 		end else begin
-			if (last_WEn && ~WEn && A == A_COMMAND) begin
-				if (DIN[7:4] == 4'h0D) begin					// FORCE interupt
-					reg_cmd <= DIN;								// TODO operace po prijeti commandu
-					command_start <= 0;
+			if (write_rq && A == A_COMMAND) begin
+				if (!busy || (DIN[7:4] == 4'hD)) begin
+					//$fwrite(file, "%c%c", 8'h02, DIN);
+					$display("SET CMD %X", DIN);
+					reg_cmd <= DIN;
+					command_start <= 1;
 					INTRQ_cmd_res <= 1;
-					interrupt <= 1;
-				end else begin
-					if (!busy) begin
-						reg_cmd <= DIN;
-						command_start <= 1;
-						INTRQ_cmd_res <= 1;
-					end
 				end
 			end
-
-			if (status[0]) 
-				command_start <= 0;
-			
 		end
 	end
 
@@ -140,9 +167,11 @@ module wd279x #(parameter WD279_57=1)
 		if (~MRn)	begin
 			reg_track <= 0;
 		end	else begin
-			if (last_WEn && ~WEn && A == A_TRACK && !busy )
+			if (write_rq && A == A_TRACK && !busy ) begin
 				reg_track <= DIN;
-
+				$display("SET TRACK %X", DIN);
+				//$fwrite(file, "%c%c", 8'h00, DIN);
+			end
 			if (reg_track_write) 
 				reg_track <= reg_track_out;
 		end
@@ -153,8 +182,10 @@ module wd279x #(parameter WD279_57=1)
 		if (~MRn)	begin
 			reg_sector <= 1;
 		end	else begin
-			if (last_WEn && ~WEn && A == A_SECTOR && !busy ) begin
+			if (write_rq && A == A_SECTOR && !busy ) begin
 				reg_sector <= DIN;
+				$display("SET SECTOR %X", DIN);
+				//$fwrite(file, "%c%c", 8'h01, DIN);
 			end
 			if (reg_sector_write) 
 				reg_sector <= reg_sector_out;
@@ -170,25 +201,61 @@ module wd279x #(parameter WD279_57=1)
 			reg_LOST_DATA <= 0;
 			reg_DRQ <= 0;
 		end	else begin
-			if (last_WEn && ~WEn && A == A_DATA) begin
+			if (write_rq && A == A_DATA) begin
+				//$fwrite(file, "%c%c", 8'h04, DIN);
+				$display("SET DATA  %X", DIN);
 				reg_data <= DIN;
+				reg_DRQ <= 0;
 			end
 			
-			if (last_REn && ~REn && A == A_DATA && reg_DRQ) begin
+			if (read_rq && A == A_DATA) begin
 				reg_DRQ <= 0;
 			end
 
+			//if (~data_valid) adr <= 0;
 			if (reg_cmd[7:5] == 3'b100 && status_command_type_II[1]) begin
 				if (bclk && data_valid) begin
 					if (reg_DRQ) 
 						reg_LOST_DATA <= 1;
 					reg_DRQ <= 1;
 					reg_data <= data;
+
+					//if (adr < 5) 
+					//$fwrite(fileData, "%c", data);
+					//	$display("DATA %X", data);
+					//adr <= adr + 1;
 				end
 			end
 		end
 	end
-
+/*	
+	wire [15:0] DISKcrc;
+	crc #(.CRC_WIDTH(16)) crc1
+	(
+		.clk(clk),
+		.valid(data_valid),
+		.we(bclk),
+		.data_in(data),
+		.crc(DISKcrc)
+	);
+	/*
+	crc #(.CRC_WIDTH(32), .POLYNOM(32'hEDB88320))crc2
+	(
+		.clk(clk),
+		.valid(data_valid),
+		.we(bclk),
+		.data_in(data),
+		.crc()
+	);*/
+/*
+	CRC_32 crc3 (
+		.clk(clk),
+		.en(data_valid),
+		.we(bclk),
+		.crc_in(data),
+		.crc_out()
+	);
+*/
 	//INTRQ register
 	always_ff @(posedge clk) begin
 		if (~MRn)	begin
@@ -197,8 +264,9 @@ module wd279x #(parameter WD279_57=1)
 			if (INTRQ_cmd_res) begin
 				INTRQ <= 0;
 			end else 
-				if (INTRQ_I || INTRQ_II) begin
+				if (INTRQ_I || (INTRQ_II && ~reg_DRQ)|| INTRQ_IV) begin
 					INTRQ <= 1;
+					//if (INTRQ_II) $display("CRC %X", DISKcrc);
 				end
 		end
 	end
@@ -226,15 +294,15 @@ wd279x_command_I command_I (
 	.HLD(),
 	.INTRQ(INTRQ_I),
 	.data_valid(data_valid),
-	.sec_id(sec_id),
-	.TEST(TEST)
+	.sec_id(sec_id)
+//	.TEST(TEST)
 );
 
 logic [7:0] reg_sector_out;
 logic       reg_sector_write;
 logic [7:0] status_command_type_II;
 logic       INTRQ_II;
-wd279x_command_II command_II (
+wd279x_command_II #(.WD279_57(WD279_57)) command_II (
 	.clk(clk),
 	.msclk(msclk),
 	.interrupt(interrupt),
@@ -255,8 +323,20 @@ wd279x_command_II command_II (
 	.INTRQ(INTRQ_II),
 	.data_valid(data_valid),
 	.sec_id(sec_id),
-	.TEST(TEST)
+	.drq_out(reg_DRQ)
+	//.TEST(TEST)
 );
 
+logic       INTRQ_IV;
+logic       interrupt;
+wd279x_command_IV  command_IV (
+	.clk(clk),
+	.msclk(msclk),
+	.interrupt(interrupt),
+	.MRn(MRn),
+	.command(reg_cmd),
+	.command_start(command_start),
+	.INTRQ(INTRQ_IV)
+);
 endmodule
 

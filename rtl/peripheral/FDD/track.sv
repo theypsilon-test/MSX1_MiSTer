@@ -1,4 +1,4 @@
-module track #(DELAY = 3, MAX_TRACKS = 80)
+module track #(DELAYms = 3, MAX_TRACKS = 80)
 (
     input  logic        clk,
     input  logic        msclk,  //clk at 1ms
@@ -52,12 +52,12 @@ module track #(DELAY = 3, MAX_TRACKS = 80)
                 if (SDIRn) begin
                     if (reg_track[USEL] < MAX_TRACKS) begin
                         reg_track[USEL] <= reg_track[USEL] + 1;
-                        track_delay <= DELAY;
+                        track_delay <= DELAYms;
                     end
                 end else begin
                     if (reg_track[USEL] > 0) begin
                         reg_track[USEL] <= reg_track[USEL] - 1;
-                        track_delay <= DELAY;
+                        track_delay <= DELAYms;
                     end
                 end
             end           
@@ -83,6 +83,7 @@ module track #(DELAY = 3, MAX_TRACKS = 80)
 
         .disk_mounted(disk_mounted),
         .disk_readonly(disk_readonly),
+        .disk_sides(disk_sides),
         .sd_lba(sd_lba),
         .sd_blk_cnt(sd_blk_cnt),
         .sd_rd(sd_rd),

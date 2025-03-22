@@ -41,6 +41,7 @@ module dev_WD2793
    clock_bus_if.base_mp clock_bus,
    device_bus           device_bus,
    input  MSX::io_device_t io_device[3],
+   FDD_if.FDC_mp            FDD_bus,
    sd_bus               sd_bus,
    sd_bus_control       sd_bus_control,
    image_info           image_info,
@@ -73,6 +74,12 @@ wire wdcs           = device_cs && cpu_bus.addr[2] == 0;
 logic motor, side;
 drive_t drive;
 
+
+assign FDD_bus.USEL   = 0;                //TODO zatim jeden image
+assign FDD_bus.MOTORn = ~(motor && drive == DRIVE_A);
+assign FDD_bus.SIDEn  = ~side;
+
+
 always @(posedge cpu_bus.clk) begin
    if (cpu_bus.reset) begin
       philips_sideReg  <= 8'd0;
@@ -85,7 +92,7 @@ always @(posedge cpu_bus.clk) begin
          if (area_philips) begin
             if (cpu_bus.addr[2:0] == 3'd4) begin
                philips_sideReg  <= cpu_bus.data;
-               side               <= cpu_bus.data[0];
+               side             <= cpu_bus.data[0];
             end
             if (cpu_bus.addr[2:0] == 3'd5) begin 
                philips_driveReg <= cpu_bus.data;
@@ -113,24 +120,26 @@ always @(posedge cpu_bus.clk) begin
    end
 end
 
+logic last_data_oe_crc;
 always_comb begin
    data = 8'hFF;
    data_oe_rq = 0;
+  
    if (cpu_bus.rd && device_cs) begin
       if (cpu_bus.addr[2] == 0) begin
-         data = d_from_wd17;
-         data_oe_rq = 1;;
+         data = image_info.enable ? d_from_wd17_old : d_from_wd17;
+         data_oe_rq = 1;
       end else begin
          if (area_philips) begin
             case(cpu_bus.addr[1:0])
                0: begin data = philips_sideReg; data_oe_rq = 1; end
                1: begin data = philips_driveReg & 8'hFB; data_oe_rq = 1; end
                2: ;
-               3: begin data = {~drq, ~intrq, 6'b111111}; data_oe_rq = 1; end
+               3: begin data = image_info.enable ?  {~drq_old, ~intrq_old, 6'b111111} : {~drq, ~intrq, 6'b111111}; data_oe_rq = 1; end
             endcase
          end else begin
             if (area_national) begin
-               data = {intrq, ~drq, 6'b111111};
+               data = image_info.enable ? {intrq_old, ~drq_old, 6'b111111} : {intrq, ~drq, 6'b111111};
                data_oe_rq = 1;
             end
          end
@@ -138,11 +147,36 @@ always_comb begin
    end
 end
 
+logic [15:0] crc;
+logic fdc_we;
+
+assign fdc_we = data_oe_rq && (image_info.enable ? busy : dbg_busy) && wdcs && (image_info.enable ? drq_old : drq);
+/*
+crc #(.CRC_WIDTH(16)) crc1
+(
+   .clk(cpu_bus.clk),
+   .valid(image_info.enable ? !intrq_old : !intrq),
+   .we(fdc_we & ~last_data_oe_crc) ,
+   .data_in(image_info.enable ? d_from_wd17_old : d_from_wd17),
+   .crc(crc )
+);
+*/
+logic last;
+always @(posedge cpu_bus.clk) begin
+   last_data_oe_crc <= fdc_we;
+   last <= image_info.enable ? intrq_old : intrq;
+   if (last && !(image_info.enable ? intrq_old : intrq))
+      $display("CRC %X", crc);
+
+
+end
+
 wire fdd_ready = image_mounted && motor && drive == DRIVE_A;
 
-wire [7:0] d_from_wd17;
-wire drq, intrq;
-wd1793 #(.RWMODE(1), .EDSK(0)) wd2793_i
+wire [7:0] d_from_wd17_old;
+wire drq_old, intrq_old, busy, dbg_busy;
+
+wd1793 wd2793_iold
 (
    .clk_sys(cpu_bus.clk),
    .ce(clock_bus.ce_3m58_n),
@@ -152,11 +186,12 @@ wd1793 #(.RWMODE(1), .EDSK(0)) wd2793_i
    .wr(cpu_bus.wr),
    .addr(cpu_bus.addr[1:0]),
    .din(cpu_bus.data),
-   .dout(d_from_wd17),
-   .drq(drq),
-   .intrq(intrq),
+   .dout(d_from_wd17_old),
+   .drq(drq_old),
+   .intrq(intrq_old),
    .ready(fdd_ready),
    .layout(layout),
+   .busy(busy),
    .size_code(3'h2),
    .side(side),
    .img_mounted(image_info.mounted),
@@ -175,6 +210,60 @@ wd1793 #(.RWMODE(1), .EDSK(0)) wd2793_i
    .input_data(8'h0),
    .input_wr(1'b0),
    .buff_din(8'h0)
+);
+
+wire [7:0] d_from_wd17;
+wire drq, intrq;
+wd279x #(.WD279_57(0)) wd2793_i
+(
+   .clk(cpu_bus.clk),
+   .msclk(clock_bus.ce_1k),
+   .MRn(~cpu_bus.reset),
+   .CSn(~wdcs),
+   .REn(~cpu_bus.rd),
+   .WEn(~cpu_bus.wr),
+   .A(cpu_bus.addr[1:0]),
+   .DIN(cpu_bus.data),
+   .DOUT(d_from_wd17),
+   .DRQ(drq),
+   .INTRQ(intrq),
+   
+   //FDD
+   .STEPn(FDD_bus.STEPn),
+   .SDIRn(FDD_bus.SDIRn),
+   .INDEXn(FDD_bus.INDEXn),
+   .TRK00n(FDD_bus.TRACK0n),
+   .READYn(FDD_bus.READYn),
+   .WPROTn(FDD_bus.WPROTn),
+   .SSO(),  //Pouze WD2795/7
+   //FDD helper
+   .data(FDD_bus.data),
+   .bclk(FDD_bus.bclk),
+   .sec_id(FDD_bus.sec_id),
+   .data_valid(FDD_bus.data_valid),
+   .dbg_busy(dbg_busy)
+
+   // .ready(fdd_ready),               //TODO ziskat z FDD
+   // .layout(layout),
+   // .size_code(3'h2),
+   /*
+   .side(side),
+   .img_mounted(image_info.mounted),
+   .wp(image_info.readonly),
+   .img_size(image_info.size[19:0]),
+   .sd_lba(sd_bus_control.sd_lba),
+   .sd_rd(sd_bus_control.rd),
+   .sd_wr(sd_bus_control.wr),
+   .sd_ack(sd_bus.ack),
+   .sd_buff_addr(sd_bus.buff_addr[8:0]),
+   .sd_buff_dout(sd_bus.buff_data),
+   .sd_buff_din(sd_bus_control.buff_data),
+   .sd_buff_wr(sd_bus.buff_wr),
+   .input_active(1'b0),
+   .input_addr(20'h0),
+   .input_data(8'h0),
+   .input_wr(1'b0),
+   .buff_din(8'h0)*/
 );
 
 endmodule

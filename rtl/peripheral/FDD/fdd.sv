@@ -1,9 +1,9 @@
-module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
+module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
 (
     input  logic            clk,
     input  logic            msclk,
     input  logic            reset,
-
+    FDD_if.FDD_mp           FDD_bus,
 /*
     output logic            INDEXn,     // Pin 8  Index
     input  logic            MOTEAn,     // Pin 10 Motor Enable A
@@ -20,6 +20,7 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
     input  logic            SIDE1n,     // Pin 32 Head select
     output logic            DSKCHGn,    // Pin 34 Disk change/ready
 */
+    /*
     input  logic      [1:0] USEL,
     input  logic            MOTORn,
     output logic            READYn,
@@ -34,7 +35,7 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
     output logic      [7:0] sec_id[6],
     output logic            data_valid,
     output logic            bclk,
-
+    */
     //hps image
     input logic       [3:0] img_mounted,
     input logic             img_readonly,
@@ -51,32 +52,28 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
     input  logic [13:0] sd_buff_addr,
     input  logic  [7:0] sd_buff_dout,
     output logic  [7:0] sd_buff_din[0:3],
-    input  logic        sd_buff_wr,
-    input  logic        TEST           
+    input  logic        sd_buff_wr     
 );
-
-//input        layout,      // 0 = Track-Side-Sector, 1 - Side-Track-Sector
 
     logic [3:0] motor_run;         // Stav motoru
 
-    motor #(.TIMEOUT(30), .DELAY(3)) FDD_motor(
+    motor #(.TIMEOUTms(30000), .DELAYms(3)) FDD_motor(
         .clk(clk),
         .msclk(msclk),
         .reset(reset),
-        .USEL(USEL),
-        .MOTORn(MOTORn),
+        .USEL(FDD_bus.USEL),
+        .MOTORn(FDD_bus.MOTORn),
         .motor_run(motor_run)
     );
-
 
     logic sides;
     ready FDD_ready(
         .clk(clk),
         .reset(reset),
-        .USEL(USEL),
+        .USEL(FDD_bus.USEL),
         .motor_run(motor_run),
-        .READYn(READYn),
-        .WPROTn(WPROTn),
+        .READYn(FDD_bus.READYn),
+        .WPROTn(FDD_bus.WPROTn),
         .sides(sides),
         .img_mounted(img_mounted),
         .img_readonly(img_readonly),
@@ -88,19 +85,20 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
     logic  [7:0] buffer_q;
     logic        track_ready;
 
-    track #(.DELAY(3), .MAX_TRACKS(80)) FDD_track(
+    track #(.DELAYms(3), .MAX_TRACKS(80)) FDD_track(
         .clk(clk),
         .msclk(msclk),
         .reset(reset),
-        .USEL(USEL),
-        .READYn(READYn),
-        .STEPn(STEPn),
-        .SDIRn(SDIRn),
-        .TRACK0n(TRACK0n),
+        .USEL(FDD_bus.USEL),
+        .READYn(FDD_bus.READYn),
+        .STEPn(FDD_bus.STEPn),
+        .SDIRn(FDD_bus.SDIRn),
+        .TRACK0n(FDD_bus.TRACK0n),
+        .SIDEn(FDD_bus.SIDEn),
         
         .track(track),
-        .disk_mounted(~READYn),
-        .disk_readonly(~WPROTn),
+        .disk_mounted(~FDD_bus.READYn),
+        .disk_readonly(~FDD_bus.WPROTn),
         .disk_sides(sides),
 
         .track_ready(track_ready),
@@ -118,9 +116,9 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
         .sd_buff_wr(sd_buff_wr)
     );
 
-    transmit FDD_transmit(
+    transmit #(.sysCLK(sysCLK)) FDD_transmit(
         .clk(clk),
-        .bclk(bclk),
+        .bclk(FDD_bus.bclk),
         .reset(reset),
         
         //Track buffer
@@ -129,58 +127,12 @@ module fdd #(SECTORS=9, SECTOR_SIZE=512, TRACKS=80)
         .track_ready(track_ready),
 
         .track(track),
-        .side(~SIDEn),
+        .side(~FDD_bus.SIDEn),
         
-        .INDEXn(INDEXn),
-        .data(data),
-        .sec_id(sec_id),
-        .data_valid(data_valid)
-    );
-
-    sftgen bytRate (
-        .len(568-1),
-        .sft(bclk),
-        .clk(clk),
-        .rstn(~reset)
+        .INDEXn(FDD_bus.INDEXn),
+        .data(FDD_bus.data),
+        .sec_id(FDD_bus.sec_id),
+        .data_valid(FDD_bus.data_valid)
     );
 
 endmodule
-
-/*
-module wd1793_dpram #(parameter DATAWIDTH=8, ADDRWIDTH=11)
-(
-	input	                     clock,
-
-	input	     [ADDRWIDTH-1:0] address_a,
-	input	     [DATAWIDTH-1:0] data_a,
-	input	                     wren_a,
-	output reg [DATAWIDTH-1:0] q_a,
-
-	input	     [ADDRWIDTH-1:0] address_b,
-	input	     [DATAWIDTH-1:0] data_b,
-	input	                     wren_b,
-	output reg [DATAWIDTH-1:0] q_b
-);
-
-logic [DATAWIDTH-1:0] ram[0:(1<<ADDRWIDTH)-1];
-
-always_ff@(posedge clock) begin
-	if(wren_a) begin
-		ram[address_a] <= data_a;
-		q_a <= data_a;
-	end else begin
-		q_a <= ram[address_a];
-	end
-end
-
-always_ff@(posedge clock) begin
-	if(wren_b) begin
-		ram[address_b] <= data_b;
-		q_b <= data_b;
-	end else begin
-		q_b <= ram[address_b];
-	end
-end
-
-endmodule
-*/

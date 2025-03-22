@@ -41,6 +41,7 @@ module devices (
     device_bus              device_bus,                             // Device control bus interface
     sd_bus                  sd_bus,                                 // SD bus interface
     sd_bus_control          sd_bus_control,                         // SD bus control interface
+    FDD_if.FDC_mp            FDD_bus,
     video_bus_if.device_mp  video_bus,
     vram_bus_if.device_mp   vram_bus,
     image_info              image_info,                             // Image information
@@ -160,6 +161,7 @@ module devices (
         .clock_bus(clock_bus),
         .device_bus(device_bus),
         .io_device(io_device[DEV_WD2793]),
+        .FDD_bus(FDD_bus),
         .sd_bus(sd_bus),
         .sd_bus_control(sd_bus_control),
         .image_info(image_info),

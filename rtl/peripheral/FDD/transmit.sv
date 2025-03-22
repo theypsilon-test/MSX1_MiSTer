@@ -1,7 +1,7 @@
-module transmit
+module transmit #(parameter sysCLK)
 (
     input  logic        clk,
-    input  logic        bclk,   //Byt clock clk podělit 687
+    output logic        bclk,   
     input  logic        reset,
     output logic [12:0] buffer_addr,
     input  logic  [7:0] buffer_q,
@@ -40,49 +40,54 @@ module transmit
 
     logic [12:0] track_position;
     logic  [3:0] sector;
-    logic  [3:0] next_sector = sector + 1;
+    logic  [3:0] next_sector;
+
+    assign next_sector = sector + 1;
     
     track_layout_t track_state;
 
-    always_ff @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk) begin
         if (reset) begin
             track_position <= 0;
             track_state <= HEADER;
         end else begin
-            if (bclk && track_ready) begin
-                track_position <= track_position + 1;
-                case(track_state)
-                    HEADER: begin
-                        if (track_position == 145) begin
-                            track_position <= 0;
-                            track_state <= SECTORS;
-                            sector <= 0;
-                        end
-                    end
-                    SECTORS: begin
-                        if (track_position == 657) begin
-                            if (sector == 8) begin
-                                track_state <= GAPS;
+            if (track_ready) begin
+                if (bclk) begin
+                    track_position <= track_position + 1;
+                    case(track_state)
+                        HEADER: begin
+                            if (track_position == 145) begin
                                 track_position <= 0;
-                            end else begin
-                                sector <= sector + 1;
+                                track_state <= SECTORS;
+                                sector <= 0;
+                            end
+                        end
+                        SECTORS: begin
+                            if (track_position == 657) begin
+                                if (sector == 8) begin
+                                    track_state <= GAPS;
+                                    track_position <= 0;
+                                end else begin
+                                    sector <= sector + 1;
+                                    track_position <= 0;
+                                end
+                            end
+                        end
+                        GAPS: begin
+                            if (track_position == 181) begin
+                                track_state <= HEADER;
                                 track_position <= 0;
                             end
                         end
-                    end
-                    GAPS: begin
-                        if (track_position == 181) begin
-                            track_state <= HEADER;
-                            track_position <= 0;
-                        end
-                    end
-                    default: ;
-                endcase
+                        default: ;
+                    endcase
+                end 
+            end else begin
+                track_position <= 0;
+                track_state <= HEADER;
             end
         end
     end
-
-
 
     always_comb begin
         INDEXn = 1;
@@ -142,7 +147,23 @@ module transmit
         endcase
     end
 
+    always_ff @(posedge clk) begin
+        
+        int unsigned count;
 
+        if (reset) begin
+            count <= 0;
+            bclk   <= 0;
+        end else begin
+            if (count > 1) begin
+                count <= count - 1;
+                bclk   <= 0;
+            end else begin
+                bclk   <= 1;
+                count <= sysCLK / 31195; //TODO ověřit (145 + (657 * 9) + 181) * 5 pro RPM 300
+            end
+        end
+    end
 
 //https://map.grauw.nl/articles/low-level-disk/
 

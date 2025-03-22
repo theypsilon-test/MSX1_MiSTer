@@ -201,6 +201,7 @@ clock_bus_if clock_bus(clk_core, clk_sdram);
 ext_sd_card_if ext_SD_card_bus();
 flash_bus_if flash_bus();
 vram_bus_if vram_bus();
+FDD_if FDD_bus();
 
 /*verilator tracing_off*/
 MSX::cpu_regs_t    cpu_regs;
@@ -230,6 +231,7 @@ wire             ioctl_wr;
 wire      [26:0] ioctl_addr;
 wire       [7:0] ioctl_dout;
 wire      [31:0] sd_lba[0:VDNUM-1];
+wire       [5:0] sd_blk_cnt[0:VDNUM-1];
 wire [VDNUM-1:0] sd_rd;
 wire [VDNUM-1:0] sd_wr;
 wire [VDNUM-1:0] sd_ack;
@@ -282,6 +284,7 @@ localparam CONF_STR = {
    CONF_STR_SLOT_B,
    "D2F4,ROM,Load,31100000;",
    "-;",
+   "O[22],WD old,YES,NO;",
    "d0S5,DSK,Mount Drive A:;",
    "SC4,VHD,Load SD card;",
    "h3O[12],Reset after Mount,No,Yes;",
@@ -358,6 +361,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
    .img_size(img_size),
    .img_readonly(img_readonly),
    .sd_lba(sd_lba),
+   .sd_blk_cnt(sd_blk_cnt),
    .sd_rd(sd_rd),
    .sd_wr(sd_wr),
    .sd_ack(sd_ack),
@@ -400,7 +404,7 @@ pll pll
    .locked(locked_sdram)
 );
 
-clock clock
+clock #(.sysCLK(21477270)) clock
 (
    .reset(RESET),
    .clock_bus(clock_bus)
@@ -441,6 +445,7 @@ msx MSX
    .sram_save(status[38]),
    .sram_load(status[39]),
    .ioctl_addr(ioctl_addr[26:0]),
+   /*
    .img_mounted(img_mounted[5]),
    .img_size(img_size[31:0]),
    .img_readonly(img_readonly),
@@ -452,6 +457,7 @@ msx MSX
    .sd_buff_dout(sd_buff_dout),
    .sd_buff_din(sd_buff_din[5]),
    .sd_buff_wr(sd_buff_wr),
+   */
    .slot_expander(slot_expander),
    .slot_layout(slot_layout),
    .lookup_RAM(lookup_RAM),
@@ -461,6 +467,9 @@ msx MSX
    .msx_config(msx_config),
    .joy(joy),
    .kb_upload_memory(kb_upload_memory),
+   .sd_bus(sd_bus),
+   .sd_bus_control(sd_bus_control),
+   .image_info(image_info),
    .*
 );
 
@@ -818,4 +827,69 @@ tape cass
    .enable(cas_load)
 );
 
+
+sd_bus sd_bus();
+sd_bus_control sd_bus_control();
+image_info image_info();
+
+
+assign sd_bus.ack = sd_ack[5];
+assign sd_bus.buff_addr = sd_buff_addr;
+assign sd_bus.buff_data = sd_buff_dout;
+assign sd_bus.buff_wr = sd_buff_wr;
+
+assign image_info.mounted = img_mounted[5];
+assign image_info.size = img_size[31:0];
+assign image_info.readonly = img_readonly;
+assign image_info.enable = status[22];
+
+logic  [3:0] fdd_sd_rd, fdd_sd_wr;
+logic [31:0] fdd_sd_lba[4];
+logic  [5:0] fdd_sd_blk_cnt[4];
+logic  [7:0] fdd_sd_buff_din[4];
+
+assign sd_rd[5]       = status[22] ? sd_bus_control.rd : fdd_sd_rd[0];
+assign sd_wr[5]       = status[22] ? sd_bus_control.wr : fdd_sd_wr[0];
+assign sd_lba[5]      = status[22] ? sd_bus_control.sd_lba : fdd_sd_lba[0];
+assign sd_blk_cnt[5]  = status[22] ? 0 : fdd_sd_blk_cnt[0];
+assign sd_buff_din[5] = status[22] ? sd_bus_control.buff_data : fdd_sd_buff_din[0];
+/*verilator tracing_on*/
+///////////////// FDD EMULATE /////////////////
+fdd #(.sysCLK(21477270), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd (
+   .clk(clock_bus.base_mp.clk),
+   .msclk(clock_bus.base_mp.ce_1k),
+   .reset(reset),
+   // FDD interface
+   .FDD_bus(FDD_bus),
+   /*
+   .USEL(0),
+   .MOTORn(0),
+   .READYn(),
+   .STEPn(),
+   .SDIRn(),
+   .SIDEn(),
+   .INDEXn(),
+   .TRACK0n(),
+   .WPROTn(),
+   // FDC helper
+   .data(),
+   .sec_id(),
+   .data_valid(),
+   .bclk(), */
+   // IMAGE 
+   .img_mounted({3'd0, img_mounted[5]}),  //TODO napojit ostatní na HPS
+   .img_readonly(img_readonly),
+   .img_size(img_size),
+   // SD block level access
+   .sd_lba(fdd_sd_lba),
+   .sd_blk_cnt(fdd_sd_blk_cnt),
+   .sd_rd(fdd_sd_rd),              //TODO napojit ostatní na HPS
+   .sd_wr(fdd_sd_wr),              //TODO napojit ostatní na HPS
+   .sd_ack({3'd0, sd_ack[5]}),            //TODO napojit ostatní na HPS
+   .sd_buff_addr(sd_buff_addr),
+   .sd_buff_dout(sd_buff_dout),
+   .sd_buff_din(fdd_sd_buff_din), //TODO napojit ostatní na HPS
+   .sd_buff_wr(sd_buff_wr)
+);  
+/*verilator tracing_off*/    
 endmodule
