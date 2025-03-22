@@ -39,18 +39,28 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 (
 	input  logic        clk,         // sys clock
 	input  logic        msclk,       // clock 1ms enable
+	input  logic        bclk,	     // Data helper
+	
 	input  logic        interrupt,
 	input  logic        MRn,	     // master reset
 	input  logic        command_start,
 	input  logic  [7:0] command,
-	input  logic  [7:0] reg_data,
-	output logic  [7:0] status,
-	output logic        INTRQ,
- 	input  logic 		INDEXn,
+	input  logic        read_data,
+	input  logic        data_valid,
+	input  logic  [7:0] fdd_data,
+	output logic  [7:0] data,
+
+	input  logic 		INDEXn,
 	input  logic        READYn,
 	input  logic		WPROTn,
 	output logic        SSO,
 	output logic        HLD,
+
+	output logic  [7:0] status,
+	output logic        INTRQ,
+	output logic        DRQ,
+ 	
+	
 	
 	input  logic  [7:0] reg_track_in,
 	input  logic  [7:0] reg_sector_in,
@@ -58,9 +68,7 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 	output logic        reg_sector_write,
 	
 	
-	input  logic  [7:0] sec_id[6],
-	input  logic  		data_valid,
-	input  logic        drq_out
+	input  logic  [7:0] sec_id[6]
 );
 
 	localparam ID_TRACK  = 0;
@@ -89,18 +97,20 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 	logic reg_RECORD_NOT_FOUND;
 	logic reg_WRITE_PROTECTED;
 	logic reg_RECORD_TYPE;
-	logic reg_DRQ;
 
+	logic [7:0] reg_data;
 	logic [4:0] wait_count;
 	logic [2:0] index_count;
 	logic       last_index;
 
-	assign status = {1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, reg_DRQ, busy}; //TODO signály z mechaniky
-	assign busy  = state != STATE_IDLE;
+	assign busy = state != STATE_IDLE;
+	assign status = command[7:6]            != 2'b10 ? 8'h00 : {READYn, 1'b0, reg_RECORD_TYPE, reg_RECORD_NOT_FOUND, reg_CRC_ERROR, reg_LOST_DATA, DRQ, busy};
+	assign data   = {command[7],command[5]} != 2'b10 ? 8'hFF : reg_data;
 
 	always_ff @(posedge clk) begin
 		reg_sector_write <= 0;
-		INTRQ <= 0;
+		if (read_data) DRQ <= 0;				// reset DRQ po cteni dat
+
 		if (~MRn || interrupt) begin
 			state <= STATE_IDLE;
 			reg_CRC_ERROR <= 0;
@@ -108,23 +118,26 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 			reg_RECORD_NOT_FOUND <= 0;
 			reg_WRITE_PROTECTED <= 0;
 			reg_RECORD_TYPE <= 0;
-			reg_DRQ <= 0;
+			DRQ <= 0;
 			HLD <= 0;
 			if (WD279_57) SSO <= 0;
 		end else begin
 			last_index <= INDEXn;
 			case(state)
 				STATE_IDLE: begin
-					if (command_start && command[7:6] == 2'b10) begin
-						$display("Time %t", $time);
-						$display("Command II m(%d) Track Side sector: %X %X %X", command[4], reg_track_in, command[3], reg_sector_in);
-						reg_CRC_ERROR <= 0;
-						reg_LOST_DATA <= 0;
-						reg_RECORD_NOT_FOUND <= 0;
-						reg_WRITE_PROTECTED <= 0;
-						reg_RECORD_TYPE <= 0;
-						reg_DRQ <= 0;
-						state <= STATE_PREPARE;
+					if (command_start) begin
+						INTRQ <= 0;
+						if (command_start && command[7:6] == 2'b10) begin
+							$display("Time %t", $time);
+							$display("Command II m(%d) Track Side sector: %X %X %X", command[4], reg_track_in, command[3], reg_sector_in);
+							reg_CRC_ERROR <= 0;
+							reg_LOST_DATA <= 0;
+							reg_RECORD_NOT_FOUND <= 0;
+							reg_WRITE_PROTECTED <= 0;
+							reg_RECORD_TYPE <= 0;
+							DRQ <= 0;
+							state <= STATE_PREPARE;
+						end
 					end
 				end
 				STATE_PREPARE: begin
@@ -176,24 +189,26 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 				STATE_READ: begin
 					//TODO nastavit status bit 5. Stávající DSK formát nezná smazané data
 					if (data_valid) begin
-						reg_DRQ <= 1;
+						if (bclk) begin
+							if (DRQ) reg_LOST_DATA <= 1;
+							DRQ <= 1;
+							reg_data <= fdd_data;
+						end
 						//TODO přečíst všechny data
 					end else begin
-						reg_DRQ <= 0;
 						if (command[4]) begin			//Multiple
 							reg_sector_out <= reg_sector_in + 1;
 							reg_sector_write <= 1;
 							$display("Command II m(%d) Track Side sector: %X %X %X NEXT", command[4], reg_track_in, command[3], reg_sector_in + 1);
 							state <= STATE_CHECK;
 						end else begin
-//							if (!drq_out) begin
+							if (!DRQ) begin				// Konec prikazu az po precteni posledniho byte.
 								INTRQ <= 1;
 								state <= STATE_IDLE;
-//							end
+							end
 						end
 					end
 				end
-
 				default: ;
 			endcase
 		end

@@ -91,31 +91,15 @@ module wd279x #(parameter WD279_57=1)
 	logic       command_start;
 	logic       busy;
 
-	//integer file;  // File handle
-	integer fileData;  // File handle
-	//integer adr;  // File handle
-
-    initial begin
-        // Otevře soubor pro zápis (rewrite mode)
-      //  file = $fopen("wd2797.txt", "w");
-		//fileData = $fopen("wd2797data.txt", "w");
-
-        //if (file == 0) begin
-        //    $display("Chyba: Nelze otevřít soubor!");
-        //    $stop;
-        //end
-		//adr = 0;
-	end
-
-//	assign temp_status = status;
 	assign busy = command_start | status[0];
-	assign DRQ = reg_DRQ;
+	assign DRQ = DRQ_II;
+	assign INTRQ = INTRQ_I | INTRQ_II;
 
 	always_comb begin
 		DOUT = '1;
 		if (!(REn || CSn))
 			case (A)
-				A_DATA:   DOUT = reg_data;
+				A_DATA:   DOUT = data_II;
 				A_STATUS: DOUT = status;
 				A_SECTOR: DOUT = reg_sector;
 				A_TRACK:  DOUT = reg_track;
@@ -152,7 +136,6 @@ module wd279x #(parameter WD279_57=1)
 		end else begin
 			if (write_rq && A == A_COMMAND) begin
 				if (!busy || (DIN[7:4] == 4'hD)) begin
-					//$fwrite(file, "%c%c", 8'h02, DIN);
 					$display("SET CMD %X", DIN);
 					reg_cmd <= DIN;
 					command_start <= 1;
@@ -170,7 +153,6 @@ module wd279x #(parameter WD279_57=1)
 			if (write_rq && A == A_TRACK && !busy ) begin
 				reg_track <= DIN;
 				$display("SET TRACK %X", DIN);
-				//$fwrite(file, "%c%c", 8'h00, DIN);
 			end
 			if (reg_track_write) 
 				reg_track <= reg_track_out;
@@ -185,7 +167,6 @@ module wd279x #(parameter WD279_57=1)
 			if (write_rq && A == A_SECTOR && !busy ) begin
 				reg_sector <= DIN;
 				$display("SET SECTOR %X", DIN);
-				//$fwrite(file, "%c%c", 8'h01, DIN);
 			end
 			if (reg_sector_write) 
 				reg_sector <= reg_sector_out;
@@ -202,7 +183,6 @@ module wd279x #(parameter WD279_57=1)
 			reg_DRQ <= 0;
 		end	else begin
 			if (write_rq && A == A_DATA) begin
-				//$fwrite(file, "%c%c", 8'h04, DIN);
 				$display("SET DATA  %X", DIN);
 				reg_data <= DIN;
 				reg_DRQ <= 0;
@@ -221,7 +201,6 @@ module wd279x #(parameter WD279_57=1)
 					reg_data <= data;
 
 					//if (adr < 5) 
-					//$fwrite(fileData, "%c", data);
 					//	$display("DATA %X", data);
 					//adr <= adr + 1;
 				end
@@ -257,6 +236,7 @@ module wd279x #(parameter WD279_57=1)
 	);
 */
 	//INTRQ register
+	/*
 	always_ff @(posedge clk) begin
 		if (~MRn)	begin
 			INTRQ <= 0; 
@@ -270,7 +250,7 @@ module wd279x #(parameter WD279_57=1)
 				end
 		end
 	end
-
+*/
 logic [7:0] reg_track_out;
 logic       reg_track_write;
 logic [7:0] status_command_type_I;
@@ -290,27 +270,30 @@ wd279x_command_I command_I (
 	.STEPn(STEPn),
 	.SDIRn(SDIRn),
 	.INDEXn(INDEXn),
+	.READYn(READYn),
+	.WPROTn(WPROTn),
 	.TRK00n(TRK00n),
 	.HLD(),
 	.INTRQ(INTRQ_I),
 	.data_valid(data_valid),
 	.sec_id(sec_id)
-//	.TEST(TEST)
 );
 
 logic [7:0] reg_sector_out;
 logic       reg_sector_write;
 logic [7:0] status_command_type_II;
-logic       INTRQ_II;
+logic       DRQ_II, INTRQ_II;
+logic [7:0] data_II;
 wd279x_command_II #(.WD279_57(WD279_57)) command_II (
 	.clk(clk),
 	.msclk(msclk),
+	.bclk(bclk),
 	.interrupt(interrupt),
 	.MRn(MRn),
 	.command(reg_cmd),
 	.command_start(command_start),
+	.read_data(read_rq && A == A_DATA),
 	.status(status_command_type_II),
-	.reg_data(reg_data),
 	.reg_track_in(reg_track),
 	.reg_sector_in(reg_sector_write ? reg_sector_out : reg_sector),
 	.reg_sector_out(reg_sector_out),
@@ -321,10 +304,11 @@ wd279x_command_II #(.WD279_57(WD279_57)) command_II (
 	.SSO(SSO),
 	.HLD(),
 	.INTRQ(INTRQ_II),
+	.DRQ(DRQ_II),
+	.data(data_II),
 	.data_valid(data_valid),
-	.sec_id(sec_id),
-	.drq_out(reg_DRQ)
-	//.TEST(TEST)
+	.fdd_data(data),
+	.sec_id(sec_id)
 );
 
 logic       INTRQ_IV;

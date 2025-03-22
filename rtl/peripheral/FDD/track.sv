@@ -39,7 +39,7 @@ module track #(DELAYms = 3, MAX_TRACKS = 80)
 
     always_ff @(posedge clk or posedge reset) begin
         if (reset) begin
-            reg_track <= '{7'd3, 7'd3, 7'd3, 7'd3};
+            reg_track <= '{7'd0, 7'd0, 7'd0, 7'd0};
             track_delay <= '0;
         end else begin
             last_STEPn <= STEPn;
