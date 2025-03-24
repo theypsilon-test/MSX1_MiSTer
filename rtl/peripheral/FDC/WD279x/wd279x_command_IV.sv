@@ -38,41 +38,40 @@
 module wd279x_command_IV 
 (
 	input  logic        clk,         // sys clock
-	input  logic        msclk,       // clock 1ms enable
 	output logic        interrupt,
 	input  logic        MRn,	     // master reset
 	input  logic        command_start,
 	input  logic  [7:0] command,
-	output logic        INTRQ
+	output logic  [7:0] status,
+	output logic        INTRQ,
+	input  logic 		INDEXn,
+	input  logic        READYn,
+	input  logic 		WPROTn,
+	input  logic 		TRK00n,
+	input  logic        HLD
 );
 
-	typedef enum {
-		STATE_IDLE,
-		STATE_WAIT
-	} sector_state_t;
+	assign status = command[7:4] != 4'hD ? 8'h00 : {READYn, ~WPROTn, HLD, 1'b0, 1'b0, ~TRK00n, ~INDEXn, 1'b0};
 
-
-	sector_state_t state;
-
+	logic last_READY;
 	always_ff @(posedge clk) begin
-		INTRQ <= 0;
+		last_READY <= READYn;
 		interrupt <= 0;
+		
 		if (~MRn) begin
-			state <= STATE_IDLE;
+			INTRQ <= 0;
 		end else begin
-			case(state)
-				STATE_IDLE: begin
-					if (command_start && command[7:4] == 4'hD) begin		//TODO podmínky
-						state <= STATE_WAIT;
-						interrupt <= 1;
-					end
+			if (command_start) INTRQ <= 0;
+
+			if (command[7:4] == 4'hD) begin
+				if (command_start) begin
+					INTRQ <= command[3];
+					interrupt <= 1;
 				end
-				STATE_WAIT: begin
-					INTRQ <= 1;					//TODO pravidla INTIRQ
-					state <= STATE_IDLE;
-				end
-				default: ;
-			endcase
+				if (command[0] && !READYn && last_READY) INTRQ <= 1;
+				if (command[1] && READYn && !last_READY) INTRQ <= 1;
+				if (command[2] && !INDEXn) INTRQ <= 1;
+			end
 		end
 	end
 endmodule

@@ -79,6 +79,7 @@ assign FDD_bus.USEL   = 0;                //TODO zatim jeden image
 assign FDD_bus.MOTORn = ~(motor && drive == DRIVE_A);
 assign FDD_bus.SIDEn  = ~side;
 
+wire [1:0] dbg_status = image_info.enable ? {drq_old, intrq_old} : {drq, intrq};
 
 always @(posedge cpu_bus.clk) begin
    if (cpu_bus.reset) begin
@@ -93,10 +94,12 @@ always @(posedge cpu_bus.clk) begin
             if (cpu_bus.addr[2:0] == 3'd4) begin
                philips_sideReg  <= cpu_bus.data;
                side             <= cpu_bus.data[0];
+               //$display("WRITE DEV SIDEREG  %X  (%d,%d) %t", cpu_bus.data, dbg_status[0], dbg_status[1], $time);
             end
             if (cpu_bus.addr[2:0] == 3'd5) begin 
                philips_driveReg <= cpu_bus.data;
                motor              <=cpu_bus.data[7];
+               //$display("WRITE DEV DRIVEREG %X  (%d,%d) %t", cpu_bus.data, dbg_status[0], dbg_status[1], $time);
                case(cpu_bus.data[1:0])
                   0, 2: drive <= DRIVE_A;
                   1:    drive <= DRIVE_B;
@@ -146,7 +149,39 @@ always_comb begin
       end
    end
 end
+/*
+logic last_data_oe_rq;
+logic [7:0] last_data;
+logic [2:0] last_addr;
+logic [1:0] last_dbg_status;
+always_ff @(posedge cpu_bus.clk) begin
+   last_data_oe_rq <= data_oe_rq;
+   last_data <= data;
+   last_addr <= cpu_bus.addr[2:0];
+   last_dbg_status <= dbg_status;
+   if (last_data_oe_rq && !data_oe_rq) begin
+      case(last_addr)
+         0: $display("READ  FDC STATUS   %X  (%d,%d) %t", last_data, last_dbg_status[0], last_dbg_status[1], $time);
+         1: $display("READ  FDC TRACK    %X  (%d,%d) %t", last_data, last_dbg_status[0], last_dbg_status[1], $time);
+         2: $display("READ  FDC SECTOR   %X  (%d,%d) %t", last_data, last_dbg_status[0], last_dbg_status[1], $time);
+         3: $display("READ  FDC DATA     %X  (%d,%d) %t", last_data, last_dbg_status[0], last_dbg_status[1], $time);
+         4: $display("READ  DEV SIDEREG  %X  (%d,%d) %t", last_data, last_dbg_status[0], last_dbg_status[1], $time);
+         5: $display("READ  DEV DRIVEREG %X  (%d,%d) %t", last_data, last_dbg_status[0], last_dbg_status[1], $time);
+         6: ;
+         7: $display("READ  DEV STATUS   %X  (%d,%d) %t", last_data, last_dbg_status[0], last_dbg_status[1], $time);
+      endcase
+   end
 
+   if (wdcs && cpu_bus.wr && cpu_bus.req && cs) begin
+      case(cpu_bus.addr[1:0])
+         0: $display("WRITE FDC COMMAND  %X  (%d,%d) %t", cpu_bus.data, dbg_status[0], dbg_status[1], $time);
+         1: $display("WRITE FDC TRACK    %X  (%d,%d) %t", cpu_bus.data, dbg_status[0], dbg_status[1], $time);
+         2: $display("WRITE FDC SECTOR   %X  (%d,%d) %t", cpu_bus.data, dbg_status[0], dbg_status[1], $time);
+         3: $display("WRITE FDC DATA     %X  (%d,%d) %t", cpu_bus.data, dbg_status[0], dbg_status[1], $time);  
+      endcase
+   end
+end
+*/
 logic [15:0] crc;
 logic fdc_we;
 
@@ -160,17 +195,16 @@ crc #(.CRC_WIDTH(16)) crc1
    .data_in(image_info.enable ? d_from_wd17_old : d_from_wd17),
    .crc(crc )
 );
-*/
+
+
 logic last;
 always @(posedge cpu_bus.clk) begin
    last_data_oe_crc <= fdc_we;
    last <= image_info.enable ? intrq_old : intrq;
    if (last && !(image_info.enable ? intrq_old : intrq))
-      $display("CRC %X", crc);
-
-
+      $display("CRC %X %t", crc, $time);
 end
-
+*/
 wire fdd_ready = image_mounted && motor && drive == DRIVE_A;
 
 wire [7:0] d_from_wd17_old;
@@ -237,8 +271,8 @@ wd279x #(.WD279_57(0)) wd2793_i
    .WPROTn(FDD_bus.WPROTn),
    .SSO(),  //Pouze WD2795/7
    //FDD helper
-   .data(FDD_bus.data),
-   .bclk(FDD_bus.bclk),
+   .fdd_data(FDD_bus.data),
+   .fdd_bclk(FDD_bus.bclk),
    .sec_id(FDD_bus.sec_id),
    .data_valid(FDD_bus.data_valid),
    .dbg_busy(dbg_busy)

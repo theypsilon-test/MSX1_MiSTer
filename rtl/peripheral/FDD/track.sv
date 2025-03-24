@@ -8,6 +8,7 @@ module track #(DELAYms = 3, MAX_TRACKS = 80)
     input  logic        STEPn,
     input  logic        SDIRn,
     input  logic        SIDEn,
+    input  logic        MOTORn,
     output logic        TRACK0n,
     output logic  [6:0] track,
     
@@ -65,7 +66,7 @@ module track #(DELAYms = 3, MAX_TRACKS = 80)
     end
 
     assign track   = reg_track[USEL];
-    assign TRACK0n = reg_track[USEL] != 0 || READYn;
+    assign TRACK0n = reg_track[USEL] != 0; //|| MOTORn; TODO
 
     track_buffer track_buffer (
         .clk(clk),

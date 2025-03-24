@@ -44,6 +44,8 @@ module wd279x_command_I
 	input  logic        command_start,
 	input  logic  [7:0] command,
 	input  logic  [7:0] reg_data,
+	output logic  [7:0] reg_data_out,
+	output logic        reg_data_write,
 	output logic  [7:0] status,
 	output logic        INTRQ,
 	output logic 		STEPn,
@@ -55,9 +57,9 @@ module wd279x_command_I
 	output logic        HLD,
 
 
-	input  logic  [7:0] reg_track_in,
-	output logic  [7:0] reg_track_out,
-	output logic  		reg_track_write,
+	input  logic  [7:0] track,
+	output logic  [7:0] track_out,
+	output logic  		track_write,
 	
 	input  logic  [7:0] sec_id[6],
 	input  logic  		data_valid
@@ -96,16 +98,19 @@ module wd279x_command_I
 	
 
 	always_ff @(posedge clk) begin
-		reg_track_write <= 0;
+		track_write <= 0;
 		if (~MRn || interrupt) begin
 			STEPn <= 1;
 			SDIRn <= 1;
 			HLD <= 1;
 			reg_CRC_ERROR <= 0;
 			reg_SEEK_ERROR <= 0;
+			INTRQ <= 0;
 			state <= STATE_IDLE;
+			reg_data_write <= 0;
 		end else begin
 			last_index <= INDEXn;
+			reg_data_write <= 0;
 			case(state)
 				STATE_IDLE: begin
 					if (command_start) begin
@@ -115,12 +120,15 @@ module wd279x_command_I
 							reg_SEEK_ERROR <= 0;
 							HLD <= ~command[3];
 							state <= STATE_STEP_BC;
+							$display("Command I Track %X Command %x dataReg %X %t", track, command, reg_data, $time);
 							case(command[6:5])
 								2'b00: begin
 									if (!command[4]) begin				// RESTORE
-										reg_track_out <= 8'hFF;
+										track_out <= 8'hFF;
 										track_rq      <= 0;
-										reg_track_write <= 1;
+										track_write <= 1;
+										reg_data_out <= '0;
+										reg_data_write <= 1;
 									end else begin						// SEEK
 										track_rq      <= reg_data;
 									end
@@ -128,25 +136,25 @@ module wd279x_command_I
 								end
 								2'b01: begin							// Step
 									if (SDIRn) begin
-										track_rq      <= reg_track_in + 1;
-										reg_track_out <= reg_track_in + 1;
+										track_rq      <= track + 1;
+										track_out <= track + 1;
 									end else begin
-										track_rq      <= reg_track_in - 1;
-										reg_track_out <= reg_track_in - 1;
+										track_rq      <= track - 1;
+										track_out <= track - 1;
 									end
-									reg_track_write <= command[4];
+									track_write <= command[4];
 								end
 								2'b10: begin							// Step in
 									SDIRn           <= 1;
-									track_rq        <= reg_track_in + 1;
-									reg_track_out   <= reg_track_in + 1;
-									reg_track_write <= command[4];
+									track_rq        <= track + 1;
+									track_out   <= track + 1;
+									track_write <= command[4];
 								end
 								2'b11: begin							// Step out
 									SDIRn           <= 0;
-									track_rq        <= reg_track_in - 1;
-									reg_track_out   <= reg_track_in - 1;
-									reg_track_write <= command[4];
+									track_rq        <= track - 1;
+									track_out   <= track - 1;
+									track_write <= command[4];
 								end
 							endcase					
 						end
@@ -154,23 +162,23 @@ module wd279x_command_I
 				end
 				STATE_STEP_A: begin
 					state <= STATE_STEP_BC;
-					if (reg_track_in == track_rq) begin
+					if (track == track_rq) begin
 						state <= STATE_VERIFY;
 					end else begin
-						if (track_rq > reg_track_in) begin
+						if (track_rq > track) begin
 							SDIRn <= 1;
-							reg_track_out <= reg_track_out + 1;
+							track_out <= track_out + 1;
 						end else begin
 							SDIRn <= 0;
-							reg_track_out <= reg_track_out - 1;
+							track_out <= track_out - 1;
 						end
-						reg_track_write <= 1;
+						track_write <= 1;
 					end
 				end
 				STATE_STEP_BC: begin
 					if (!SDIRn && !TRK00n) begin
-						reg_track_out <= 0;
-						reg_track_write <= 1;
+						track_out <= 0;
+						track_write <= 1;
 						state <= STATE_VERIFY;
 					end else begin
 						state <= STATE_STEP_WAIT;

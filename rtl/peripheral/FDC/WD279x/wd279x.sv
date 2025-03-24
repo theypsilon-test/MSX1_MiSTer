@@ -55,9 +55,10 @@ module wd279x #(parameter WD279_57=1)
 	input  logic 		TRK00n,
 	input  logic        READYn,
 	input  logic        WPROTn,
+	output logic        HLD,
 	output logic        SSO,
-	input  logic  [7:0] data,
-	input  logic        bclk,
+	input  logic  [7:0] fdd_data,
+	input  logic        fdd_bclk,
 	input  logic  [7:0] sec_id[6],
 	input  logic  		data_valid,
 	output logic		dbg_write,
@@ -77,7 +78,7 @@ module wd279x #(parameter WD279_57=1)
 	localparam A_TRACK           = 1;
 	localparam A_SECTOR          = 2;
 	localparam A_DATA            = 3;
-
+/*
 	typedef enum {
 		COMMAND_TYPE_I,
 		COMMAND_TYPE_II,
@@ -86,35 +87,35 @@ module wd279x #(parameter WD279_57=1)
 	} command_type_t;
 
 	command_type_t command_type;
-
+*/
 	logic [7:0] reg_cmd, reg_track, reg_sector, reg_data, status;
 	logic       command_start;
 	logic       busy;
 
 	assign busy = command_start | status[0];
-	assign DRQ = DRQ_II;
-	assign INTRQ = INTRQ_I | INTRQ_II;
-
+	assign INTRQ = INTRQ_I | INTRQ_II || INTRQ_IV;
+	assign status = status_command_type_I | status_command_type_II | status_command_type_IV;
+	assign HLD = HLD_I | HLD_II ;
 	always_comb begin
 		DOUT = '1;
 		if (!(REn || CSn))
 			case (A)
-				A_DATA:   DOUT = data_II;
+				A_DATA:   DOUT = reg_data;
 				A_STATUS: DOUT = status;
 				A_SECTOR: DOUT = reg_sector;
 				A_TRACK:  DOUT = reg_track;
 			endcase
 	end
-
+/*
 	always_comb begin
 		casez (reg_cmd[7:4])
 			4'b1101: begin command_type = COMMAND_TYPE_IV; status = 0; end
 			4'b1100: begin command_type = COMMAND_TYPE_III; status = 0; end
-			4'b10??: begin command_type = COMMAND_TYPE_II; status = {status_command_type_II[7:2], reg_DRQ, status_command_type_II[0]}; end
+			4'b10??: begin command_type = COMMAND_TYPE_II; status = status_command_type_II; end
 			default: begin command_type = COMMAND_TYPE_I; status = status_command_type_I; end
 		endcase
 	end
-
+*/
 	logic last_REn, last_WEn, write_rq, read_rq;
 	always_ff @(posedge clk) begin
 		last_REn <= REn;
@@ -126,20 +127,17 @@ module wd279x #(parameter WD279_57=1)
 	
 	
 	//Command register
-	logic INTRQ_cmd_res;
-		always_ff @(posedge clk) begin
-		INTRQ_cmd_res <= 0;
+	always_ff @(posedge clk) begin
 		command_start <= 0;
 		if (~MRn)	begin
 			reg_cmd <= 8'h03;
 			command_start <= 1;
 		end else begin
 			if (write_rq && A == A_COMMAND) begin
-				if (!busy || (DIN[7:4] == 4'hD)) begin
-					$display("SET CMD %X", DIN);
+				if (!busy || DIN[7:4] == 4'hD) begin
+					//$display("SET CMD %X", DIN);
 					reg_cmd <= DIN;
 					command_start <= 1;
-					INTRQ_cmd_res <= 1;
 				end
 			end
 		end
@@ -152,7 +150,7 @@ module wd279x #(parameter WD279_57=1)
 		end	else begin
 			if (write_rq && A == A_TRACK && !busy ) begin
 				reg_track <= DIN;
-				$display("SET TRACK %X", DIN);
+				//$display("SET TRACK %X", DIN);
 			end
 			if (reg_track_write) 
 				reg_track <= reg_track_out;
@@ -166,33 +164,43 @@ module wd279x #(parameter WD279_57=1)
 		end	else begin
 			if (write_rq && A == A_SECTOR && !busy ) begin
 				reg_sector <= DIN;
-				$display("SET SECTOR %X", DIN);
+				//$display("SET SECTOR %X", DIN);
 			end
 			if (reg_sector_write) 
 				reg_sector <= reg_sector_out;
 		end
 	end
 
-	//Data register
-	logic reg_DRQ;
-	logic reg_LOST_DATA;
+	//Data register Používá třeba seek
+	logic reg_lost_data;
 	always_ff @(posedge clk) begin
 		if (~MRn)	begin
 			reg_data <= 0;
-			reg_LOST_DATA <= 0;
-			reg_DRQ <= 0;
+			reg_lost_data <= 0;
 		end	else begin
 			if (write_rq && A == A_DATA) begin
-				$display("SET DATA  %X", DIN);
+				//$display("SET DATA  %X", DIN);
 				reg_data <= DIN;
-				reg_DRQ <= 0;
+			end
+			
+			if (reg_data_write_I) begin
+				reg_data <= reg_data_out_I;
+			end
+
+			if (data_valid && enable_write_reg_data_II && fdd_bclk) begin
+				if (DRQ) begin
+					reg_lost_data <= 1;
+				end
+				reg_data <= fdd_data;
+				DRQ <= 1;
 			end
 			
 			if (read_rq && A == A_DATA) begin
-				reg_DRQ <= 0;
+				DRQ <= 0;
 			end
-
+			
 			//if (~data_valid) adr <= 0;
+			/*
 			if (reg_cmd[7:5] == 3'b100 && status_command_type_II[1]) begin
 				if (bclk && data_valid) begin
 					if (reg_DRQ) 
@@ -205,6 +213,7 @@ module wd279x #(parameter WD279_57=1)
 					//adr <= adr + 1;
 				end
 			end
+			*/
 		end
 	end
 /*	
@@ -235,26 +244,14 @@ module wd279x #(parameter WD279_57=1)
 		.crc_out()
 	);
 */
-	//INTRQ register
-	/*
-	always_ff @(posedge clk) begin
-		if (~MRn)	begin
-			INTRQ <= 0; 
-		end	else begin
-			if (INTRQ_cmd_res) begin
-				INTRQ <= 0;
-			end else 
-				if (INTRQ_I || (INTRQ_II && ~reg_DRQ)|| INTRQ_IV) begin
-					INTRQ <= 1;
-					//if (INTRQ_II) $display("CRC %X", DISKcrc);
-				end
-		end
-	end
-*/
+
 logic [7:0] reg_track_out;
 logic       reg_track_write;
+logic [7:0] reg_data_out_I;
+logic       reg_data_write_I;
 logic [7:0] status_command_type_I;
 logic       INTRQ_I;
+logic 		HLD_I;
 wd279x_command_I command_I (
 	.clk(clk),
 	.msclk(msclk),
@@ -264,16 +261,18 @@ wd279x_command_I command_I (
 	.command_start(command_start),
 	.status(status_command_type_I),
 	.reg_data(reg_data),
-	.reg_track_in(reg_track_write ? reg_track_out : reg_track),
-	.reg_track_out(reg_track_out),
-	.reg_track_write(reg_track_write),
+	.reg_data_out(reg_data_out_I),
+	.reg_data_write(reg_data_write_I),
+	.track(reg_track_write ? reg_track_out : reg_track),
+	.track_out(reg_track_out),
+	.track_write(reg_track_write),
 	.STEPn(STEPn),
 	.SDIRn(SDIRn),
 	.INDEXn(INDEXn),
 	.READYn(READYn),
 	.WPROTn(WPROTn),
 	.TRK00n(TRK00n),
-	.HLD(),
+	.HLD(HLD_I),
 	.INTRQ(INTRQ_I),
 	.data_valid(data_valid),
 	.sec_id(sec_id)
@@ -282,45 +281,49 @@ wd279x_command_I command_I (
 logic [7:0] reg_sector_out;
 logic       reg_sector_write;
 logic [7:0] status_command_type_II;
-logic       DRQ_II, INTRQ_II;
-logic [7:0] data_II;
+logic       INTRQ_II;
+logic       enable_write_reg_data_II;
+logic       HLD_II;
 wd279x_command_II #(.WD279_57(WD279_57)) command_II (
 	.clk(clk),
 	.msclk(msclk),
-	.bclk(bclk),
 	.interrupt(interrupt),
 	.MRn(MRn),
 	.command(reg_cmd),
 	.command_start(command_start),
-	.read_data(read_rq && A == A_DATA),
 	.status(status_command_type_II),
-	.reg_track_in(reg_track),
-	.reg_sector_in(reg_sector_write ? reg_sector_out : reg_sector),
-	.reg_sector_out(reg_sector_out),
-	.reg_sector_write(reg_sector_write),
+	.track(reg_track),
+	.sector(reg_sector_write ? reg_sector_out : reg_sector),
+	.sector_out(reg_sector_out),
+	.sector_write(reg_sector_write),
 	.INDEXn(INDEXn),
 	.READYn(READYn),
 	.WPROTn(WPROTn),
 	.SSO(SSO),
-	.HLD(),
+	.HLD(HLD_II),
 	.INTRQ(INTRQ_II),
-	.DRQ(DRQ_II),
-	.data(data_II),
+	.DRQ(DRQ),
 	.data_valid(data_valid),
-	.fdd_data(data),
+	.enable_write_reg_data(enable_write_reg_data_II),
 	.sec_id(sec_id)
 );
 
 logic       INTRQ_IV;
 logic       interrupt;
+logic [7:0] status_command_type_IV;
 wd279x_command_IV  command_IV (
 	.clk(clk),
-	.msclk(msclk),
 	.interrupt(interrupt),
 	.MRn(MRn),
 	.command(reg_cmd),
 	.command_start(command_start),
-	.INTRQ(INTRQ_IV)
+	.status(status_command_type_IV),
+	.INTRQ(INTRQ_IV),
+	.INDEXn(INDEXn),
+	.READYn(READYn),
+	.WPROTn(WPROTn),
+	.TRK00n(TRK00n),
+	.HLD(HLD)
 );
 endmodule
 

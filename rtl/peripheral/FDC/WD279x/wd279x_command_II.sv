@@ -1,6 +1,6 @@
 // WD279x FDC
 //
-// Copyright (c) 2024-2025 Molekula
+// Copyright (c) 2025 Molekula
 //
 // All rights reserved
 //
@@ -35,20 +35,16 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-module wd279x_command_II  #(parameter WD279_57=1, TEST=0) 
+module wd279x_command_II  #(parameter WD279_57=1) 
 (
 	input  logic        clk,         // sys clock
 	input  logic        msclk,       // clock 1ms enable
-	input  logic        bclk,	     // Data helper
-	
 	input  logic        interrupt,
 	input  logic        MRn,	     // master reset
 	input  logic        command_start,
 	input  logic  [7:0] command,
-	input  logic        read_data,
 	input  logic        data_valid,
-	input  logic  [7:0] fdd_data,
-	output logic  [7:0] data,
+	output logic        enable_write_reg_data,
 
 	input  logic 		INDEXn,
 	input  logic        READYn,
@@ -58,14 +54,14 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 
 	output logic  [7:0] status,
 	output logic        INTRQ,
-	output logic        DRQ,
+	input  logic        DRQ,
  	
 	
 	
-	input  logic  [7:0] reg_track_in,
-	input  logic  [7:0] reg_sector_in,
-	output logic  [7:0] reg_sector_out,
-	output logic        reg_sector_write,
+	input  logic  [7:0] track,
+	input  logic  [7:0] sector,
+	output logic  [7:0] sector_out,
+	output logic        sector_write,
 	
 	
 	input  logic  [7:0] sec_id[6]
@@ -84,7 +80,8 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 		STATE_CHECK,
 		STATE_CHECK_II,
 		STATE_READ,
-		STATE_WRITE
+		STATE_WRITE,
+		STATE_CMD_END
 		
 	} sector_state_t;
 
@@ -98,18 +95,16 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 	logic reg_WRITE_PROTECTED;
 	logic reg_RECORD_TYPE;
 
-	logic [7:0] reg_data;
 	logic [4:0] wait_count;
 	logic [2:0] index_count;
 	logic       last_index;
 
 	assign busy = state != STATE_IDLE;
 	assign status = command[7:6]            != 2'b10 ? 8'h00 : {READYn, 1'b0, reg_RECORD_TYPE, reg_RECORD_NOT_FOUND, reg_CRC_ERROR, reg_LOST_DATA, DRQ, busy};
-	assign data   = {command[7],command[5]} != 2'b10 ? 8'hFF : reg_data;
+	assign enable_write_reg_data = state == STATE_READ;
 
 	always_ff @(posedge clk) begin
-		reg_sector_write <= 0;
-		if (read_data) DRQ <= 0;				// reset DRQ po cteni dat
+		sector_write <= 0;
 
 		if (~MRn || interrupt) begin
 			state <= STATE_IDLE;
@@ -118,8 +113,8 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 			reg_RECORD_NOT_FOUND <= 0;
 			reg_WRITE_PROTECTED <= 0;
 			reg_RECORD_TYPE <= 0;
-			DRQ <= 0;
 			HLD <= 0;
+			INTRQ <= 0;
 			if (WD279_57) SSO <= 0;
 		end else begin
 			last_index <= INDEXn;
@@ -127,15 +122,13 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 				STATE_IDLE: begin
 					if (command_start) begin
 						INTRQ <= 0;
-						if (command_start && command[7:6] == 2'b10) begin
-							$display("Time %t", $time);
-							$display("Command II m(%d) Track Side sector: %X %X %X", command[4], reg_track_in, command[3], reg_sector_in);
+						if (command[7:6] == 2'b10) begin
+							$display("Command II m(%d) Track Side sector: %X %X %X %t", command[4], track, command[3], sector, $time);
 							reg_CRC_ERROR <= 0;
 							reg_LOST_DATA <= 0;
 							reg_RECORD_NOT_FOUND <= 0;
 							reg_WRITE_PROTECTED <= 0;
 							reg_RECORD_TYPE <= 0;
-							DRQ <= 0;
 							state <= STATE_PREPARE;
 						end
 					end
@@ -176,39 +169,34 @@ module wd279x_command_II  #(parameter WD279_57=1, TEST=0)
 						state <= STATE_IDLE;
 						INTRQ <= 1;
 						reg_RECORD_NOT_FOUND <= 1;
-						$display("RECORD_NOT_FOUND");
+						//$display("RECORD_NOT_FOUND");
 					end else
 						if (data_valid)
-							if (sec_id[ID_TRACK] == reg_track_in && sec_id[ID_SECTOR] == reg_sector_in)
+							if (sec_id[ID_TRACK] == track && sec_id[ID_SECTOR] == sector)
 									if (WD279_57 == 1 ||  command[1] == 0 || sec_id[ID_SIDE][0] == command[3]) begin
 										state <= command[5] ? STATE_WRITE : STATE_READ;
-										$display("RECORD FOUND");
+										//$display("RECORD FOUND");
 									end
 
 				end
 				STATE_READ: begin
 					//TODO nastavit status bit 5. Stávající DSK formát nezná smazané data
-					if (data_valid) begin
-						if (bclk) begin
-							if (DRQ) reg_LOST_DATA <= 1;
-							DRQ <= 1;
-							reg_data <= fdd_data;
-						end
-						//TODO přečíst všechny data
-					end else begin
+					if (!data_valid) begin
 						if (command[4]) begin			//Multiple
-							reg_sector_out <= reg_sector_in + 1;
-							reg_sector_write <= 1;
-							$display("Command II m(%d) Track Side sector: %X %X %X NEXT", command[4], reg_track_in, command[3], reg_sector_in + 1);
+							sector_out <= sector + 1;
+							sector_write <= 1;
+							//$display("Command II m(%d) Track Side sector: %X %X %X NEXT", command[4], track, command[3], sector + 1);
 							state <= STATE_CHECK;
 						end else begin
-							if (!DRQ) begin				// Konec prikazu az po precteni posledniho byte.
-								INTRQ <= 1;
-								state <= STATE_IDLE;
-							end
+							state <= STATE_CMD_END;
 						end
 					end
 				end
+				STATE_CMD_END:
+					if (!DRQ) begin				// Konec prikazu az po precteni posledniho byte.
+						INTRQ <= 1;
+						state <= STATE_IDLE;
+					end
 				default: ;
 			endcase
 		end
