@@ -47,7 +47,8 @@ module wd279x_command_II  #(parameter WD279_57=1)
 	input  logic  [7:0] IDAM_data[6],
 	input  logic        DAM_valid,
 	input  logic        DAM_deleted,
-	input  logic 	    DAM_CRC_valid,	
+	input  logic 	    DAM_CRC_valid,
+	input  logic  [7:0] DAM_crc[2],	
 	input  logic        data_rx,
 	output logic        enable_write_reg_data,
 
@@ -196,6 +197,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 					if (crc_count > 0 ) begin
 						if (data_rx) crc_count <= crc_count - 1;
 					end else begin
+						$display("Command II m(%d) Track Side sector: %X %X %X CRC: %X  %t", command[4], track, command[3], sector, {DAM_crc[0], DAM_crc[1]},$time); 
 						if (DAM_CRC_valid) begin
 							if (command[4]) begin			//Multiple
 								sector_out <= sector + 1;
@@ -206,6 +208,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 								state <= STATE_CMD_END;
 							end
 						end else begin
+							$display("Command II m(%d) Track Side sector: %X %X %X CRC: %X ERROR !!!!", command[4], track, command[3], sector, {DAM_crc[0], DAM_crc[1]});
 							reg_CRC_ERROR <= 1;
 							INTRQ <= 1;
 							state <= STATE_IDLE;

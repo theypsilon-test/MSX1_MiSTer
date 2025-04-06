@@ -48,12 +48,12 @@ module wd279x_demodulator #(parameter sysCLK)
     output logic        IDAM_valid,
     output logic        DAM_valid,
     output logic        DAM_deleted,
-    output logic        DAM_CRC_valid
+    output logic        DAM_CRC_valid,
+	output logic [7:0]  DAM_crc[2]
 );
 
     // Interní signály
     logic        IDAM;
-    logic [7:0]  DAM_crc[2];
     logic [9:0]  DATA_counter;
     logic [1:0]  check_crc;
     logic [1:0]  a1_cnt;
