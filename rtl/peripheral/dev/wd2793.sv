@@ -270,7 +270,7 @@ wd279x #(.WD279_57(0),.sysCLK(sysCLK)) wd2793_i
    .WPROTn(FDD_bus.WPROTn),
    .RAWRDn(FDD_bus.READ_DATAn),
    .DDENn(0),              //TODO      Režim FM/MFM
-   .SSO(),                 //Pouze WD2795/7
+   .SSO()                 //Pouze WD2795/7
 );
 
 endmodule
