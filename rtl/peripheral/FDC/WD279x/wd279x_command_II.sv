@@ -172,7 +172,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 						reg_RECORD_NOT_FOUND <= 1;
 						//$display("RECORD_NOT_FOUND");
 					end else
-						if (IDAM_valid)
+						if (IDAM_valid && !DAM_valid)
 							if (IDAM_data[ID_TRACK] == track && IDAM_data[ID_SECTOR] == sector)
 									if (WD279_57 == 1 ||  command[1] == 0 || IDAM_data[ID_SIDE][0] == command[3]) begin
 										state <= STATE_WAIT_DAM;
