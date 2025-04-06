@@ -865,7 +865,7 @@ fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd (
    // CONFIGURATION
    .speed(4'b0000),
    .mfm(4'b1111),
-   //.sides(4'b1111),
+   .sides(4'b1111),
    .sectors('{9,9,9,9}),                // sectors per track
    .sector_size('{2,2,2,2}),            // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
    .density('{0,0,0,0}),                // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
