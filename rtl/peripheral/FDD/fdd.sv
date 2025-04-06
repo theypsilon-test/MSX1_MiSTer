@@ -1,59 +1,96 @@
 module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
 (
     input  logic            clk,
-    input  logic            msclk,
     input  logic            reset,
     FDD_if.FDD_mp           FDD_bus,
-/*
-    output logic            INDEXn,     // Pin 8  Index
-    input  logic            MOTEAn,     // Pin 10 Motor Enable A
-    input  logic            DRVSBn,     // Pin 12 Drive Sel B
-    input  logic            DRVSAn,     // Pin 14 Drive Sel A
-    input  logic            MOTEBn,     // Pin 16 Motor enable B
-    input  logic            DIRn,       // Pin 18 Direction
-    input  logic            STEPn,      // Pin 20 Step
-    input  logic            WDATEn,     // Pin 22 Write data
-    input  logic            WGATEn,     // Pin 24 Floppy Write Enable
-    output logic            TRK00n,     // Pin 26 Track 0
-    output logic            WPTn,       // Pin 28 Write protect
-    output logic            RDATAn,     // Pin 30 Read data
-    input  logic            SIDE1n,     // Pin 32 Head select
-    output logic            DSKCHGn,    // Pin 34 Disk change/ready
-*/
-    /*
-    input  logic      [1:0] USEL,
-    input  logic            MOTORn,
-    output logic            READYn,
-    input  logic            STEPn,
-    input  logic            SDIRn,
-    input  logic            SIDEn,
-    output logic            INDEXn,
-    output logic            TRACK0n,
-    output logic            WPROTn,
 
-    output logic      [7:0] data,               // Octal data
-    output logic      [7:0] sec_id[6],
-    output logic            data_valid,
-    output logic            bclk,
-    */
+    //device config
+    input logic       [3:0] speed,          // 0 - 300rpm / 1 - 360rpm
+    input logic       [3:0] mfm,            // 0 - FM     / 1 - MFM
+    //input logic       [3:0] sides,        // 0 - SS     / 1 - DS
+    input logic       [1:0] density[4],     // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
+    input logic       [5:0] sectors[4],     // sectors per track
+    input logic       [1:0] sector_size[4], // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
     //hps image
     input logic       [3:0] img_mounted,
     input logic             img_readonly,
     input logic      [63:0] img_size,
 
     //SD block level access
-    output logic [31:0] sd_lba[0:3],
-    output logic  [5:0] sd_blk_cnt[0:3],
-    output logic  [3:0] sd_rd,
-    output logic  [3:0] sd_wr,
-    input  logic  [3:0] sd_ack,
+    output logic     [31:0] sd_lba[0:3],
+    output logic      [5:0] sd_blk_cnt[0:3],
+    output logic      [3:0] sd_rd,
+    output logic      [3:0] sd_wr,
+    input  logic      [3:0] sd_ack,
    
     // SD byte level access. Signals for 2-PORT altsyncram.
-    input  logic [13:0] sd_buff_addr,
-    input  logic  [7:0] sd_buff_dout,
-    output logic  [7:0] sd_buff_din[0:3],
-    input  logic        sd_buff_wr     
+    input  logic     [13:0] sd_buff_addr,
+    input  logic      [7:0] sd_buff_dout,
+    output logic      [7:0] sd_buff_din[0:3],
+    input  logic            sd_buff_wr     
 );
+
+    
+//https://map.grauw.nl/articles/low-level-disk/
+//https://retrocmp.de/fdd/general/floppy-formats.htm
+
+    logic motor_360rmp;
+    clockEnabler #(.clkFreq(sysCLK), .targetFreq(6)) FDD_RPM360(
+        .clk(clk),
+        .en(motor_360rmp)
+    );
+    
+    logic motor_300rmp;
+    clockEnabler #(.clkFreq(sysCLK), .targetFreq(5)) FDD_RPM300(
+        .clk(clk),
+        .en(motor_300rmp)
+    );
+
+    logic msclk;
+    clockEnabler #(.clkFreq(sysCLK), .targetFreq(1000)) FDD_MS(
+        .clk(clk),
+        .en(msclk)
+    );
+
+    logic bitRate_250;
+    clockEnabler #(.clkFreq(sysCLK), .targetFreq(250000*2)) FDD_BITRATE_250(
+        .clk(clk),
+        .en(bitRate_250)
+    );
+
+    logic bitRate_500;
+    clockEnabler #(.clkFreq(sysCLK), .targetFreq(500000*2)) FDD_BITRATE_500(
+        .clk(clk),
+        .en(bitRate_500)
+    );
+
+    logic bitRate_1000;
+    clockEnabler #(.clkFreq(sysCLK), .targetFreq(1000000*2))  FDD_BITRATE_1000(
+        .clk(clk),
+        .en(bitRate_1000)
+    );
+
+
+    logic       drive_motor_rpm;
+    logic       floppy_mfm;
+    logic       floppy_sides;
+    logic       floppy_bitRate;
+    logic [5:0] floppy_sectors;
+    logic [1:0] floppy_sectors_size;
+
+    always_comb begin
+        case (density[FDD_bus.USEL])
+            2'd0: floppy_bitRate = bitRate_250;    
+            2'd1: floppy_bitRate = bitRate_500;   
+            2'd2: floppy_bitRate = bitRate_1000;
+            default;
+        endcase
+
+        drive_motor_rpm     = speed[FDD_bus.USEL] ? motor_360rmp : motor_300rmp;
+        floppy_mfm          = mfm[FDD_bus.USEL];
+        floppy_sectors      = sectors[FDD_bus.USEL];
+        floppy_sectors_size = sector_size[FDD_bus.USEL];
+    end
 
     logic [3:0] motor_run;         // Stav motoru
 
@@ -66,7 +103,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
         .motor_run(motor_run)
     );
 
-    logic sides;
+    //logic sides;
     ready FDD_ready(
         .clk(clk),
         .reset(reset),
@@ -74,7 +111,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
         .motor_run(motor_run),
         .READYn(FDD_bus.READYn),
         .WPROTn(FDD_bus.WPROTn),
-        .sides(sides),
+        .sides(/*sides*/),
         .img_mounted(img_mounted),
         .img_readonly(img_readonly),
         .img_size(img_size)
@@ -99,7 +136,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
         .track(track),
         .disk_mounted(~FDD_bus.READYn),
         .disk_readonly(~FDD_bus.WPROTn),
-        .disk_sides(sides),
+        .disk_sides(/*sides*/),
 
         .track_ready(track_ready),
         .buffer_addr(buffer_addr),
@@ -118,9 +155,14 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
 
     transmit #(.sysCLK(sysCLK)) FDD_transmit(
         .clk(clk),
-        .bclk(FDD_bus.bclk),
         .reset(reset),
         
+        .drive_motor_rpm(drive_motor_rpm),
+        .floppy_bitRate(floppy_bitRate),
+        .floppy_mfm(floppy_mfm),
+        .floppy_sectors(floppy_sectors),
+        .floppy_sectors_size(floppy_sectors_size),
+
         //Track buffer
         .buffer_addr(buffer_addr),
         .buffer_q(buffer_q),
@@ -130,9 +172,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
         .side(~FDD_bus.SIDEn),
         
         .INDEXn(FDD_bus.INDEXn),
-        .data(FDD_bus.data),
-        .sec_id(FDD_bus.sec_id),
-        .data_valid(FDD_bus.data_valid)
+        .READ_DATAn(FDD_bus.READ_DATAn)
     );
 
 endmodule

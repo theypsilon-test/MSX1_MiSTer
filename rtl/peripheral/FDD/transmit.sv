@@ -1,170 +1,347 @@
 module transmit #(parameter sysCLK)
 (
     input  logic        clk,
-    output logic        bclk,   
     input  logic        reset,
+    
+    input  logic        drive_motor_rpm,
+    input  logic        floppy_bitRate,
+    input  logic        floppy_mfm,
+    input  logic  [5:0] floppy_sectors,
+    input  logic  [1:0] floppy_sectors_size,
+
     output logic [12:0] buffer_addr,
     input  logic  [7:0] buffer_q,
     input  logic        track_ready,
     input  logic  [6:0] track,
     input  logic        side,
     output logic        INDEXn,
-    output logic  [7:0] data,
-    output logic  [7:0] sec_id[6],
-    output logic        data_valid
+    output logic        READ_DATAn
 );
-
-    localparam ID_TRACK  = 0;
-    localparam ID_SIDE   = 1;
-    localparam ID_SECTOR = 2;
-    localparam ID_LENGHT = 3;
-    localparam ID_CRC1   = 4;
-    localparam ID_CRC2   = 5;
-
-    assign data_valid    = track_state == SECTORS && track_position >= 60 && track_position < 572;
-    assign buffer_addr   = (512 * sector) + (data_valid ? (track_position-60) : 0);
     
-    assign sec_id[ID_TRACK]  = {8'(track)};
-    assign sec_id[ID_SIDE]   = {8'(side)};
-    assign sec_id[ID_SECTOR] = {8'(next_sector)};
-    assign sec_id[ID_LENGHT] = 2;
-    assign sec_id[ID_CRC1]   = 0;
-    assign sec_id[ID_CRC2]   = 0;
+    typedef enum { 
+        WRITE_DATA,
+        WRITE_A1,
+        WRITE_C2,
+        WRITE_CRC1,
+        WRITE_CRC2,
+        WAIT
+    } write_type_t;
 
+    typedef enum { 
+        FDD_GAP4a,
+        FDD_SYNC_1,
+        FDD_IAM,
+        FDD_IAM_2,
+        FDD_GAP1,
+        FDD_SYNC_2,
+        FDD_IDAM,
+        FDD_IDAM_2,
+        FDD_C,
+        FDD_H,
+        FDD_R,
+        FDD_N,
+        FDD_CRC,
+        FDD_CRC1,
+        FDD_CRC2,
+        FDD_GAP2,
+        FDD_SYNC_3,
+        FDD_DDAM,
+        FDD_DDAM_2,
+        FDD_DATA,
+        FDD_CRC_D,
+        FDD_CRC_D1,
+        FDD_CRC_D2,
+        FDC_GAP3,
+        FDD_GAP4b
+    } fdd_track_state_t;
 
-    typedef enum logic [1:0] { 
-        HEADER,
-        SECTORS,
-        GAPS
-    } track_layout_t;
-
+    logic [10:0] sector_sz;
+    logic [10:0] write_count;
+    logic [10:0] buff_pos;
     logic [12:0] track_position;
-    logic  [3:0] sector;
-    logic  [3:0] next_sector;
-
-    assign next_sector = sector + 1;
+    logic  [5:0] sector;
+    logic  [5:0] next_sector;
+    logic  [7:0] txdat;
+    logic        crc_calc;
+    logic        txwr;
+    logic        fm_txmf8;
+    logic        fm_txmfb;
+    logic        fm_txmfc;
+    logic        fm_txmfe;
+    logic        mfm_txma1;
+    logic        mfm_txmc2;
     
-    track_layout_t track_state;
+    assign next_sector = sector + 1;
+    assign buffer_addr = (sector_sz * sector) + {2'd0,buff_pos};
+    assign sector_sz   = 11'd128 << floppy_sectors_size;
+    
+    assign READ_DATAn  = ~(floppy_mfm ? mfm_bitout : fm_bitout);
+
+    write_type_t write_type;
+    fdd_track_state_t fdd_state_next;
 
     always_ff @(posedge clk) begin
         if (reset) begin
-            track_position <= 0;
-            track_state <= HEADER;
+            fdd_state_next <= FDD_GAP4b;
+            fdd_state_next <= FDD_GAP4b;
+            write_count    <= 0;
+            write_type     <= WRITE_DATA;
+            INDEXn         <= 1;
+            crc_calc       <= 0;
         end else begin
-            if (track_ready) begin
-                if (bclk) begin
-                    track_position <= track_position + 1;
-                    case(track_state)
-                        HEADER: begin
-                            if (track_position == 145) begin
-                                track_position <= 0;
-                                track_state <= SECTORS;
-                                sector <= 0;
+            if (drive_motor_rpm) begin
+                fdd_state_next <= FDD_GAP4a;
+                write_count    <= floppy_mfm ?  80 : 40;
+                txdat          <= floppy_mfm ?  8'h4E : 8'hFF;
+                sector         <= 0;
+                INDEXn         <= 0;
+            end
+            if (txemp) begin
+                if (write_count > 0) begin
+                    write_count <= write_count - 1;
+                    case(write_type)
+                        WRITE_DATA: txwr      <= 1;
+                        WRITE_A1:   mfm_txma1 <= 1;
+                        WRITE_C2:   mfm_txmc2 <= 1;
+                        WRITE_CRC1: begin  txwr <= 1; txdat <= crc_out[15:8]; end
+                        WRITE_CRC2: begin  txwr <= 1; txdat <= crc_out[7:0]; end
+                        default:;
+                    endcase
+                    if (fdd_state_next == FDD_DATA) begin
+                        txdat    <= buffer_q;
+                        buff_pos <= buff_pos + 1;              
+                    end
+                end else begin
+                    case (fdd_state_next)
+                        FDD_GAP4b: begin
+                            write_count        <= 1;
+                            txdat              <= floppy_mfm ?  8'h4E : 8'hFF;
+                        end
+                        FDD_GAP4a: begin
+                            write_count        <= floppy_mfm ?  12 : 6;
+                            txdat              <= 8'd00;
+                            fdd_state_next     <= FDD_SYNC_1;
+                        end
+                        FDD_SYNC_1: begin
+                            if (floppy_mfm) begin
+                                write_count    <= 3;
+                                txdat          <= 8'hC2;
+                                write_type     <= WRITE_C2;
+                                fdd_state_next <= FDD_IAM;
+                            end else begin
+                                fm_txmfc       <= 1;
+                                INDEXn         <= 1;
+                                fdd_state_next <= FDD_IAM_2;
                             end
                         end
-                        SECTORS: begin
-                            if (track_position == 657) begin
-                                if (sector == 8) begin
-                                    track_state <= GAPS;
-                                    track_position <= 0;
-                                end else begin
-                                    sector <= sector + 1;
-                                    track_position <= 0;
-                                end
+                        FDD_IAM: begin
+                            write_type     <= WRITE_DATA;
+                            write_count    <= 3;
+                            txdat          <= 8'hFC;
+                            INDEXn         <= 1;
+                            fdd_state_next <= FDD_IAM_2;
+                        end
+                        FDD_IAM_2: begin
+                            write_count    <= floppy_mfm ?  50 : 26;
+                            txdat          <= floppy_mfm ?  8'h4E : 8'hFF;
+                            fdd_state_next <= FDD_GAP1;
+                        end
+                        FDD_GAP1: begin
+                            write_count    <= floppy_mfm ?  12 : 6;
+                            txdat          <= 8'd00;
+                            fdd_state_next <= FDD_SYNC_2;
+                        end
+
+                        FDD_SYNC_2: begin
+                            crc_calc           <= 1;
+                            if (floppy_mfm) begin
+                                write_count    <= 3;
+                                txdat          <= 8'hA1;
+                                write_type     <= WRITE_A1;
+                                fdd_state_next <= FDD_IDAM;
+                            end else begin
+                                txdat          <= 8'hFE;
+                                fm_txmfe       <= 1;
+                                fdd_state_next <= FDD_IDAM_2;
                             end
                         end
-                        GAPS: begin
-                            if (track_position == 181) begin
-                                track_state <= HEADER;
-                                track_position <= 0;
+                        FDD_IDAM: begin
+                            write_count    <= 1;
+                            write_type     <= WRITE_DATA;
+                            txdat          <= 8'hFE;
+                            fdd_state_next <= FDD_IDAM_2;
+                        end
+                        FDD_IDAM_2: begin
+                            write_count    <= 1;
+                            txdat          <= {8'(track)};
+                            fdd_state_next <= FDD_C;
+                        end
+                        FDD_C: begin
+                            write_count    <= 1;
+                            txdat          <= {8'(side)};
+                            fdd_state_next <= FDD_H;
+                        end
+                        FDD_H: begin
+                            write_count    <= 1;
+                            txdat          <= {8'(next_sector)};
+                            fdd_state_next <= FDD_R;
+                        end
+                        FDD_R: begin
+                            write_count    <= 1;
+                            txdat          <= {8'(floppy_sectors_size)};
+                            fdd_state_next <= FDD_N;
+                        end
+                        FDD_N: begin
+                            crc_calc       <= 0;
+                            write_count    <= 1;
+                            write_type     <= WAIT;
+                            fdd_state_next <= FDD_CRC;
+                        end
+                        FDD_CRC: begin
+                            write_count    <= 1;
+                            write_type     <= WRITE_CRC1;
+                            fdd_state_next <= FDD_CRC1;
+                        end
+                        FDD_CRC1: begin
+                            write_count    <= 1;
+                            write_type     <= WRITE_CRC2;
+                            fdd_state_next <= FDD_CRC2;
+                        end
+                        FDD_CRC2: begin
+                            write_type     <= WRITE_DATA;
+                            write_count    <= floppy_mfm ?  22 : 11;
+                            txdat          <= floppy_mfm ?  8'h4E : 8'hFF;
+                            fdd_state_next <= FDD_GAP2;
+                        end
+                        FDD_GAP2: begin
+                            write_count    <= floppy_mfm ?  12 : 6;
+                            txdat          <= 8'd00;
+                            fdd_state_next <= FDD_SYNC_3;
+                        end
+                        FDD_SYNC_3: begin
+                            buff_pos       <= 0;
+                            crc_calc       <= 1;
+                            if (floppy_mfm) begin
+                                write_count    <= 3;
+                                txdat          <= 8'hA1;
+                                write_type     <= WRITE_A1;
+                                fdd_state_next <= FDD_DDAM;
+                            end else begin
+                                txdat          <= 8'hFB;
+                                fm_txmfb       <= 1;          // TODO fm_txmfb nebo fm_txmf8 podle toho zda jsou data delete
+                                fdd_state_next <= FDD_DDAM_2;
+                            end
+
+                        end
+                        FDD_DDAM: begin
+                            write_type     <= WRITE_DATA;
+                            write_count    <= 1;
+                            txdat          <= 8'hFB;         // TODO FB nebo F8 podle toho zda jsou data delete
+                            fdd_state_next <= FDD_DDAM_2;
+                        end
+                        FDD_DDAM_2: begin
+                            write_count    <= sector_sz;
+                            if (track_ready) begin
+                                txdat      <= buffer_q;
+                            end else begin
+                                txwr       <= 0;
+                            end
+                            fdd_state_next <= FDD_DATA;
+                        end
+                        FDD_DATA: begin
+                            crc_calc       <= 0;
+                            write_count    <= 1;
+                            write_type     <= WAIT;
+                            fdd_state_next <= FDD_CRC_D;
+                        end
+                        FDD_CRC_D: begin
+                            write_count    <= 1;
+                            write_type     <= WRITE_CRC1;
+                            fdd_state_next <= FDD_CRC_D1;
+                        end
+                        FDD_CRC_D1: begin
+                            write_count    <= 1;
+                            write_type     <= WRITE_CRC2;
+                            fdd_state_next <= FDD_CRC_D2;
+                        end
+                        FDD_CRC_D2: begin
+                            write_type     <= WRITE_DATA;
+                            write_count    <= floppy_mfm ?  83 : 42;        // TODO ověřit
+                            txdat          <= floppy_mfm ?  8'h4E : 8'hFF;
+                            fdd_state_next <= FDC_GAP3;
+                        end
+                        FDC_GAP3: begin
+                            if (sector == 8)
+                                fdd_state_next <= FDD_GAP4b;
+                            else begin
+                                fdd_state_next <= FDD_GAP1;
+                                sector         <= next_sector;
                             end
                         end
                         default: ;
                     endcase
-                end 
+                end
             end else begin
-                track_position <= 0;
-                track_state <= HEADER;
+                if (txwr)      txwr      <= 0;
+                if (fm_txmf8)  fm_txmf8  <= 0;
+                if (fm_txmfb)  fm_txmfb  <= 0;
+                if (fm_txmfc)  fm_txmfc  <= 0;
+                if (fm_txmfe)  fm_txmfe  <= 0;
+                if (mfm_txma1) mfm_txma1 <= 0;
+                if (mfm_txmc2) mfm_txmc2 <= 0;
             end
         end
     end
 
-    always_comb begin
-        INDEXn = 1;
-        case (track_state)
-            HEADER: begin
-                if (track_position < 80) begin
-                    data = 8'h4E;
-                end else if (track_position < 92) begin
-                    data = 8'h00;
-                    INDEXn = 0;
-                end else if (track_position < 95) begin
-                    data = 8'hC2;
-                    INDEXn = 0;
-                end else if (track_position < 96) begin
-                    data = 8'hFC;
-                    INDEXn = 0;
-                end else begin
-                    data = 8'h4E;
-                end
-            end
-            SECTORS: begin
-                if (track_position < 12) begin
-                    data = 8'h00;
-                end else if (track_position < 15) begin
-                    data = 8'hA1;
-                end else if (track_position < 16) begin
-                    data = 8'hFE;
-                end else if (track_position < 17) begin
-                    data = {1'd0,track};
-                end else if (track_position < 18) begin
-                    data = {7'd0,side};
-                end else if (track_position < 19) begin
-                    data = {4'd0, sector};
-                end else if (track_position < 20) begin
-                    data = sec_id[ID_LENGHT];
-                end else if (track_position < 22) begin
-                    data = 8'h00;   // TODO CRC
-                end else if (track_position < 44) begin
-                    data = 8'h4E;
-                end else if (track_position < 56) begin
-                    data = 8'h00;
-                end else if (track_position < 59) begin
-                    data = 8'hA1;
-                end else if (track_position < 60) begin
-                    data = 8'hFB;
-                end else if (track_position < 572) begin
-                    data = buffer_q;
-                end else if (track_position < 574) begin
-                    data = 8'h00;   // TODO CRC
-                end else begin
-                    data = 8'h4E;
-                end
-            end
-            default: begin
-                data = 8'h4E;
-            end
-        endcase
-    end
+logic txemp, crcwr;
+assign txemp = floppy_mfm ? mfm_txemp : fm_txemp;
+assign crcwr = txwr | mfm_txma1 | mfm_txmc2 | fm_txmfb | fm_txmf8 | fm_txmfe;
 
-    always_ff @(posedge clk) begin
-        
-        int unsigned count;
+logic fm_txemp;
+logic fm_bitout;
+fmmod fmmod(
+      .txdat(txdat),
+      .txwr(~floppy_mfm & txwr),
+      .txmf8(fm_txmf8),
+      .txmfb(fm_txmfb),
+      .txmfc(fm_txmfc),
+      .txmfe(fm_txmfe),
+      .txend(),
+      .txemp(fm_txemp),
+      .brk(0),
+      .sft(floppy_bitRate),
+   
+      .bitout(fm_bitout),
+      .clk(clk),
+      .rstn(~reset)
+);
 
-        if (reset) begin
-            count <= 0;
-            bclk   <= 0;
-        end else begin
-            if (count > 1) begin
-                count <= count - 1;
-                bclk   <= 0;
-            end else begin
-                bclk   <= 1;
-                count <= sysCLK / 31195; //TODO ověřit (145 + (657 * 9) + 181) * 5 pro RPM 300
-            end
-        end
-    end
+logic mfm_txemp;
+logic mfm_bitout;
+mfmmod mfmmod(
+      .txdat(txdat),
+      .txwr(floppy_mfm & txwr),
+      .txma1(mfm_txma1),
+      .txmc2(mfm_txmc2),
+      .brk(0),
+   
+      .txemp(mfm_txemp),
+      .txend(),
+   
+      .bitout(mfm_bitout),
+   
+      .sft(floppy_bitRate),
+      .clk(clk),
+      .rstn(~reset)
+);
 
-//https://map.grauw.nl/articles/low-level-disk/
+logic [15:0] crc_out;
+crc #(.POLYNOM(16'h1021)) crc (
+    .clk(clk),
+    .valid(crc_calc),
+    .we(crcwr),
+    .data_in(txdat),
+    .crc(crc_out)
+);
 
 endmodule
