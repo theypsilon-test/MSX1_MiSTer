@@ -69,6 +69,7 @@ module wd279x #(parameter WD279_57=1, parameter sysCLK)
 	logic [7:0] reg_cmd, reg_track, reg_sector, reg_data, status;
 	logic       command_start;
 	logic       busy;
+	logic       INTRQ_ACK;
 
 	assign busy = command_start | status[0];
 	assign INTRQ = INTRQ_I | INTRQ_II || INTRQ_IV;
@@ -76,10 +77,11 @@ module wd279x #(parameter WD279_57=1, parameter sysCLK)
 	assign HLD = HLD_I | HLD_II ;
 	always_comb begin
 		DOUT = '1;
+		INTRQ_ACK = 0;
 		if (!(REn || CSn))
 			case (A)
 				A_DATA:   DOUT = reg_data;
-				A_STATUS: DOUT = status;
+				A_STATUS: begin DOUT = status; INTRQ_ACK = 1; end
 				A_SECTOR: DOUT = reg_sector;
 				A_TRACK:  DOUT = reg_track;
 			endcase
@@ -200,7 +202,8 @@ wd279x_command_I command_I (
 	.WPROTn(WPROTn),
 	.TRK00n(TRK00n),
 	.HLD(HLD_I),
-	.INTRQ(INTRQ_I)
+	.INTRQ(INTRQ_I),
+	.INTRQ_ACK(INTRQ_ACK)
 );
 
 logic [7:0] reg_sector_out;
@@ -227,6 +230,7 @@ wd279x_command_II #(.WD279_57(WD279_57)) command_II (
 	.SSO(SSO),
 	.HLD(HLD_II),
 	.INTRQ(INTRQ_II),
+	.INTRQ_ACK(INTRQ_ACK),
 	.DRQ(DRQ),
 	.enable_write_reg_data(enable_write_reg_data_II),
 	.IDAM_valid(IDAM_valid),
@@ -248,6 +252,7 @@ wd279x_command_IV  command_IV (
 	.command_start(command_start),
 	.status(status_command_type_IV),
 	.INTRQ(INTRQ_IV),
+	.INTRQ_ACK(INTRQ_ACK),
 	.INDEXn(INDEXn),
 	.READYn(READYn),
 	.WPROTn(WPROTn),

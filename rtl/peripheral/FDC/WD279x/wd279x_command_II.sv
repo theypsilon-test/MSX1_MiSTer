@@ -59,7 +59,8 @@ module wd279x_command_II  #(parameter WD279_57=1)
 
 	output logic  [7:0] status,
 	output logic        INTRQ,
-	input  logic        DRQ,
+	input  logic        INTRQ_ACK,
+	input  logic        DRQ,	  
 	
 	input  logic  [7:0] track,
 	input  logic  [7:0] sector,
@@ -121,6 +122,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 		end else begin
 			last_index <= INDEXn;
 			if (last_index && !INDEXn) index_count <= index_count + 1;
+			if (INTRQ_ACK) INTRQ <= 0;
 			case(state)
 				STATE_IDLE: begin
 					if (command_start) begin

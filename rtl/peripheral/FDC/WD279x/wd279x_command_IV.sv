@@ -44,6 +44,7 @@ module wd279x_command_IV
 	input  logic  [7:0] command,
 	output logic  [7:0] status,
 	output logic        INTRQ,
+	input  logic        INTRQ_ACK,
 	input  logic 		INDEXn,
 	input  logic        READYn,
 	input  logic 		WPROTn,
@@ -62,6 +63,8 @@ module wd279x_command_IV
 			INTRQ <= 0;
 		end else begin
 			if (command_start) INTRQ <= 0;
+
+			if (INTRQ_ACK) INTRQ <= 0;
 
 			if (command[7:4] == 4'hD) begin
 				if (command_start) begin

@@ -48,6 +48,7 @@ module wd279x_command_I
 	output logic        reg_data_write,
 	output logic  [7:0] status,
 	output logic        INTRQ,
+	input  logic        INTRQ_ACK,
 	output logic 		STEPn,
 	output logic 		SDIRn,
 	input  logic 		INDEXn,
@@ -112,6 +113,7 @@ module wd279x_command_I
 			reg_data_write <= 0;
 		end else begin
 			reg_data_write <= 0;
+			if (INTRQ_ACK) INTRQ <= 0;
 			case(state)
 				STATE_IDLE: begin
 					if (command_start) begin
