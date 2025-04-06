@@ -7,7 +7,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
     //device config
     input logic       [3:0] speed,          // 0 - 300rpm / 1 - 360rpm
     input logic       [3:0] mfm,            // 0 - FM     / 1 - MFM
-    //input logic       [3:0] sides,        // 0 - SS     / 1 - DS
+    input logic       [3:0] sides,          // 0 - SS     / 1 - DS
     input logic       [1:0] density[4],     // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
     input logic       [5:0] sectors[4],     // sectors per track
     input logic       [1:0] sector_size[4], // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
@@ -90,6 +90,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
         floppy_mfm          = mfm[FDD_bus.USEL];
         floppy_sectors      = sectors[FDD_bus.USEL];
         floppy_sectors_size = sector_size[FDD_bus.USEL];
+        floppy_sides        = sides[FDD_bus.USEL];
     end
 
     logic [3:0] motor_run;         // Stav motoru
@@ -136,7 +137,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
         .track(track),
         .disk_mounted(~FDD_bus.READYn),
         .disk_readonly(~FDD_bus.WPROTn),
-        .disk_sides(/*sides*/),
+        .disk_sides(floppy_sides),
 
         .track_ready(track_ready),
         .buffer_addr(buffer_addr),
