@@ -1,4 +1,4 @@
-   module msx
+   module msx #(parameter sysCLK)
 (
    input                    core_reset,
    input                    core_hard_reset,
@@ -224,7 +224,7 @@ wire        reset_lock, reset_request, ocm_megaSD_enable;
 wire [1:0]  ocm_slot2_mode;
 wire        ocm_slot1_mode;
 wire [1:0]  cpu_clock_sel;
-devices devices
+devices #(.sysCLK(sysCLK)) devices
 (
    .clock_bus(clock_bus),
    .cpu_bus(cpu_bus),

@@ -35,7 +35,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-module devices (
+module devices  #(parameter sysCLK)
+(
     clock_bus_if.base_mp    clock_bus,                              // Clock interface
     cpu_bus_if.device_mp    cpu_bus,                                // CPU bus interface
     device_bus              device_bus,                             // Device control bus interface
@@ -156,7 +157,7 @@ module devices (
 
     wire [7:0] wd2793_data;
     wire wd2793_data_oe_rq;
-    dev_WD2793 WD2793 (
+    dev_WD2793 #(.sysCLK(sysCLK)) WD2793 (
         .cpu_bus(cpu_bus),
         .clock_bus(clock_bus),
         .device_bus(device_bus),

@@ -83,11 +83,7 @@ interface FDD_if();
     wire       INDEXn;
     wire       TRACK0n;
     wire       WPROTn;
-
-    wire [7:0] data;
-    wire [7:0] sec_id[6];
-    wire       data_valid;
-    wire       bclk;
+    wire       READ_DATAn;
 
     modport FDD_mp (
         input   USEL,
@@ -99,10 +95,7 @@ interface FDD_if();
         output  INDEXn,
         output  TRACK0n,
         output  WPROTn,
-        output  data,
-        output  sec_id,
-        output  data_valid,
-        output  bclk
+        output  READ_DATAn
     );
 
     modport FDC_mp (
@@ -115,10 +108,7 @@ interface FDD_if();
         input   INDEXn,
         input   TRACK0n,
         input   WPROTn,
-        input   data,
-        input   sec_id,
-        input   data_valid,
-        input   bclk
+        input   READ_DATAn
     );
 
 endinterface

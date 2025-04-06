@@ -195,6 +195,8 @@ assign LED_DISK  = {1'b1, ~vsd_sel & sd_act};
 assign BUTTONS = 0;
 
 localparam VDNUM = 6;
+localparam sysCLK = 21477270;
+
 /*verilator tracing_on*/
 video_bus_if video_bus();
 clock_bus_if clock_bus(clk_core, clk_sdram);
@@ -404,7 +406,7 @@ pll pll
    .locked(locked_sdram)
 );
 
-clock #(.sysCLK(21477270)) clock
+clock #(.sysCLK(sysCLK)) clock
 (
    .reset(RESET),
    .clock_bus(clock_bus)
@@ -425,7 +427,7 @@ wire        opcode_out;
 wire [15:0] opcode_PC_start;
 assign joy[0] = joy0[5:0];
 assign joy[1] = joy1[5:0];
-msx MSX
+msx #(.sysCLK(sysCLK)) MSX 
 (
    .core_reset(reset),
    .core_hard_reset(hard_reset),
@@ -855,27 +857,18 @@ assign sd_blk_cnt[5]  = status[22] ? 0 : fdd_sd_blk_cnt[0];
 assign sd_buff_din[5] = status[22] ? sd_bus_control.buff_data : fdd_sd_buff_din[0];
 /*verilator tracing_on*/
 ///////////////// FDD EMULATE /////////////////
-fdd #(.sysCLK(21477270), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd (
+fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd (
    .clk(clock_bus.base_mp.clk),
-   .msclk(clock_bus.base_mp.ce_1k),
    .reset(reset),
    // FDD interface
    .FDD_bus(FDD_bus),
-   /*
-   .USEL(0),
-   .MOTORn(0),
-   .READYn(),
-   .STEPn(),
-   .SDIRn(),
-   .SIDEn(),
-   .INDEXn(),
-   .TRACK0n(),
-   .WPROTn(),
-   // FDC helper
-   .data(),
-   .sec_id(),
-   .data_valid(),
-   .bclk(), */
+   // CONFIGURATION
+   .speed(4'b0000),
+   .mfm(4'b1111),
+   //.sides(4'b1111),
+   .sectors('{9,9,9,9}),                // sectors per track
+   .sector_size('{2,2,2,2}),            // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
+   .density('{0,0,0,0}),                // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
    // IMAGE 
    .img_mounted({3'd0, img_mounted[5]}),  //TODO napojit ostatní na HPS
    .img_readonly(img_readonly),

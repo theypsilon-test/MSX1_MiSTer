@@ -83,7 +83,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
             2'd0: floppy_bitRate = bitRate_250;    
             2'd1: floppy_bitRate = bitRate_500;   
             2'd2: floppy_bitRate = bitRate_1000;
-            default;
+            default floppy_bitRate = bitRate_250;
         endcase
 
         drive_motor_rpm     = speed[FDD_bus.USEL] ? motor_360rmp : motor_300rmp;

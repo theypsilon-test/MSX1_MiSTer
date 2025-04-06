@@ -35,7 +35,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-module dev_WD2793
+module dev_WD2793 #(parameter sysCLK)
 (
    cpu_bus_if.device_mp cpu_bus,
    clock_bus_if.base_mp clock_bus,
@@ -248,10 +248,9 @@ wd1793 wd2793_iold
 
 wire [7:0] d_from_wd17;
 wire drq, intrq;
-wd279x #(.WD279_57(0)) wd2793_i
+wd279x #(.WD279_57(0),.sysCLK(sysCLK)) wd2793_i
 (
    .clk(cpu_bus.clk),
-   .msclk(clock_bus.ce_1k),
    .MRn(~cpu_bus.reset),
    .CSn(~wdcs),
    .REn(~cpu_bus.rd),
@@ -269,35 +268,9 @@ wd279x #(.WD279_57(0)) wd2793_i
    .TRK00n(FDD_bus.TRACK0n),
    .READYn(FDD_bus.READYn),
    .WPROTn(FDD_bus.WPROTn),
-   .SSO(),  //Pouze WD2795/7
-   //FDD helper
-   .fdd_data(FDD_bus.data),
-   .fdd_bclk(FDD_bus.bclk),
-   .sec_id(FDD_bus.sec_id),
-   .data_valid(FDD_bus.data_valid),
-   .dbg_busy(dbg_busy)
-
-   // .ready(fdd_ready),               //TODO ziskat z FDD
-   // .layout(layout),
-   // .size_code(3'h2),
-   /*
-   .side(side),
-   .img_mounted(image_info.mounted),
-   .wp(image_info.readonly),
-   .img_size(image_info.size[19:0]),
-   .sd_lba(sd_bus_control.sd_lba),
-   .sd_rd(sd_bus_control.rd),
-   .sd_wr(sd_bus_control.wr),
-   .sd_ack(sd_bus.ack),
-   .sd_buff_addr(sd_bus.buff_addr[8:0]),
-   .sd_buff_dout(sd_bus.buff_data),
-   .sd_buff_din(sd_bus_control.buff_data),
-   .sd_buff_wr(sd_bus.buff_wr),
-   .input_active(1'b0),
-   .input_addr(20'h0),
-   .input_data(8'h0),
-   .input_wr(1'b0),
-   .buff_din(8'h0)*/
+   .RAWRDn(FDD_bus.READ_DATAn),
+   .DDENn(0),              //TODO      Režim FM/MFM
+   .SSO(),                 //Pouze WD2795/7
 );
 
 endmodule
