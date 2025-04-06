@@ -68,7 +68,6 @@ module wd279x_command_IV
 
 			if (command[7:4] == 4'hD) begin
 				if (command_start) begin
-					$display("Command IV Command %x %t", command, $time);
 					INTRQ <= command[3];
 					interrupt <= 1;
 				end

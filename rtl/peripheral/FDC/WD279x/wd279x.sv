@@ -87,17 +87,6 @@ module wd279x #(parameter WD279_57=1, parameter sysCLK)
 			endcase
 	end
 
-	always_ff @(posedge clk) begin
-		if (read_rq) begin
-			case (A)
-				A_DATA:   ;
-				A_STATUS: $display("READ STATUS %X %t", status, $time);
-				A_SECTOR: $display("READ SECTOR %X %t", reg_sector, $time);
-				A_TRACK:  $display("READ TRACK %X %t", reg_track, $time);
-			endcase
-		end
-	end
-
 	logic last_REn, last_WEn, write_rq, read_rq;
 	always_ff @(posedge clk) begin
 		last_REn <= REn;
@@ -132,7 +121,7 @@ module wd279x #(parameter WD279_57=1, parameter sysCLK)
 		end	else begin
 			if (write_rq && A == A_TRACK && !busy ) begin
 				reg_track <= DIN;
-				$display("SET TRACK %X %t", DIN, $time);
+				//$display("SET TRACK %X", DIN);
 			end
 			if (reg_track_write) 
 				reg_track <= reg_track_out;
@@ -146,7 +135,7 @@ module wd279x #(parameter WD279_57=1, parameter sysCLK)
 		end	else begin
 			if (write_rq && A == A_SECTOR && !busy ) begin
 				reg_sector <= DIN;
-				$display("SET SECTOR %X  %t", DIN, $time);
+				//$display("SET SECTOR %X", DIN);
 			end
 			if (reg_sector_write) 
 				reg_sector <= reg_sector_out;
@@ -161,7 +150,7 @@ module wd279x #(parameter WD279_57=1, parameter sysCLK)
 			reg_lost_data <= 0;
 		end	else begin
 			if (write_rq && A == A_DATA) begin
-				$display("SET DATA  %X  %t", DIN, $time);
+				//$display("SET DATA  %X", DIN);
 				reg_data <= DIN;
 			end
 			
@@ -249,7 +238,6 @@ wd279x_command_II #(.WD279_57(WD279_57)) command_II (
 	.DAM_valid(DAM_valid),
 	.DAM_deleted(DAM_deleted),
 	.DAM_CRC_valid(DAM_CRC_valid),
-	.DAM_crc(DAM_crc),
 	.data_rx(fdd_rx)
 );
 
@@ -274,7 +262,6 @@ wd279x_command_IV  command_IV (
 
 	
 logic  [7:0] IDAM_data[6];
-logic  [7:0] DAM_crc[2];
 logic  [7:0] fdd_data;
 logic        fdd_rx;
 logic        IDAM_valid;
@@ -294,8 +281,7 @@ wd279x_demodulator #(.sysCLK(sysCLK)) modulator (
     .IDAM_valid(IDAM_valid),
 	.DAM_valid(DAM_valid),
 	.DAM_deleted(DAM_deleted),
-    .DAM_CRC_valid(DAM_CRC_valid),
-	.DAM_crc(DAM_crc)
+    .DAM_CRC_valid(DAM_CRC_valid)
 );
 
 logic msclk;
