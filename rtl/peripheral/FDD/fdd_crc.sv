@@ -1,4 +1,4 @@
-module crc #( 
+module fdd_crc #( 
     parameter int CRC_WIDTH = 16, // Možnost volby 16 nebo 32 bitového CRC
     parameter logic [CRC_WIDTH-1:0] POLYNOM = 16'h1021 // Výchozí polynom
 )(

@@ -336,7 +336,7 @@ mfmmod mfmmod(
 );
 
 logic [15:0] crc_out;
-crc #(.POLYNOM(16'h1021)) crc (
+fdd_crc #(.POLYNOM(16'h1021)) crc (
     .clk(clk),
     .valid(crc_calc),
     .we(crcwr),

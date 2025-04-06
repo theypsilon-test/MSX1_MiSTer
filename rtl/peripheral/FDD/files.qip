@@ -5,7 +5,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) r
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) motor.sv        ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) fdd.sv          ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) clockEnabler.sv ]
-set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) crc.sv          ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) fdd_crc.sv      ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) fmmod.sv        ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) mfmmod.sv       ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) transmit.sv     ]
