@@ -286,7 +286,7 @@ localparam CONF_STR = {
    CONF_STR_SLOT_B,
    "D2F4,ROM,Load,31100000;",
    "-;",
-   "O[22],WD old,YES,NO;",
+   "O[22],WD version,NEW,OLD;",
    "d0S5,DSK,Mount Drive A:;",
    "SC4,VHD,Load SD card;",
    "h3O[12],Reset after Mount,No,Yes;",
