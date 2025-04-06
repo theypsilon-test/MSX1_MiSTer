@@ -43,7 +43,12 @@ module wd279x_command_II  #(parameter WD279_57=1)
 	input  logic        MRn,	     // master reset
 	input  logic        command_start,
 	input  logic  [7:0] command,
-	input  logic        data_valid,
+	input  logic        IDAM_valid,
+	input  logic  [7:0] IDAM_data[6],
+	input  logic        DAM_valid,
+	input  logic        DAM_deleted,
+	input  logic 	    DAM_CRC_valid,	
+	input  logic        data_rx,
 	output logic        enable_write_reg_data,
 
 	input  logic 		INDEXn,
@@ -55,16 +60,11 @@ module wd279x_command_II  #(parameter WD279_57=1)
 	output logic  [7:0] status,
 	output logic        INTRQ,
 	input  logic        DRQ,
- 	
-	
 	
 	input  logic  [7:0] track,
 	input  logic  [7:0] sector,
 	output logic  [7:0] sector_out,
-	output logic        sector_write,
-	
-	
-	input  logic  [7:0] sec_id[6]
+	output logic        sector_write
 );
 
 	localparam ID_TRACK  = 0;
@@ -79,12 +79,13 @@ module wd279x_command_II  #(parameter WD279_57=1)
 		STATE_PREPARE,
 		STATE_CHECK,
 		STATE_CHECK_II,
+		STATE_WAIT_DAM,
 		STATE_READ,
 		STATE_WRITE,
+		STATE_CRC_CHECK,
 		STATE_CMD_END
 		
 	} sector_state_t;
-
 
 	sector_state_t state;
 
@@ -98,6 +99,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 	logic [4:0] wait_count;
 	logic [2:0] index_count;
 	logic       last_index;
+	logic [1:0] crc_count;
 
 	assign busy = state != STATE_IDLE;
 	assign status = command[7:6]            != 2'b10 ? 8'h00 : {READYn, 1'b0, reg_RECORD_TYPE, reg_RECORD_NOT_FOUND, reg_CRC_ERROR, reg_LOST_DATA, DRQ, busy};
@@ -118,6 +120,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 			if (WD279_57) SSO <= 0;
 		end else begin
 			last_index <= INDEXn;
+			if (last_index && !INDEXn) index_count <= index_count + 1;
 			case(state)
 				STATE_IDLE: begin
 					if (command_start) begin
@@ -150,45 +153,60 @@ module wd279x_command_II  #(parameter WD279_57=1)
 					if (wait_count > 0) begin
 						if (msclk) wait_count <= wait_count - 1;
 					end else begin
+						state <= STATE_CHECK_II;
+						index_count <= 0;
 						if (command[5]) begin				 // Write ?
 							if (!WPROTn) begin
 								INTRQ <= 1;
 								state <= STATE_IDLE;
 								reg_WRITE_PROTECTED <= 1;
 							end
-						end else begin
-							if (~data_valid) begin
-								state <= STATE_CHECK_II;
-								index_count <= 0;
-							end
 						end
 					end
 				STATE_CHECK_II: begin
-					if (last_index && !INDEXn) index_count <= index_count + 1;
 					if (index_count > 4) begin
 						state <= STATE_IDLE;
 						INTRQ <= 1;
 						reg_RECORD_NOT_FOUND <= 1;
 						//$display("RECORD_NOT_FOUND");
 					end else
-						if (data_valid)
-							if (sec_id[ID_TRACK] == track && sec_id[ID_SECTOR] == sector)
-									if (WD279_57 == 1 ||  command[1] == 0 || sec_id[ID_SIDE][0] == command[3]) begin
-										state <= command[5] ? STATE_WRITE : STATE_READ;
+						if (IDAM_valid)
+							if (IDAM_data[ID_TRACK] == track && IDAM_data[ID_SECTOR] == sector)
+									if (WD279_57 == 1 ||  command[1] == 0 || IDAM_data[ID_SIDE][0] == command[3]) begin
+										state <= STATE_WAIT_DAM;
 										//$display("RECORD FOUND");
 									end
-
+				end
+				STATE_WAIT_DAM: begin
+					if (~IDAM_valid) state <= STATE_CHECK_II;	// DAM timeout
+					if (DAM_valid) begin
+						reg_RECORD_TYPE <= DAM_deleted;
+						state <= command[5] ? STATE_WRITE : STATE_READ;
+					end
 				end
 				STATE_READ: begin
-					//TODO nastavit status bit 5. Stávající DSK formát nezná smazané data
-					if (!data_valid) begin
-						if (command[4]) begin			//Multiple
-							sector_out <= sector + 1;
-							sector_write <= 1;
-							//$display("Command II m(%d) Track Side sector: %X %X %X NEXT", command[4], track, command[3], sector + 1);
-							state <= STATE_CHECK;
+					if (!DAM_valid) begin
+						state <= STATE_CRC_CHECK;
+						crc_count <= 2;
+					end
+				end
+				STATE_CRC_CHECK: begin
+					if (crc_count > 0 ) begin
+						if (data_rx) crc_count <= crc_count - 1;
+					end else begin
+						if (DAM_CRC_valid) begin
+							if (command[4]) begin			//Multiple
+								sector_out <= sector + 1;
+								sector_write <= 1;
+								//$display("Command II m(%d) Track Side sector: %X %X %X NEXT", command[4], track, command[3], sector + 1);
+								state <= STATE_CHECK;
+							end else begin
+								state <= STATE_CMD_END;
+							end
 						end else begin
-							state <= STATE_CMD_END;
+							reg_CRC_ERROR <= 1;
+							INTRQ <= 1;
+							state <= STATE_IDLE;
 						end
 					end
 				end

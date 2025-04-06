@@ -35,18 +35,17 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-module wd279x #(parameter WD279_57=1) 
+module wd279x #(parameter WD279_57=1, parameter sysCLK) 
 (
 	input  logic        clk,         // sys clock
-	input  logic        msclk,       // clock 1ms
 	input  logic        MRn,	      // master reset
 	input  logic        CSn,		  // i/o enable
 	input  logic        REn,         // i/o read
 	input  logic        WEn,         // i/o write
 	input  logic  [1:0] A,           // i/o port addr
 	input  logic  [7:0] DIN,         // i/o data in
-	output logic  [7:0] DOUT,  // i/o data out
-	output logic        DRQ,  // DMA request
+	output logic  [7:0] DOUT,  		// i/o data out
+	output logic        DRQ,  		// DMA request
 	output logic        INTRQ,
 
 	output logic 		STEPn,
@@ -57,37 +56,16 @@ module wd279x #(parameter WD279_57=1)
 	input  logic        WPROTn,
 	output logic        HLD,
 	output logic        SSO,
-	input  logic  [7:0] fdd_data,
-	input  logic        fdd_bclk,
-	input  logic  [7:0] sec_id[6],
-	input  logic  		data_valid,
-	output logic		dbg_write,
-	output logic		dbg_read,
-	output logic        dbg_busy
-
-	//input  logic        TEST,	//Zkrácené časy
-	// output logic  [7:0] temp_status
+	input  logic        RAWRDn,
+	input  logic        DDENn
 );
-
-	assign dbg_read = read_rq;
-	assign dbg_write = write_rq;
-	assign dbg_busy = busy;
 
 	localparam A_COMMAND         = 0;
 	localparam A_STATUS          = 0;
 	localparam A_TRACK           = 1;
 	localparam A_SECTOR          = 2;
 	localparam A_DATA            = 3;
-/*
-	typedef enum {
-		COMMAND_TYPE_I,
-		COMMAND_TYPE_II,
-		COMMAND_TYPE_III,
-		COMMAND_TYPE_IV
-	} command_type_t;
 
-	command_type_t command_type;
-*/
 	logic [7:0] reg_cmd, reg_track, reg_sector, reg_data, status;
 	logic       command_start;
 	logic       busy;
@@ -106,16 +84,7 @@ module wd279x #(parameter WD279_57=1)
 				A_TRACK:  DOUT = reg_track;
 			endcase
 	end
-/*
-	always_comb begin
-		casez (reg_cmd[7:4])
-			4'b1101: begin command_type = COMMAND_TYPE_IV; status = 0; end
-			4'b1100: begin command_type = COMMAND_TYPE_III; status = 0; end
-			4'b10??: begin command_type = COMMAND_TYPE_II; status = status_command_type_II; end
-			default: begin command_type = COMMAND_TYPE_I; status = status_command_type_I; end
-		endcase
-	end
-*/
+
 	logic last_REn, last_WEn, write_rq, read_rq;
 	always_ff @(posedge clk) begin
 		last_REn <= REn;
@@ -187,7 +156,7 @@ module wd279x #(parameter WD279_57=1)
 				reg_data <= reg_data_out_I;
 			end
 
-			if (data_valid && enable_write_reg_data_II && fdd_bclk) begin
+			if (enable_write_reg_data_II && fdd_rx) begin
 				if (DRQ) begin
 					reg_lost_data <= 1;
 				end
@@ -198,52 +167,8 @@ module wd279x #(parameter WD279_57=1)
 			if (read_rq && A == A_DATA) begin
 				DRQ <= 0;
 			end
-			
-			//if (~data_valid) adr <= 0;
-			/*
-			if (reg_cmd[7:5] == 3'b100 && status_command_type_II[1]) begin
-				if (bclk && data_valid) begin
-					if (reg_DRQ) 
-						reg_LOST_DATA <= 1;
-					reg_DRQ <= 1;
-					reg_data <= data;
-
-					//if (adr < 5) 
-					//	$display("DATA %X", data);
-					//adr <= adr + 1;
-				end
-			end
-			*/
 		end
 	end
-/*	
-	wire [15:0] DISKcrc;
-	crc #(.CRC_WIDTH(16)) crc1
-	(
-		.clk(clk),
-		.valid(data_valid),
-		.we(bclk),
-		.data_in(data),
-		.crc(DISKcrc)
-	);
-	/*
-	crc #(.CRC_WIDTH(32), .POLYNOM(32'hEDB88320))crc2
-	(
-		.clk(clk),
-		.valid(data_valid),
-		.we(bclk),
-		.data_in(data),
-		.crc()
-	);*/
-/*
-	CRC_32 crc3 (
-		.clk(clk),
-		.en(data_valid),
-		.we(bclk),
-		.crc_in(data),
-		.crc_out()
-	);
-*/
 
 logic [7:0] reg_track_out;
 logic       reg_track_write;
@@ -266,6 +191,8 @@ wd279x_command_I command_I (
 	.track(reg_track_write ? reg_track_out : reg_track),
 	.track_out(reg_track_out),
 	.track_write(reg_track_write),
+	.IDAM_valid(IDAM_valid),
+	.IDAM_data(IDAM_data),
 	.STEPn(STEPn),
 	.SDIRn(SDIRn),
 	.INDEXn(INDEXn),
@@ -273,9 +200,7 @@ wd279x_command_I command_I (
 	.WPROTn(WPROTn),
 	.TRK00n(TRK00n),
 	.HLD(HLD_I),
-	.INTRQ(INTRQ_I),
-	.data_valid(data_valid),
-	.sec_id(sec_id)
+	.INTRQ(INTRQ_I)
 );
 
 logic [7:0] reg_sector_out;
@@ -303,9 +228,13 @@ wd279x_command_II #(.WD279_57(WD279_57)) command_II (
 	.HLD(HLD_II),
 	.INTRQ(INTRQ_II),
 	.DRQ(DRQ),
-	.data_valid(data_valid),
 	.enable_write_reg_data(enable_write_reg_data_II),
-	.sec_id(sec_id)
+	.IDAM_valid(IDAM_valid),
+	.IDAM_data(IDAM_data),
+	.DAM_valid(DAM_valid),
+	.DAM_deleted(DAM_deleted),
+	.DAM_CRC_valid(DAM_CRC_valid),
+	.data_rx(fdd_rx)
 );
 
 logic       INTRQ_IV;
@@ -325,5 +254,36 @@ wd279x_command_IV  command_IV (
 	.TRK00n(TRK00n),
 	.HLD(HLD)
 );
+
+	
+logic  [7:0] IDAM_data[6];
+logic  [7:0] fdd_data;
+logic        fdd_rx;
+logic        IDAM_valid;
+logic        DAM_valid;
+logic        DAM_deleted;
+logic        DAM_CRC_valid;
+
+wd279x_demodulator #(.sysCLK(sysCLK)) modulator (
+	.clk(clk),
+	.MRn(MRn),
+	.INDEXn(INDEXn),
+	.DDENn(DDENn),
+	.RAWRDn(RAWRDn),
+	.IDAM_data(IDAM_data),
+    .fdd_data(fdd_data),
+    .fdd_rx(fdd_rx),
+    .IDAM_valid(IDAM_valid),
+	.DAM_valid(DAM_valid),
+	.DAM_deleted(DAM_deleted),
+    .DAM_CRC_valid(DAM_CRC_valid)
+);
+
+logic msclk;
+clockEnabler #(.clkFreq(sysCLK), .targetFreq(1000)) FDD_MS(
+	.clk(clk),
+	.en(msclk)
+);
+
 endmodule
 

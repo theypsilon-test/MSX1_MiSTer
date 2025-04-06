@@ -60,9 +60,9 @@ module wd279x_command_I
 	input  logic  [7:0] track,
 	output logic  [7:0] track_out,
 	output logic  		track_write,
-	
-	input  logic  [7:0] sec_id[6],
-	input  logic  		data_valid
+
+	input  logic		IDAM_valid,	
+	input  logic  [7:0] IDAM_data[6]
 );
 
 	localparam ID_TRACK  = 0;
@@ -99,6 +99,8 @@ module wd279x_command_I
 
 	always_ff @(posedge clk) begin
 		track_write <= 0;
+		last_index <= INDEXn;
+		if (last_index && !INDEXn) index_count <= index_count + 1;
 		if (~MRn || interrupt) begin
 			STEPn <= 1;
 			SDIRn <= 1;
@@ -109,7 +111,6 @@ module wd279x_command_I
 			state <= STATE_IDLE;
 			reg_data_write <= 0;
 		end else begin
-			last_index <= INDEXn;
 			reg_data_write <= 0;
 			case(state)
 				STATE_IDLE: begin
@@ -221,13 +222,12 @@ module wd279x_command_I
 							index_count <= 0;
 						end
 					end else begin			// Lze kontrolovat
-						if (last_index && !INDEXn) index_count <= index_count + 1;
 						if (index_count > 4) begin
 							state <= STATE_IDLE;
 							INTRQ <= 1;
 							reg_SEEK_ERROR <= 1;
 						end
-						if (data_valid && sec_id[ID_TRACK] == track_rq) begin
+						if (IDAM_valid && IDAM_data[ID_TRACK] == track_rq) begin
 							state <= STATE_IDLE;
 							INTRQ <= 1;
 						end
