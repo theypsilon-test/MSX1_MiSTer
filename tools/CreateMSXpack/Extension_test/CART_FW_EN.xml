@@ -147,7 +147,7 @@
     <block start="1" count="1">
       <filename>VY0010.ROM</filename>
       <SHA1>8924e3e11eb1c8c1edcb7efa63c26d2bdc142473</SHA1>
-      <device style="Philips">WD2793</device>
+      <device style="Philips" fdd_count="2">WD2793</device>
     </block>
   </fw>
   

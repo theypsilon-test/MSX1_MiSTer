@@ -397,6 +397,9 @@ package MSX;
         cpu_t cpu;
         logic [2:0] wait_count;
         logic [2:0] cpu_clock_sel;
+        logic [1:0] fdd_internal; 
+        logic [1:0] fdd_slot_A;
+        logic [1:0] fdd_slot_B;
     } msx_config_t;
 
 endpackage

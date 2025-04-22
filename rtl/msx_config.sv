@@ -1,15 +1,14 @@
 parameter CONF_STR_SLOT_A = {
-    "O[20:17],Slot1,ROM,SCC,SCC+,FM-PAC,MegaSCC+ 1MB, MegaFlashROM SCC+ SD,GameMaster2,Empty;"
+    "O[20:17],Slot1,ROM,FDC,SCC,SCC+,FM-PAC,MegaSCC+ 1MB, MegaFlashROM SCC+ SD,GameMaster2,Empty;"
 };
 parameter CONF_STR_SLOT_B = {
-    "O[32:29],Slot2,FDC,ROM,SCC,SCC+,FM-PAC,MegaSCC+ 2MB,MegaRAM ASCII-8K 1MB,MegaRAM ASCII-16K 2MB,Empty;"
+    "O[32:29],Slot2,ROM,FDC,SCC,SCC+,FM-PAC,MegaSCC+ 2MB,MegaRAM ASCII-8K 1MB,MegaRAM ASCII-16K 2MB,Empty;"
 };
 
 module user_config
 (
     input                     clk,
     input                     reset,
-    input                     disable_menu_FDC,
     input              [63:0] HPS_status,
     input               [1:0] sdram_size,
     output MSX::config_cart_t cart_conf[2],
@@ -27,12 +26,13 @@ wire [3:0] slot_B_select   = HPS_status[32:29];
     always_comb begin : Slot1
         case(HPS_status[20:17])
             4'd0: cart_conf[0].typ = CART_TYP_ROM;
-            4'd1: cart_conf[0].typ = CART_TYP_SCC;
-            4'd2: cart_conf[0].typ = CART_TYP_SCC2;
-            4'd3: cart_conf[0].typ = CART_TYP_FM_PAC;
-            4'd4: cart_conf[0].typ = ocmMode ? MEGARAM : CART_MEGASCC1;
-            4'd5: cart_conf[0].typ = CART_TYP_MFRSD;
-            4'd6: cart_conf[0].typ = CART_TYP_GM2;
+            4'd1: cart_conf[0].typ = CART_TYP_FDC;
+            4'd2: cart_conf[0].typ = CART_TYP_SCC;
+            4'd3: cart_conf[0].typ = CART_TYP_SCC2;
+            4'd4: cart_conf[0].typ = CART_TYP_FM_PAC;
+            4'd5: cart_conf[0].typ = ocmMode ? MEGARAM : CART_MEGASCC1;
+            4'd6: cart_conf[0].typ = CART_TYP_MFRSD;
+            4'd7: cart_conf[0].typ = CART_TYP_GM2;
             default: cart_conf[0].typ = CART_TYP_EMPTY;
         endcase
     end
@@ -40,8 +40,8 @@ wire [3:0] slot_B_select   = HPS_status[32:29];
     cart_typ_t cart_B;
     always_comb begin : Slot2
         case(HPS_status[32:29])
-            4'd0: cart_conf[1].typ = disable_menu_FDC ? CART_TYP_EMPTY : CART_TYP_FDC;
-            4'd1: cart_conf[1].typ = CART_TYP_ROM;
+            4'd0: cart_conf[1].typ = CART_TYP_ROM;
+            4'd1: cart_conf[1].typ = CART_TYP_FDC;
             4'd2: cart_conf[1].typ = CART_TYP_SCC;
             4'd3: cart_conf[1].typ = CART_TYP_SCC2;
             4'd4: cart_conf[1].typ = CART_TYP_FM_PAC;

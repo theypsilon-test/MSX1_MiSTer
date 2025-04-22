@@ -301,22 +301,33 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
             (typ, attributes) = block.pop('device', (None, None))
             if typ in constants['device']:
                 params[0] = constants['device'][typ]
-                if (typ == "WD2793") :
-                    parameter = 0x80
-                    if "style" in attributes:
-                        if attributes["style"] == "Philips" :
-                            parameter = 0x80
-                        elif attributes["style"] == "National" :
-                            parameter = 0x81
-                    params[1] = parameter
+                if (typ == "WD2793" or typ == "TC8566AF"):
+                    fdd_count = 1
+                    if "fdd_count" in attributes:
+                        fdd_count = convert_to_8bit(attributes['fdd_count'])
+                        if fdd_count > 2 or fdd_count < 1:
+                            print(f"Error: FDD count '{fdd_count}' in slot {slot}/{subslot} is not in range 1-2 Setting to 1")
+                            fdd_count = 1
+                    
+                    if fdd_count == 2:
+                        parameter = 0x80        # 0x80 = 2 drive
+                    else:
+                        parameter = 0x40        # 0x40 = 1 drive
                 
-                if (typ == "TC8566AF") :
-                    parameter = 0x80
-                    if "ioRegs" in attributes:
-                        if attributes["ioRegs"] == "7FF2" :
-                            parameter = 0x81
-                        elif attributes["ioRegs"] == "7FF8" :
-                            parameter = 0x82
+                    if (typ == "WD2793") :                        
+                        if "style" in attributes:
+                            if attributes["style"] == "Philips" :
+                                parameter = parameter | 0x00; 
+                            elif attributes["style"] == "National" :
+                                parameter = parameter | 0x01
+                
+                    if (typ == "TC8566AF") :
+                        if "ioRegs" in attributes:
+                            if attributes["ioRegs"] == "7FF2" :
+                                parameter = parameter | 0x01; 
+                            elif attributes["ioRegs"] == "7FF8" :
+                                parameter = parameter | 0x02; 
+
                     params[1] = parameter
 
                 if "param" in attributes:

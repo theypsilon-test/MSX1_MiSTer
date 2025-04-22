@@ -127,6 +127,7 @@ module memory_upload
         logic [1:0]  slot, subslot, block, size, offset, ref_sram, device_num;
         logic [15:0] rom_fw_table;
         logic  [2:0] io_ref_mem;
+        logic        cart_id;
         mapper_typ_t mapper;
         device_t device;
         
@@ -279,6 +280,9 @@ module memory_upload
                         msx_config.cpu           <= Z80;
                         msx_config.wait_count    <= 3'd1;
                         msx_config.cpu_clock_sel <= '0;
+                        msx_config.fdd_internal  <= '0;
+                        msx_config.fdd_slot_A    <= '0;
+                        msx_config.fdd_slot_B    <= '0;
                         if (ioctl_size[1] > 0) begin
                             state      <= STATE_READ_CONF;
                             next_state <= STATE_CHECK_FW_CONF;
@@ -515,7 +519,7 @@ module memory_upload
                             next_state <= STATE_LOAD_CONF;                          // Defaultně neděláme nic
                             state      <= STATE_READ_CONF;
                             $display("BLOCK CART ID:%d CONF:%x", conf[3][0], cart_conf[conf[3][0]].typ);
-
+                            cart_id    <= conf[3][0];
                             if (cart_conf[conf[3][0]].typ == CART_TYP_ROM) begin
                                 if (ioctl_size[conf[3][0] ? 3'd3 : 3'd2] > '0) begin
                                     $display("BLOCK CART %d LOAD START ref: %d addr:%x size:%x - %x", conf[3][0], ref_ram, ram_addr, ioctl_size[conf[3][0] ? 3 : 2], ioctl_size[conf[3][0] ? 3 : 2][26:14]);
@@ -696,6 +700,7 @@ module memory_upload
                         $display("BLOCK slot:%x subslot:%x block:%x < device:%x(id:%d) ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].device, slot_layout[{slot, subslot, conf[3][1:0]}].device_num );
                         ref_dev_block <= '0;
                     end
+
                     if (ref_dev_mem) begin
                         slot_layout[{slot, subslot, block}].ref_ram    <= slot_layout[{slot, subslot, conf[3][1:0]}].ref_ram;
                         slot_layout[{slot, subslot, block}].mapper     <= slot_layout[{slot, subslot, conf[3][1:0]}].mapper;
@@ -704,7 +709,22 @@ module memory_upload
                         $display("BLOCK slot:%x subslot:%x block:%x < offset:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].offset_ram);
                         $display("BLOCK slot:%x subslot:%x block:%x < mapper:%x ", slot, subslot, block, slot_layout[{slot, subslot, conf[3][1:0]}].mapper);
                         ref_dev_mem <= '0;
-                    end                 
+                    end
+
+                    if (device == DEV_TC8566AF || device == DEV_WD2793) begin
+                        if (fw_space) begin
+                            if (cart_id) begin
+                                msx_config.fdd_slot_B <= conf[4][7:6];
+                                $display("Change FDD layout. Slot B: %x ", conf[4][7:6]);
+                            end else begin
+                                msx_config.fdd_slot_A <= conf[4][7:6];
+                                $display("Change FDD layout. Slot A: %x ", conf[4][7:6]);
+                            end
+                        end else begin
+                            msx_config.fdd_internal  <= conf[4][7:6];
+                            $display("Change FDD layout. Internal: %x) ", conf[4][7:6]);
+                        end
+                    end
                 end
                 STATE_SEARCH_CRC32_INIT: begin
                     if (ioctl_size[4] == 0) begin

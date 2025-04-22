@@ -29,7 +29,7 @@
     <secondary slot="3">
       <block start="1" count="1">
         <memory SHA1="c3f3ca454d66a0bc791f1d4b60e6857b44eb8755" filename="nms8245_disk.rom">ROM</memory>
-        <device style="Panasonic">WD2793</device>
+        <device style="Panasonic" fdd_count="2">WD2793</device>
       </block>
       <block start="2" count="1">
         <ref to_block="1">DEVICE</ref>

@@ -280,19 +280,27 @@ localparam CONF_STR = {
    "FC2,MSX,Load FW  PACK,30300000;",
    "FC6,DB,Load DB MAPPERS,31600000;",
    "-;",
+   "h8S5,DSK,Mount int. Drive 1;",
+   "h9S6,DSK,Mount int. Drive 2;",
+   "-;",
    CONF_STR_SLOT_A,
-   "D1FS3,ROM,Load,30C00000;",
+   "H1FS3,ROM,Load,30C00000;",
+   "h4S1,DSK,Mount Drive 1;",
+   "h5S2,DSK,Mount Drive 2;",
    "-;",
    CONF_STR_SLOT_B,
-   "D2F4,ROM,Load,31100000;",
+   "H2F4,ROM,Load,31100000;",
+   "h6S3,DSK,Mount Drive 1;",
+   "h7S4,DSK,Mount Drive 2;",
    "-;",
    "O[22],WD version,NEW,OLD;",
-   "d0S5,DSK,Mount Drive A:;",
+   "h8S5,DSK,Mount internal Drive 1;",
+   "h9S6,DSK,Mount internal Drive 2;",
    "SC4,VHD,Load SD card;",
    "h3O[12],Reset after Mount,No,Yes;",
-   "H6-;",
-   "H6R[38],SRAM Save;",
-   "H6R[39],SRAM Load;",
+   "H10-;",
+   "H10R[38],SRAM Save;",
+   "H10R[39],SRAM Load;",
    "-;",
    "h3O[11],Internal Mapper,2048KB RAM,4096KB RAM;",
    
@@ -300,8 +308,8 @@ localparam CONF_STR = {
 	"h3O[16],CPU type,Z80,R800;",
 
    "O[40],Tape Input,File,ADC;",
-   "H7F5,CAS,Cas File,31700000;",
-   "H7T9,Tape Rewind;",
+   "H11F5,CAS,Cas File,31700000;",
+   "H11T9,Tape Rewind;",
    "-;",
    "P1,Video settings;",
    "P1O[2:1],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
@@ -324,17 +332,19 @@ wire [1:0] sdram_size;
 wire [7:0] info;
 wire info_req;
 
-wire disable_menu_FDC = io_device[DEV_WD2793][0].param[7] && io_device[DEV_WD2793][0].enable; //Enable FDC to CART menu
-assign status_menumask[0] = io_device[DEV_WD2793][0].enable;
+assign status_menumask[0] = '0;
 assign status_menumask[1] = ROM_A_load_hide || io_device[DEV_OCM_BOOT][0].enable ;
 assign status_menumask[2] = ROM_B_load_hide || io_device[DEV_OCM_BOOT][0].enable ;
 assign status_menumask[3] = io_device[DEV_OCM_BOOT][0].enable;
-assign status_menumask[4] = '0;
-assign status_menumask[5] = '0;
-
-assign status_menumask[6] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
-assign status_menumask[7] = msx_user_config.cas_audio_src == CAS_AUDIO_ADC;
-assign status_menumask[15:8] = '0;
+assign status_menumask[4] = msx_config.fdd_slot_A[0];
+assign status_menumask[5] = msx_config.fdd_slot_A[1];
+assign status_menumask[6] = msx_config.fdd_slot_B[0];
+assign status_menumask[7] = msx_config.fdd_slot_B[1];
+assign status_menumask[8] = msx_config.fdd_internal[0];
+assign status_menumask[9] = msx_config.fdd_internal[1];
+assign status_menumask[10] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
+assign status_menumask[11] = msx_user_config.cas_audio_src == CAS_AUDIO_ADC;
+assign status_menumask[15:12] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 
 assign info_req = error != ERR_NONE;
@@ -384,7 +394,6 @@ user_config user_config
 (
    .clk(clock_bus.base_mp.clk),
    .reset(reset),
-   .disable_menu_FDC(disable_menu_FDC),
    .HPS_status(status[63:0]),
    .sdram_size(sdram_size),
    .cart_conf(cart_conf),
@@ -469,6 +478,7 @@ msx #(.sysCLK(sysCLK)) MSX
    .msx_config(msx_config),
    .joy(joy),
    .kb_upload_memory(kb_upload_memory),
+   .debug_data_overlay(debug_data_overlay),
    .sd_bus(sd_bus),
    .sd_bus_control(sd_bus_control),
    .image_info(image_info),
@@ -577,9 +587,9 @@ video_mixer #(.GAMMA(1), .LINE_LENGTH(582)) video_mixer
    .gamma_bus(gamma_bus),
    
    .ce_pix(video_bus.display_mp.ce_pix),
-   .R(video_bus.display_mp.R),
-   .G(video_bus.display_mp.G),
-   .B(video_bus.display_mp.B),
+   .R(o_r),
+   .G(o_g),
+   .B(o_b),
    .HSync(video_bus.display_mp.HS),
    .VSync(video_bus.display_mp.VS), 
    .HBlank(video_bus.display_mp.hblank),
@@ -596,6 +606,32 @@ video_mixer #(.GAMMA(1), .LINE_LENGTH(582)) video_mixer
    .VGA_HS(VGA_HS),
    .VGA_DE(vga_de)
 );
+/////////////////  DEBUG OVERLAY /////////////
+/*verilator tracing_on*/
+wire [7:0] o_r;
+wire [7:0] o_g;
+wire [7:0] o_b;
+wire [7:0] debug_data_overlay[8];
+
+overlay  #( .RGB(24'hFFFFFF) ) coverlay
+(
+        .reset(reset),
+        .i_r(video_bus.display_mp.R),
+        .i_g(video_bus.display_mp.G),
+        .i_b(video_bus.display_mp.B),
+        .i_hs(video_bus.display_mp.HS),
+        .i_vs(video_bus.display_mp.VS),
+        .i_vb(video_bus.display_mp.vblank),
+        .i_hb(video_bus.display_mp.hblank),
+        .i_clk(CLK_VIDEO),
+        .i_pix(video_bus.display_mp.ce_pix),
+
+        .o_r(o_r),
+        .o_g(o_g),
+        .o_b(o_b),
+        .debug_data(debug_data_overlay)
+);
+/*verilator tracing_off*/
 
 /////////////////  Tape In   /////////////////
 wire tape_adc, tape_adc_act, tape_in;
@@ -699,7 +735,7 @@ ddram buffer
    .debug_wr(opcode_out),
    .*
 );
-
+/*verilator tracing_on*/
 assign ram_dout = sdram_ce ? sdram_dout :
                              8'hFF;
 
@@ -737,7 +773,7 @@ sdram sdram
    .ch3_done(),
    .*
 );    
-
+/*verilator tracing_off*/
 // VDP video RAM
 spram #(.addr_width(16),.mem_name("VRA2")) vram_lo
 (
@@ -878,7 +914,7 @@ fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd (
    .sd_blk_cnt(fdd_sd_blk_cnt),
    .sd_rd(fdd_sd_rd),              //TODO napojit ostatní na HPS
    .sd_wr(fdd_sd_wr),              //TODO napojit ostatní na HPS
-   .sd_ack({3'd0, sd_ack[5]}),            //TODO napojit ostatní na HPS
+   .sd_ack({3'd0, sd_ack[5]}),     //TODO napojit ostatní na HPS
    .sd_buff_addr(sd_buff_addr),
    .sd_buff_dout(sd_buff_dout),
    .sd_buff_din(fdd_sd_buff_din), //TODO napojit ostatní na HPS
