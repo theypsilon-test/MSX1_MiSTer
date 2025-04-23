@@ -564,28 +564,35 @@ module memory_upload
                         BLOCK_DEVICE: begin
                             state  <= STATE_SET_LAYOUT;
                             device <= device_t'(conf[3]);
-
-                            if (~io_device[device_t'(conf[3])][0].enable) begin
-                                $display("BLOCK IO_DEVICE[%x][0] enable: 1 param:%x", device_t'(conf[3]), conf[4]);
-                                device_num                              <= 'd0;
-                                io_device[device_t'(conf[3])][0].enable <= 1'b1;
-                                io_device[device_t'(conf[3])][0].param  <= conf[4];
-                            end else if (~io_device[device_t'(conf[3])][1].enable) begin
-                                $display("BLOCK IO_DEVICE[%x][1] enable: 1 param:%x", device_t'(conf[3]), conf[4]);
-                                device_num                        <= 'd1;
-                                io_device[device_t'(conf[3])][1].enable <= 1'b1;
-                                io_device[device_t'(conf[3])][1].param  <= conf[4];
-                            end else if (~io_device[device_t'(conf[3])][2].enable) begin                                    
-                                $display("BLOCK IO_DEVICE[%x][2] enable: 1 param:%x", device_t'(conf[3]), conf[4]);
-                                device_num                        <= 'd2;
-                                io_device[device_t'(conf[3])][2].enable <= 1'b1;
-                                io_device[device_t'(conf[3])][2].param  <= conf[4];
+                            if (device_t'(conf[3]) == DEV_TC8566AF || device_t'(conf[3]) == DEV_WD2793) begin       //FIXED DEVICE ID
+                                device_num <= fw_space ? {1'b0, cart_id} : 'd2;
+                                io_device[device_t'(conf[3])][fw_space ? {1'b0, cart_id} : 'd2].enable <= 1'b1;
+                                io_device[device_t'(conf[3])][fw_space ? {1'b0, cart_id} : 'd2].param  <= conf[4];
+                                $display("BLOCK IO_DEVICE[%x] IS FIXED pos:%x", device_t'(conf[3]), fw_space ? {1'b0, cart_id} : 'd2);
+                                $display("BLOCK IO_DEVICE[%x][%x] enable: 1 param:%x", device_t'(conf[3]), fw_space ? {1'b0, cart_id} : 'd2, conf[4]);
                             end else begin
-                                error                             <= ERR_DEVICE_MISSING;                  // DEVICE JIZ NENI K DISPOZICI
-                                state                             <= STATE_IDLE;
-                                $display("DEVICE %x JIZ NENI K DISPOZICI", device_t'(conf[3]));
-                                device                            <= DEV_NONE;
-                            end                             
+                                if (~io_device[device_t'(conf[3])][0].enable) begin
+                                    $display("BLOCK IO_DEVICE[%x][0] enable: 1 param:%x", device_t'(conf[3]), conf[4]);
+                                    device_num                              <= 'd0;
+                                    io_device[device_t'(conf[3])][0].enable <= 1'b1;
+                                    io_device[device_t'(conf[3])][0].param  <= conf[4];
+                                end else if (~io_device[device_t'(conf[3])][1].enable) begin
+                                    $display("BLOCK IO_DEVICE[%x][1] enable: 1 param:%x", device_t'(conf[3]), conf[4]);
+                                    device_num                        <= 'd1;
+                                    io_device[device_t'(conf[3])][1].enable <= 1'b1;
+                                    io_device[device_t'(conf[3])][1].param  <= conf[4];
+                                end else if (~io_device[device_t'(conf[3])][2].enable) begin                                    
+                                    $display("BLOCK IO_DEVICE[%x][2] enable: 1 param:%x", device_t'(conf[3]), conf[4]);
+                                    device_num                        <= 'd2;
+                                    io_device[device_t'(conf[3])][2].enable <= 1'b1;
+                                    io_device[device_t'(conf[3])][2].param  <= conf[4];
+                                end else begin
+                                    error                             <= ERR_DEVICE_MISSING;                  // DEVICE JIZ NENI K DISPOZICI
+                                    state                             <= STATE_IDLE;
+                                    $display("DEVICE %x JIZ NENI K DISPOZICI", device_t'(conf[3]));
+                                    device                            <= DEV_NONE;
+                                end                             
+                            end
                         end
                         BLOCK_IO_DEVICE: begin
                             $display("BLOCK IO_DEVICE[%d][%d] port:%x mask %x param %x (%d/%d/%d)",
