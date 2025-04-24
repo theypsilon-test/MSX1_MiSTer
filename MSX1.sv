@@ -194,7 +194,7 @@ assign LED_USER  = vsd_sel & sd_act;
 assign LED_DISK  = {1'b1, ~vsd_sel & sd_act};
 assign BUTTONS = 0;
 
-localparam VDNUM = 6;
+localparam VDNUM = 7;
 localparam sysCLK = 21477270;
 
 /*verilator tracing_on*/
@@ -203,7 +203,10 @@ clock_bus_if clock_bus(clk_core, clk_sdram);
 ext_sd_card_if ext_SD_card_bus();
 flash_bus_if flash_bus();
 vram_bus_if vram_bus();
-FDD_if FDD_bus();
+FDD_if FDD_bus[3]();
+block_device_if block_device_FDD[6]();
+block_device_if block_device_SD();
+block_device_if block_device_nvram[4]();
 
 /*verilator tracing_off*/
 MSX::cpu_regs_t    cpu_regs;
@@ -261,10 +264,10 @@ wire             hard_reset;
 //[15]    OCM CPU SPEED
 //[16]    OCM CPU TYPE
 //[20:17] SLOT A CART TYPE
-//21      Reset 
+//21      Reset
 //[23:22] RESERVA
 //[25:24] RESERVA
-//[28:26] RESERVA 
+//[28:26] RESERVA
 //[32:29] SLOT B CART TYPE
 //[34:33] RESERVA
 //[37:35] RESERVA
@@ -272,7 +275,7 @@ wire             hard_reset;
 //[39]    SRAM LOAD
 //[40]    Tape input
 //[41]    BORDER
-`include "build_id.v" 
+`include "build_id.v"
 localparam CONF_STR = {
    "MSX1;",
    "-;",
@@ -293,9 +296,6 @@ localparam CONF_STR = {
    "h6S3,DSK,Mount Drive 1;",
    "h7S4,DSK,Mount Drive 2;",
    "-;",
-   "O[22],WD version,NEW,OLD;",
-   "h8S5,DSK,Mount internal Drive 1;",
-   "h9S6,DSK,Mount internal Drive 2;",
    "SC4,VHD,Load SD card;",
    "h3O[12],Reset after Mount,No,Yes;",
    "H10-;",
@@ -303,7 +303,7 @@ localparam CONF_STR = {
    "H10R[39],SRAM Load;",
    "-;",
    "h3O[11],Internal Mapper,2048KB RAM,4096KB RAM;",
-   
+
    "h3O[15],CPU speed,Normal,Turbo(+F11);",
 	"h3O[16],CPU type,Z80,R800;",
 
@@ -318,10 +318,10 @@ localparam CONF_STR = {
    "P1O[41],Border,No,Yes;",
    "-;",
    "T[21],Reset;",
-   "R[10],Reset & Detach ROM Cartridge;",					
+   "R[10],Reset & Detach ROM Cartridge;",
    "R[21],Reset and close OSD;",
    "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING,Exceeded number of IO_DEVICE,No CRC32 DB,Not find CRC32 in DB;",
-   "V,v",`BUILD_DATE 
+   "V,v",`BUILD_DATE
 };
 /*verilator tracing_on*/
 assign hard_reset = RESET || status[0] || upload_reset;
@@ -336,12 +336,7 @@ assign status_menumask[0] = '0;
 assign status_menumask[1] = ROM_A_load_hide || io_device[DEV_OCM_BOOT][0].enable ;
 assign status_menumask[2] = ROM_B_load_hide || io_device[DEV_OCM_BOOT][0].enable ;
 assign status_menumask[3] = io_device[DEV_OCM_BOOT][0].enable;
-assign status_menumask[4] = msx_config.fdd_slot_A[0];
-assign status_menumask[5] = msx_config.fdd_slot_A[1];
-assign status_menumask[6] = msx_config.fdd_slot_B[0];
-assign status_menumask[7] = msx_config.fdd_slot_B[1];
-assign status_menumask[8] = msx_config.fdd_internal[0];
-assign status_menumask[9] = msx_config.fdd_internal[1];
+assign status_menumask[9:4] = msx_config.fdd[5:0];
 assign status_menumask[10] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
 assign status_menumask[11] = msx_user_config.cas_audio_src == CAS_AUDIO_ADC;
 assign status_menumask[15:12] = '0;
@@ -390,7 +385,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
 /////////////////   CONFIG   /////////////////
 wire [5:0] mapper_A, mapper_B;
 wire       reload, ROM_A_load_hide, ROM_B_load_hide;
-user_config user_config 
+user_config user_config
 (
    .clk(clock_bus.base_mp.clk),
    .reset(reset),
@@ -436,7 +431,7 @@ wire        opcode_out;
 wire [15:0] opcode_PC_start;
 assign joy[0] = joy0[5:0];
 assign joy[1] = joy1[5:0];
-msx #(.sysCLK(sysCLK)) MSX 
+msx #(.sysCLK(sysCLK)) MSX
 (
    .core_reset(reset),
    .core_hard_reset(hard_reset),
@@ -445,6 +440,7 @@ msx #(.sysCLK(sysCLK)) MSX
    .vram_bus(vram_bus),
    .ext_SD_card_bus(ext_SD_card_bus),
    .flash_bus(flash_bus),
+   .FDD_bus(FDD_bus),
    .cpu_regs(cpu_regs),
    .opcode(opcode),
    .opcode_num(opcode_num),
@@ -456,19 +452,6 @@ msx #(.sysCLK(sysCLK)) MSX
    .sram_save(status[38]),
    .sram_load(status[39]),
    .ioctl_addr(ioctl_addr[26:0]),
-   /*
-   .img_mounted(img_mounted[5]),
-   .img_size(img_size[31:0]),
-   .img_readonly(img_readonly),
-   .sd_rd(sd_rd[5]),
-   .sd_wr(sd_wr[5]),
-   .sd_ack(sd_ack[5]),
-   .sd_lba(sd_lba[5]),
-   .sd_buff_addr(sd_buff_addr),
-   .sd_buff_dout(sd_buff_dout),
-   .sd_buff_din(sd_buff_din[5]),
-   .sd_buff_wr(sd_buff_wr),
-   */
    .slot_expander(slot_expander),
    .slot_layout(slot_layout),
    .lookup_RAM(lookup_RAM),
@@ -479,9 +462,6 @@ msx #(.sysCLK(sysCLK)) MSX
    .joy(joy),
    .kb_upload_memory(kb_upload_memory),
    .debug_data_overlay(debug_data_overlay),
-   .sd_bus(sd_bus),
-   .sd_bus_control(sd_bus_control),
-   .image_info(image_info),
    .*
 );
 
@@ -535,15 +515,15 @@ sd_card sd_card
     .clk_sys(clock_bus.base_mp.clk),
     .img_mounted(img_mounted[4]),
     .img_size(img_size),
-    .sd_lba(sd_lba[4]),
-    .sd_rd(sd_rd[4]),
-    .sd_wr(sd_wr[4]),
-    .sd_ack(sd_ack[4]),
-    .sd_buff_addr(sd_buff_addr[8:0]),
-    .sd_buff_dout(sd_buff_dout),
-    .sd_buff_din(sd_buff_din[4]),
-    .sd_buff_wr(sd_buff_wr),
-    
+    .sd_lba(block_device_SD.device_mp.lba),
+    .sd_rd(block_device_SD.device_mp.rd),
+    .sd_wr(block_device_SD.device_mp.wr),
+    .sd_ack(block_device_SD.device_mp.ack),
+    .sd_buff_addr(block_device_SD.device_mp.buff_addr[8:0]),
+    .sd_buff_dout(block_device_SD.device_mp.buff_dout),
+    .sd_buff_din(block_device_SD.device_mp.buff_din),
+    .sd_buff_wr(block_device_SD.device_mp.buff_wr),
+
     .clk_spi(clk_sdram),
     .sdhc(1),
     .sck(sdclk),
@@ -585,13 +565,13 @@ video_mixer #(.GAMMA(1), .LINE_LENGTH(582)) video_mixer
    .hq2x(scale==1),
    .scandoubler(scandoubler),
    .gamma_bus(gamma_bus),
-   
+
    .ce_pix(video_bus.display_mp.ce_pix),
    .R(o_r),
    .G(o_g),
    .B(o_b),
    .HSync(video_bus.display_mp.HS),
-   .VSync(video_bus.display_mp.VS), 
+   .VSync(video_bus.display_mp.VS),
    .HBlank(video_bus.display_mp.hblank),
    .VBlank(video_bus.display_mp.vblank),
 
@@ -748,14 +728,14 @@ sdram sdram
    .init(~locked_sdram),
    .clk(clk_sdram),
    .doRefresh(1'd0),
-   
+
    .ch1_dout(sdram_dout),
    .ch1_din(upload ? upload_ram_din : ram_din),
    .ch1_addr(upload ? upload_ram_addr : ram_addr),
    .ch1_req(upload ? upload_ram_ce : sdram_ce),
    .ch1_rnw(upload ? 1'd0 : ram_rnw),
    .ch1_ready(sdram_ready),
-   
+
    .ch2_dout(),
    .ch2_din(flash_dout),
    .ch2_addr(flash_addr),
@@ -772,7 +752,7 @@ sdram sdram
    .ch3_ready(backup_ram_ready),
    .ch3_done(),
    .*
-);    
+);
 /*verilator tracing_off*/
 // VDP video RAM
 spram #(.addr_width(16),.mem_name("VRA2")) vram_lo
@@ -819,6 +799,7 @@ nvram_backup nvram_backup
    .img_mounted(img_mounted[3:0]),
    .img_readonly(img_readonly),
    .img_size(img_size[31:0]),
+   /*
    .sd_lba(sd_lba[0:3]),
    .sd_rd(sd_rd[3:0]),
    .sd_wr(sd_wr[3:0]),
@@ -827,6 +808,7 @@ nvram_backup nvram_backup
    .sd_buff_addr(sd_buff_addr),
    .sd_buff_din(sd_buff_din[0:3]),
    .sd_buff_dout(sd_buff_dout),
+   */
    .ram_addr(backup_ram_addr),
    .ram_dout(backup_ram_dout),
    .ram_din(backup_ram_din),
@@ -839,18 +821,18 @@ nvram_backup nvram_backup
 wire ioctl_isCAS, buff_mem_ready, motor, CAS_dout, play, rewind;
 logic cas_load = 0;
 always @(posedge clock_bus.base_mp.clk) begin
-   logic ioctl_download_last; 
+   logic ioctl_download_last;
    if (~ioctl_isCAS & ioctl_download_last )  begin
       cas_load <= 1'b1;
    end
-   ioctl_download_last <= ioctl_isCAS;         
+   ioctl_download_last <= ioctl_isCAS;
 end
 
 assign play         = ~motor & cas_load;
 assign ioctl_isCAS  = ioctl_download & (ioctl_index[5:0] == 6'd5);
 assign rewind       = status[9] | ioctl_isCAS | reset;
 
-tape cass 
+tape cass
 (
    .clk(clock_bus.base_mp.clk),
    .ce_5m3(clock_bus.base_mp.ce_5m39_p),
@@ -865,60 +847,69 @@ tape cass
    .enable(cas_load)
 );
 
-
-sd_bus sd_bus();
-sd_bus_control sd_bus_control();
-image_info image_info();
-
-
-assign sd_bus.ack = sd_ack[5];
-assign sd_bus.buff_addr = sd_buff_addr;
-assign sd_bus.buff_data = sd_buff_dout;
-assign sd_bus.buff_wr = sd_buff_wr;
-
-assign image_info.mounted = img_mounted[5];
-assign image_info.size = img_size[31:0];
-assign image_info.readonly = img_readonly;
-assign image_info.enable = status[22];
-
-logic  [3:0] fdd_sd_rd, fdd_sd_wr;
-logic [31:0] fdd_sd_lba[4];
-logic  [5:0] fdd_sd_blk_cnt[4];
-logic  [7:0] fdd_sd_buff_din[4];
-
-assign sd_rd[5]       = status[22] ? sd_bus_control.rd : fdd_sd_rd[0];
-assign sd_wr[5]       = status[22] ? sd_bus_control.wr : fdd_sd_wr[0];
-assign sd_lba[5]      = status[22] ? sd_bus_control.sd_lba : fdd_sd_lba[0];
-assign sd_blk_cnt[5]  = status[22] ? 0 : fdd_sd_blk_cnt[0];
-assign sd_buff_din[5] = status[22] ? sd_bus_control.buff_data : fdd_sd_buff_din[0];
 /*verilator tracing_on*/
-///////////////// FDD EMULATE /////////////////
-fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd (
+
+
+blockDevMux #(.VDNUM(VDNUM)) blockDevMux
+(
    .clk(clock_bus.base_mp.clk),
    .reset(reset),
-   // FDD interface
-   .FDD_bus(FDD_bus),
-   // CONFIGURATION
-   .speed(4'b0000),
-   .mfm(4'b1111),
-   .sides(4'b1111),
-   .sectors('{9,9,9,9}),                // sectors per track
-   .sector_size('{2,2,2,2}),            // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
-   .density('{0,0,0,0}),                // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
-   // IMAGE 
-   .img_mounted({3'd0, img_mounted[5]}),  //TODO napojit ostatní na HPS
-   .img_readonly(img_readonly),
-   .img_size(img_size),
-   // SD block level access
-   .sd_lba(fdd_sd_lba),
-   .sd_blk_cnt(fdd_sd_blk_cnt),
-   .sd_rd(fdd_sd_rd),              //TODO napojit ostatní na HPS
-   .sd_wr(fdd_sd_wr),              //TODO napojit ostatní na HPS
-   .sd_ack({3'd0, sd_ack[5]}),     //TODO napojit ostatní na HPS
+   .msx_config(msx_config),
+   .block_device_FDD(block_device_FDD),
+   .block_device_SD(block_device_SD),
+   .block_device_nvram(block_device_nvram),
+   .sd_rd(sd_rd),
+   .sd_wr(sd_wr),
+   .sd_ack(sd_ack),
+   .sd_lba(sd_lba),
+   .sd_blk_cnt(sd_blk_cnt),
+   .sd_buff_din(sd_buff_din),
    .sd_buff_addr(sd_buff_addr),
    .sd_buff_dout(sd_buff_dout),
-   .sd_buff_din(fdd_sd_buff_din), //TODO napojit ostatní na HPS
-   .sd_buff_wr(sd_buff_wr)
-);  
-/*verilator tracing_off*/    
+   .sd_buff_wr(sd_buff_wr),
+   .img_mounted(img_mounted),
+   .img_size(img_size),
+   .img_readonly(img_readonly)
+);
+///////////////// FDD EMULATE /////////////////
+fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd0 (
+   .clk(clock_bus.base_mp.clk),
+   .reset(reset),
+   .FDD_bus(FDD_bus[0]),
+   .block_device(block_device_FDD[0:1]),
+   // CONFIGURATION
+   .speed(2'b00),
+   .mfm(2'b11),
+   .sides(2'b11),
+   .sectors('{9,9}),                // sectors per track
+   .sector_size('{2,2}),            // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
+   .density('{0,0})                // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
+);
+fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd1 (
+   .clk(clock_bus.base_mp.clk),
+   .reset(reset),
+   .FDD_bus(FDD_bus[1]),
+   .block_device(block_device_FDD[2:3]),
+   // CONFIGURATION
+   .speed(2'b00),
+   .mfm(2'b11),
+   .sides(2'b11),
+   .sectors('{9,9}),                // sectors per track
+   .sector_size('{2,2}),            // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
+   .density('{0,0})                // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
+);
+fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd2 (
+   .clk(clock_bus.base_mp.clk),
+   .reset(reset),
+   .FDD_bus(FDD_bus[2]),
+   .block_device(block_device_FDD[4:5]),
+   // CONFIGURATION
+   .speed(2'b00),
+   .mfm(2'b11),
+   .sides(2'b11),
+   .sectors('{9,9}),                // sectors per track
+   .sector_size('{2,2}),            // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
+   .density('{0,0})                // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
+);
+/*verilator tracing_off*/
 endmodule

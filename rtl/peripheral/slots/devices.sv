@@ -40,12 +40,9 @@ module devices  #(parameter sysCLK)
     clock_bus_if.base_mp    clock_bus,                              // Clock interface
     cpu_bus_if.device_mp    cpu_bus,                                // CPU bus interface
     device_bus              device_bus,                             // Device control bus interface
-    sd_bus                  sd_bus,                                 // SD bus interface
-    sd_bus_control          sd_bus_control,                         // SD bus control interface
-    FDD_if.FDC_mp            FDD_bus,
+    FDD_if.FDC_mp           FDD_bus[3],
     video_bus_if.device_mp  video_bus,
     vram_bus_if.device_mp   vram_bus,
-    image_info              image_info,                             // Image information
     input MSX::io_device_t  io_device[16][3],                       // Array of IO devices
     input MSX::io_device_mem_ref_t io_memory[8],                    // Array of memory references
     input MSX::kb_memory_t  kb_upload_memory,
@@ -80,8 +77,8 @@ module devices  #(parameter sysCLK)
 
     // Výstupy kombinující jednotlivé zařízení
     assign sound = opl3_sound + scc_sound + psg_sound;
-    assign data = scc_data & wd2793_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data & ocm_data & reset_status_data;
-    assign data_oe_rq = wd2793_data_oe_rq;
+    assign data = scc_data & fdc_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data & ocm_data & reset_status_data;// & TC8566AF_data;
+    assign data_oe_rq = fdc_data_oe_rq;// | TC8566AF_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
 
     assign reset_request = ocm_reset_request;
@@ -155,20 +152,16 @@ module devices  #(parameter sysCLK)
         .data_to_mapper(latch_port_data_to_mapper)
     );
 
-    wire [7:0] wd2793_data;
-    wire wd2793_data_oe_rq;
-    dev_WD2793 #(.sysCLK(sysCLK)) WD2793 (
+    wire [7:0] fdc_data;
+    wire       fdc_data_oe_rq;
+    dev_FDC #(.sysCLK(sysCLK)) FDC (
         .cpu_bus(cpu_bus),
-        .clock_bus(clock_bus),
         .device_bus(device_bus),
-        .io_device(io_device[DEV_WD2793]),
+        .io_device(io_device),
         .FDD_bus(FDD_bus),
-        .sd_bus(sd_bus),
-        .sd_bus_control(sd_bus_control),
-        .image_info(image_info),
-        .data(wd2793_data),
-        .data_oe_rq(wd2793_data_oe_rq)
-    );
+        .data(fdc_data),
+        .data_oe_rq(fdc_data_oe_rq)
+    );    
 
     wire [26:0] kanji_ram_addr;
     wire        kanji_ram_cs;

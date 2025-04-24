@@ -51,11 +51,8 @@
    //KBD
    input MSX::kb_memory_t   kb_upload_memory,
    //SD FDC
-   FDD_if.FDC_mp            FDD_bus,
-   sd_bus                  sd_bus,                                 // SD bus interface
-   sd_bus_control          sd_bus_control,                         // SD bus control interface
-   image_info              image_info,                             // Image information
-
+   FDD_if.FDC_mp           FDD_bus[3],
+   
    /*
    input                    img_mounted,
    input             [31:0] img_size,
@@ -72,8 +69,6 @@
 
 device_bus device_bus();
 cpu_bus_if cpu_bus(clock_bus.clk, reset);
-//sd_bus sd_bus();
-//sd_bus_control sd_bus_control();
 
 //  -----------------------------------------------------------------------------
 //  -- reset
@@ -194,24 +189,8 @@ assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
 
 wire signed [15:0] device_sound;
 
-assign sd_bus.ack = sd_ack;
-assign sd_bus.buff_addr = sd_buff_addr;
-assign sd_bus.buff_data = sd_buff_dout;
-assign sd_bus.buff_wr = sd_buff_wr;
-
-assign sd_rd  = sd_bus_control.rd;
-assign sd_wr  = sd_bus_control.wr;
-assign sd_lba = sd_bus_control.sd_lba;
-assign sd_buff_din = sd_bus_control.buff_data;
-
 assign ram_addr = slots_ram_addr & device_ram_addr;
 assign sdram_ce = slots_ram_ce   | device_ram_ce;
-
-//image_info image_info();
-
-//assign image_info.mounted = img_mounted;
-//assign image_info.size = img_size;
-//assign image_info.readonly = img_readonly;
 
 wire  [7:0] device_data;
 wire  [7:0] data_to_mapper;
@@ -229,9 +208,6 @@ devices #(.sysCLK(sysCLK)) devices
    .clock_bus(clock_bus),
    .cpu_bus(cpu_bus),
    .device_bus(device_bus),
-   .sd_bus(sd_bus),
-   .sd_bus_control(sd_bus_control),
-   .image_info(image_info),
    .FDD_bus(FDD_bus),
    .io_device(io_device),
    .io_memory(io_memory),

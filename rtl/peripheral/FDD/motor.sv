@@ -2,9 +2,9 @@ module motor #(parameter TIMEOUTms = 30000, DELAYms = 3) (
     input  logic        clk,
     input  logic        msclk,  // 1ms clock
     input  logic        reset,
-    input  logic  [1:0] USEL,
+    input  logic        USEL,
     input  logic        MOTORn,
-    output logic  [3:0] motor_run
+    output logic  [1:0] motor_run
 );
 
     logic [15:0] motor_timeout[3:0];  // Použití logického typu místo int
@@ -12,7 +12,7 @@ module motor #(parameter TIMEOUTms = 30000, DELAYms = 3) (
 
     genvar i;
     generate
-        for (i = 0; i < 4; i++) begin : MOTOR_I
+        for (i = 0; i < 2; i++) begin : MOTOR_I
             always_ff @(posedge clk or posedge reset) begin
                 if (reset) begin
                     motor_timeout[i] <= 0;

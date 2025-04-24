@@ -280,9 +280,7 @@ module memory_upload
                         msx_config.cpu           <= Z80;
                         msx_config.wait_count    <= 3'd1;
                         msx_config.cpu_clock_sel <= '0;
-                        msx_config.fdd_internal  <= '0;
-                        msx_config.fdd_slot_A    <= '0;
-                        msx_config.fdd_slot_B    <= '0;
+                        msx_config.fdd           <= '0;
                         if (ioctl_size[1] > 0) begin
                             state      <= STATE_READ_CONF;
                             next_state <= STATE_CHECK_FW_CONF;
@@ -721,14 +719,14 @@ module memory_upload
                     if (device == DEV_TC8566AF || device == DEV_WD2793) begin
                         if (fw_space) begin
                             if (cart_id) begin
-                                msx_config.fdd_slot_B <= conf[4][7:6];
-                                $display("Change FDD layout. Slot B: %x ", conf[4][7:6]);
+                                msx_config.fdd[3:2] <= conf[4][7:6];
+                                $display("Change FDD layout. Slot %d: %x ", cart_id, conf[4][7:6]);
                             end else begin
-                                msx_config.fdd_slot_A <= conf[4][7:6];
-                                $display("Change FDD layout. Slot A: %x ", conf[4][7:6]);
+                                msx_config.fdd[1:0] <= conf[4][7:6];
+                                $display("Change FDD layout. Internal: %x) ", conf[4][7:6]);
                             end
                         end else begin
-                            msx_config.fdd_internal  <= conf[4][7:6];
+                            msx_config.fdd[5:4] <= conf[4][7:6];
                             $display("Change FDD layout. Internal: %x) ", conf[4][7:6]);
                         end
                     end

@@ -88,6 +88,7 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
         if block['device'] in constants['device']:
             param_dev = block.get('device_param', 0)
             device_id = constants['device'][block['device']]
+            param_dev = 0
             parameter = 0
             if block['device'] == 'WD2793' :
                 fdd_count = convert_to_int(element.attrib.get('fdd_count','1'))
@@ -97,11 +98,11 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
 
                 style = element.attrib.get('style','Philips')
                 if style == "Philips" :
-                    parameter = 0x0
+                    param_dev = 0x0
                 elif style == "National" :
-                    parameter = 0x1
+                    param_dev = 0x1
 
-                parameter |= 0x80 if fdd_count == 2 else 0x40
+                param_dev |= 0xC0 if fdd_count == 2 else 0x40
 
             result.append(create_block_entry(constants, 'DEVICE', address, param1=device_id, param2 = param_dev, param3=parameter))
             if device_port is not None:

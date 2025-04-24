@@ -4,41 +4,33 @@ module track_buffer
     input  logic        reset,
     
     input  logic  [6:0] track,
-    input  logic  [1:0] USEL,
+    input  logic        USEL,
     input  logic        side,
     
     input  logic [12:0] buffer_addr,
     output logic  [7:0] buffer_q,
     output logic        ready,
-     
+    
+    block_device_if.device_mp block_device[2],
+    
     //Image info
     input  logic        disk_mounted,
     input  logic        disk_readonly,
-    input  logic        disk_sides,
-
-    //SD block level access
-    output logic [31:0] sd_lba[0:3],
-    output logic  [5:0] sd_blk_cnt[0:3],
-    output logic  [3:0] sd_rd,
-    output logic  [3:0] sd_wr,
-    input  logic  [3:0] sd_ack,
-   
-    // SD byte level access. Signals for 2-PORT altsyncram.
-    input  logic [13:0] sd_buff_addr,
-    input  logic  [7:0] sd_buff_dout,
-    output logic  [7:0] sd_buff_din[0:3],
-    input  logic        sd_buff_wr
+    input  logic        disk_sides
 );
 
     logic [6:0] reg_track;
-    logic [1:0] reg_USEL;
+    logic       reg_USEL;
     logic       reg_side;
 
     logic       load;
+    logic       sd_ack;
 
-    wire changed = {reg_track, reg_USEL, reg_side} != {track,  USEL, side}; 
+    wire changed = {reg_track, reg_USEL, reg_side} != {track, USEL, side};
     
-    assign ready = !changed && !load && !load_busy && disk_mounted;
+    
+    assign sd_ack = reg_USEL ? block_device[1].ack : block_device[0].ack;
+    assign ready  = !changed && !load && !load_busy && disk_mounted;
 
     always_ff @(posedge clk) begin
         if (reset) begin
@@ -46,7 +38,7 @@ module track_buffer
         end else begin
             
             if (!load_busy && changed) load <= 1;
-            if (load_busy && sd_ack[reg_USEL]) load <= 0;
+            if (load_busy && sd_ack) load <= 0;
         end       
     end
 
@@ -60,37 +52,41 @@ module track_buffer
             if (!load_busy && load && disk_mounted) begin
                 {reg_track, reg_USEL, reg_side} <= {track,  USEL, side};
                 load_busy <= 1;
-                sd_lba[USEL] <=  (track * (disk_sides ? 18 : 9)) + (side == 1'b1 ? 9 : 0);
-                sd_blk_cnt[USEL] <= 8 ;
-                sd_rd[USEL] <= 1;
+                if (USEL) begin
+                    $display("LOAD Track USEL 1  %t",  $time);
+                    block_device[1].lba <=  (track * (disk_sides ? 18 : 9)) + (side == 1'b1 ? 9 : 0);
+                    block_device[1].blk_cnt <= 8 ;
+                    block_device[1].rd <= 1;
+                end else begin
+                    $display("Load Track USEL 0  %t",  $time);
+                    block_device[0].lba <=  (track * (disk_sides ? 18 : 9)) + (side == 1'b1 ? 9 : 0);
+                    block_device[0].blk_cnt <= 8 ;
+                    block_device[0].rd <= 1;
+                end
             end
-            if (sd_rd[reg_USEL] && sd_ack[reg_USEL] && load_busy) begin
-                sd_rd[reg_USEL] <= 0;
-            end
-            if (!load && !sd_ack[reg_USEL] ) begin
-                load_busy <= 0;
-            end
+
+            if (~reg_USEL && block_device[0].rd && block_device[0].ack && load_busy) block_device[0].rd <= 0;
+            
+            if (reg_USEL && block_device[1].rd && block_device[1].ack && load_busy) block_device[1].rd <= 0;
+            
+            if (!load && !sd_ack ) load_busy <= 0;
         end
     end
 
     logic [7:0] dpram_sd_buff_din;
-    
-    //assign sd_buff_din[reg_USEL] = dpram_sd_buff_din;
-
     always_ff @(posedge clk) begin
-        case (reg_USEL)
-            2'b00: sd_buff_din[0] <= dpram_sd_buff_din;
-            2'b01: sd_buff_din[1] <= dpram_sd_buff_din;
-            2'b10: sd_buff_din[2] <= dpram_sd_buff_din;
-            2'b11: sd_buff_din[3] <= dpram_sd_buff_din;
-        endcase
+        if (reg_USEL) begin
+            block_device[1].buff_din <= dpram_sd_buff_din;
+        end else begin
+            block_device[0].buff_din <= dpram_sd_buff_din;
+        end
     end
 
     track_dpram track_dpram (
         .clock(clk),
-        .address_a(sd_buff_addr[12:0]),
-        .data_a(sd_buff_dout),
-        .wren_a(sd_buff_wr),
+        .address_a(reg_USEL ? block_device[1].buff_addr[12:0] : block_device[0].buff_addr[12:0]),
+        .data_a(reg_USEL ? block_device[1].buff_dout : block_device[0].buff_dout),
+        .wren_a(reg_USEL ? block_device[1].buff_wr : block_device[0].buff_wr),
         .q_a(dpram_sd_buff_din),
 
         .address_b(buffer_addr),

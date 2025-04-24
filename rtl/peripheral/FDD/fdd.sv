@@ -1,33 +1,16 @@
 module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
 (
-    input  logic            clk,
-    input  logic            reset,
-    FDD_if.FDD_mp           FDD_bus,
-
+    input  logic              clk,
+    input  logic              reset,
+    FDD_if.FDD_mp             FDD_bus,
+    block_device_if.device_mp block_device[2],
     //device config
-    input logic       [3:0] speed,          // 0 - 300rpm / 1 - 360rpm
-    input logic       [3:0] mfm,            // 0 - FM     / 1 - MFM
-    input logic       [3:0] sides,          // 0 - SS     / 1 - DS
-    input logic       [1:0] density[4],     // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
-    input logic       [5:0] sectors[4],     // sectors per track
-    input logic       [1:0] sector_size[4], // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
-    //hps image
-    input logic       [3:0] img_mounted,
-    input logic             img_readonly,
-    input logic      [63:0] img_size,
-
-    //SD block level access
-    output logic     [31:0] sd_lba[0:3],
-    output logic      [5:0] sd_blk_cnt[0:3],
-    output logic      [3:0] sd_rd,
-    output logic      [3:0] sd_wr,
-    input  logic      [3:0] sd_ack,
-   
-    // SD byte level access. Signals for 2-PORT altsyncram.
-    input  logic     [13:0] sd_buff_addr,
-    input  logic      [7:0] sd_buff_dout,
-    output logic      [7:0] sd_buff_din[0:3],
-    input  logic            sd_buff_wr     
+    input logic         [1:0] speed,          // 0 - 300rpm / 1 - 360rpm
+    input logic         [1:0] mfm,            // 0 - FM     / 1 - MFM
+    input logic         [1:0] sides,          // 0 - SS     / 1 - DS
+    input logic         [1:0] density[2],     // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
+    input logic         [5:0] sectors[2],     // sectors per track
+    input logic         [1:0] sector_size[2]  // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
 );
 
     
@@ -93,7 +76,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
         floppy_sides        = sides[FDD_bus.USEL];
     end
 
-    logic [3:0] motor_run;         // Stav motoru
+    logic [1:0] motor_run;         // Stav motoru
 
     motor #(.TIMEOUTms(30000), .DELAYms(3)) FDD_motor(
         .clk(clk),
@@ -113,9 +96,9 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
         .READYn(FDD_bus.READYn),
         .WPROTn(FDD_bus.WPROTn),
         .sides(/*sides*/),
-        .img_mounted(img_mounted),
-        .img_readonly(img_readonly),
-        .img_size(img_size)
+        .img_mounted({block_device[1].img_mounted, block_device[0].img_mounted}),
+        .img_readonly({block_device[1].img_readonly, block_device[0].img_readonly}),
+        .img_size('{block_device[0].img_size, block_device[1].img_size})
     );
 
     logic  [6:0] track;
@@ -135,23 +118,14 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
         .SIDEn(FDD_bus.SIDEn),
         
         .track(track),
+        .block_device(block_device),
         .disk_mounted(~FDD_bus.READYn),
         .disk_readonly(~FDD_bus.WPROTn),
         .disk_sides(floppy_sides),
 
         .track_ready(track_ready),
         .buffer_addr(buffer_addr),
-        .buffer_q(buffer_q),
-
-        .sd_lba(sd_lba),
-        .sd_blk_cnt(sd_blk_cnt),
-        .sd_rd(sd_rd),
-        .sd_wr(sd_wr),
-        .sd_ack(sd_ack),
-        .sd_buff_addr(sd_buff_addr),
-        .sd_buff_dout(sd_buff_dout),
-        .sd_buff_din(sd_buff_din),
-        .sd_buff_wr(sd_buff_wr)
+        .buffer_q(buffer_q)
     );
 
     transmit #(.sysCLK(sysCLK)) FDD_transmit(

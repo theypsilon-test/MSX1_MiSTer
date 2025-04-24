@@ -73,8 +73,53 @@ interface clock_bus_if(
 
 endinterface
 
+interface block_device_if;
+   wire        rd;
+   wire        wr;
+   wire        ack;
+   wire [31:0] lba;
+   wire  [5:0] blk_cnt;
+   wire  [7:0] buff_din;
+   wire  [7:0] buff_dout;
+   wire [13:0] buff_addr;
+   wire        buff_wr;
+   wire        img_mounted;
+   wire [63:0] img_size;
+   wire        img_readonly;
+
+   modport hps_mp (
+        input   rd,
+        input   wr,
+        output  ack,
+        input   lba,
+        input   blk_cnt,
+        input   buff_din,
+        output  buff_dout,
+        output  buff_addr,
+        output  buff_wr,
+        output  img_mounted,
+        output  img_size,
+        output  img_readonly
+   );
+   modport device_mp (
+        output  rd,
+        output  wr,
+        input   ack,
+        output  lba,
+        output  blk_cnt,
+        output  buff_din,
+        input   buff_dout,
+        input   buff_addr,
+        input   buff_wr,
+        input   img_mounted,
+        input   img_size,
+        input   img_readonly
+   );
+endinterface
+
+
 interface FDD_if();
-    wire [1:0] USEL;
+    wire       USEL;
     wire       MOTORn;
     wire       READYn;
     wire       STEPn;
@@ -301,13 +346,6 @@ interface sd_bus_control;
    logic   [7:0] buff_data;
 endinterface
 
-interface image_info;
-    logic        mounted;
-    logic [31:0] size;
-    logic        readonly;
-    logic        enable;
-endinterface
-
 package MSX;
     
     typedef struct {
@@ -397,9 +435,7 @@ package MSX;
         cpu_t cpu;
         logic [2:0] wait_count;
         logic [2:0] cpu_clock_sel;
-        logic [1:0] fdd_internal; 
-        logic [1:0] fdd_slot_A;
-        logic [1:0] fdd_slot_B;
+        logic [5:0] fdd; 
     } msx_config_t;
 
 endpackage

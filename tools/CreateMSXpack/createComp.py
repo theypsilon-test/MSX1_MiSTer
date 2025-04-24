@@ -310,7 +310,7 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
                             fdd_count = 1
                     
                     if fdd_count == 2:
-                        parameter = 0x80        # 0x80 = 2 drive
+                        parameter = 0xC0        # 0x80 = 2 drive
                     else:
                         parameter = 0x40        # 0x40 = 1 drive
                 
