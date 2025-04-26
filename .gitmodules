@@ -1,0 +1,6 @@
+[submodule "rtl/sound/ikaopll"]
+	path = rtl/sound/ikaopll
+	url = https://github.com/ika-musume/IKAOPLL.git
+[submodule "rtl/sound/ikaopm"]
+	path = rtl/sound/ikaopm
+	url = https://github.com/ika-musume/IKAOPM.git
