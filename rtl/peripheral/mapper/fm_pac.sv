@@ -70,7 +70,7 @@ module mapper_fm_pac (
     assign out.rnw      = ~(out.sram_cs && cpu_bus.wr);
     assign out.addr     = cs ? (out.sram_cs ? sram_addr : ram_addr) : {27{1'b1}};
 
-    assign device_out.typ = cs ? DEV_OPL3 : DEV_NONE;
+    assign device_out.typ = cs ? DEV_OPLL : DEV_NONE;
     assign device_out.we  = cs && opll_wr;
     assign device_out.en  = cs && enable[block_info.id][0];
 

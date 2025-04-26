@@ -9,7 +9,7 @@
   <device mask="0xF8" port="0xA8" param="0x0">PPI</device> <!-- param bit 0 OCM config -->
   <device mask="0xFE" port="0xB4">RTC</device> <!-- param ???? -->
   <device mask="0xFE" port="0xD8" ROM_SHA1="84a645becec0a25d3ab7a909cde1b242699a8662">KANJI</device>
-  <device mask="0xFE" port="0x7C">OPL3</device>
+  <device mask="0xFE" port="0x7C">OPLL</device>
   <device mask="0xFF" port="0xF4" param="0x1">RESET_STATUS</device>  <!-- param bit 0 inverted -->
     <primary slot="0">
     <secondary slot="0">

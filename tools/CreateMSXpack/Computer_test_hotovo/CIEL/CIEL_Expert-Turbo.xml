@@ -25,7 +25,7 @@
        <memory SHA1="c5bfa85f7315fb11928b27a721a908c93b7d3fbf" filename="ExpertTurbo_fmbasic.rom" skip="16384" size="16384">ROM</memory>
        <!-- <memory SHA1="befebc916bfdb5e8057040f0ae82b5517a7750db" filename="ExpertTurbo_msx2psub.rom">ROM</memory> -->
        <mapper>FMPAC</mapper>
-       <device mask="0xFE" port="0x7C">OPL3</device>
+       <device mask="0xFE" port="0x7C">OPLL</device>
       </block>
     </secondary>
   </primary>

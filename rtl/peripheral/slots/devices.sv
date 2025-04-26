@@ -76,7 +76,7 @@ module devices  #(parameter sysCLK)
     vram_bus_if             vram_bus_v99();
 
     // Výstupy kombinující jednotlivé zařízení
-    assign sound = opl3_sound + scc_sound + psg_sound;
+    assign sound = opll_sound + scc_sound + psg_sound;
     assign data = scc_data & fdc_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data & ocm_data & reset_status_data;// & TC8566AF_data;
     assign data_oe_rq = fdc_data_oe_rq;// | TC8566AF_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
@@ -113,13 +113,13 @@ module devices  #(parameter sysCLK)
     //MSX2 memory limiter
     
     // Definice instancí zařízení s výstupy pro propojení
-    wire signed [15:0] opl3_sound;
-    dev_opl3 opl3 (
+    wire signed [15:0] opll_sound;
+    dev_opll opll (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
         .clock_bus(clock_bus),
-        .io_device(io_device[DEV_OPL3]),
-        .sound(opl3_sound)
+        .io_device(io_device[DEV_OPLL]),
+        .sound(opll_sound)
     );
 
     wire [7:0] scc_data;

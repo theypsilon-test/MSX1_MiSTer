@@ -132,7 +132,7 @@
       <filename>FM_PAC_EN.ROM</filename>
       <SHA1>6996489fcec52934b8beed87643cc33d02ecc301</SHA1>
       <mapper>FMPAC</mapper>
-      <device mask="0xFE" port="0x7C">OPL3</device>
+      <device mask="0xFE" port="0x7C">OPLL</device>
       <sram>8192</sram>
     </block>
   </fw>

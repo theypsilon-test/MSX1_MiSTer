@@ -1,6 +1,6 @@
 {
   "NONE": 0,
-  "OPL3": 1,
+  "OPLL": 1,
   "SCC": 2,
   "WD2793": 3,
   "MEM_MAPPER": 4,
