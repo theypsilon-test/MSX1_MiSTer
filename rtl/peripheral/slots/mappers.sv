@@ -20,6 +20,7 @@ module mappers (
     mapper_out ascii16_out();           // Outputs from ASCII16 mapper
     mapper_out offset_out();            // Outputs from OFFSET mapper
     mapper_out fm_pac_out();            // Outputs from FM-PAC mapper
+    mapper_out yamaha_sfg_out();        // Outputs from Yamaha SFG mapper
     mapper_out konami_out();            // Outputs from KONAMI mapper
     mapper_out konami_SCC_out();        // Outputs from KONAMI SCC mapper
     mapper_out gm2_out();               // Outputs from Konami GameMaster mapper
@@ -35,6 +36,7 @@ module mappers (
     mapper_out national_out();          // Outputs from NATIONAL mapper
     mapper_out mega_ram_out();          // Outputs from MegaRam mapper
     device_bus fm_pac_device_out();     // Device bus output for FM-PAC mapper
+    device_bus yamaha_sfg_device_out(); // Device bus output for Yamaha SFG mapper
     device_bus konami_SCC_device_out(); // Device bus output for SCC mapper
     device_bus mfrsd_device_out();      // Device bus output for MFRSD1 mapper
     device_bus mega_ram_device_out();   // Device bus output for Megaram mapper
@@ -93,6 +95,14 @@ module mappers (
         .block_info(block_info),
         .out(fm_pac_out),
         .device_out(fm_pac_device_out)
+    );
+
+    // Instantiate the Yamaha SFG mapper
+    mapper_yamaha_sfg yamaha_sfg (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(yamaha_sfg_out),
+        .device_out(yamaha_sfg_device_out)
     );
     
     // Instantiate the Konami Gamemaster2 mapper
@@ -200,7 +210,8 @@ module mappers (
     assign memory_bus.addr  = ascii8_out.addr 
                             & ascii16_out.addr 
                             & offset_out.addr 
-                            & fm_pac_out.addr 
+                            & fm_pac_out.addr
+                            & yamaha_sfg_out.addr
                             & konami_out.addr 
                             & gm2_out.addr 
                             & konami_SCC_out.addr 
@@ -231,7 +242,8 @@ module mappers (
     assign memory_bus.ram_cs    = ascii8_out.ram_cs 
                                 | ascii16_out.ram_cs 
                                 | offset_out.ram_cs 
-                                | fm_pac_out.ram_cs 
+                                | fm_pac_out.ram_cs
+                                | yamaha_sfg_out.ram_cs
                                 | konami_out.ram_cs 
                                 | gm2_out.ram_cs 
                                 | konami_SCC_out.ram_cs 
@@ -256,8 +268,8 @@ module mappers (
     // Device control signals: Use the FM-PAC mapper's control signals
     assign device_bus.typ   = cpu_bus.mreq ? block_info.device : DEV_NONE;
     
-    assign device_bus.we    = fm_pac_device_out.we;
-    assign device_bus.en    = fm_pac_device_out.en | konami_SCC_device_out.en | mfrsd_device_out.en | mega_ram_device_out.en;
+    assign device_bus.we    = fm_pac_device_out.we | yamaha_sfg_device_out.we;
+    assign device_bus.en    = fm_pac_device_out.en | yamaha_sfg_device_out.en | konami_SCC_device_out.en | mfrsd_device_out.en | mega_ram_device_out.en;
     assign device_bus.mode  = konami_SCC_device_out.mode & mfrsd_device_out.mode;
     assign device_bus.param = konami_SCC_device_out.param & mfrsd_device_out.param;
 

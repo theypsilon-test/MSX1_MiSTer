@@ -5,6 +5,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) k
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) msx2_ram.sv                        ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) gamemaster2.sv                     ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) fm_pac.sv                          ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) yamaha_sfg.sv                      ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) offset.sv                          ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) crossBlaim.sv                      ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) generic16k.sv                      ]

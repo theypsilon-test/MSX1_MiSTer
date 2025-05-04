@@ -49,7 +49,8 @@ module devices  #(parameter sysCLK)
     input MSX::user_config_t msx_user_config,
     input            [10:0] ps2_key,
     input            [64:0] rtc_time,
-    output    signed [15:0] sound,                                  // Combined audio output
+    output    signed [15:0] sound_L,                                // Combined audio output
+    output    signed [15:0] sound_R,                                // Combined audio output
     output            [7:0] data,                                   // Combined data output
     output                  data_oe_rq,                             // Priorite data
     output            [7:0] data_to_mapper,                         // Data output to mapper
@@ -76,8 +77,9 @@ module devices  #(parameter sysCLK)
     vram_bus_if             vram_bus_v99();
 
     // Výstupy kombinující jednotlivé zařízení
-    assign sound = opll_sound + scc_sound + psg_sound;
-    assign data = scc_data & fdc_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data & ocm_data & reset_status_data;// & TC8566AF_data;
+    assign sound_L = opll_sound + scc_sound + psg_sound + opm_sound_L;
+    assign sound_R = opll_sound + scc_sound + psg_sound + opm_sound_R;
+    assign data = scc_data & fdc_data & msx2_ram_data & tms_data & v99_data & rtc_data & psg_data & ppi_data & ocm_data & reset_status_data & opm_data;// & TC8566AF_data;
     assign data_oe_rq = fdc_data_oe_rq;// | TC8566AF_data_oe_rq;
     assign data_to_mapper = msx2_ram_data_to_mapper & latch_port_data_to_mapper;
 
@@ -88,7 +90,7 @@ module devices  #(parameter sysCLK)
     assign ram_addr = kanji_ram_addr & ocm_ram_addr;
 
     // VIDEO interfaces
-    assign cpu_interrupt     = tms_interrupt | v99_interrupt;
+    assign cpu_interrupt     = tms_interrupt | v99_interrupt | opm_irq;
 
     assign video_bus.R       = video_bus_tms.R              | video_bus_v99.R;          // default black 
     assign video_bus.G       = video_bus_tms.G              | video_bus_v99.G;          // default black
@@ -120,6 +122,20 @@ module devices  #(parameter sysCLK)
         .clock_bus(clock_bus),
         .io_device(io_device[DEV_OPLL]),
         .sound(opll_sound)
+    );
+    
+    wire signed [15:0] opm_sound_L, opm_sound_R;
+    wire         [7:0] opm_data;
+    wire               opm_irq;
+    dev_opm opm (
+        .cpu_bus(cpu_bus),
+        .device_bus(device_bus),
+        .clock_bus(clock_bus),
+        .io_device(io_device[DEV_OPM]),
+        .irq(opm_irq),
+        .data(opm_data),
+        .sound_L(opm_sound_L),
+        .sound_R(opm_sound_R)
     );
 
     wire [7:0] scc_data;

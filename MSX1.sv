@@ -185,8 +185,8 @@ assign HDMI_FREEZE = 0;
 assign HDMI_BLACKOUT = 0;
 
 assign AUDIO_S = 1;
-assign AUDIO_L = audio;
-assign AUDIO_R = audio;
+assign AUDIO_L = audio_L;
+assign AUDIO_R = audio_R;
 assign AUDIO_MIX = 0;
 
 assign LED_POWER = 0;
@@ -418,7 +418,7 @@ clock #(.sysCLK(sysCLK)) clock
 
 ///////////////// Computer /////////////////
 wire  [7:0] R, G, B, cpu_din, cpu_dout;
-wire [15:0] cpu_addr, audio;
+wire [15:0] cpu_addr, audio_L, audio_R;
 wire        cpu_wr, cpu_rd, cpu_mreq, cpu_iorq, cpu_m1;
 wire [26:0] ram_addr;
 wire  [7:0] ram_din, ram_dout;

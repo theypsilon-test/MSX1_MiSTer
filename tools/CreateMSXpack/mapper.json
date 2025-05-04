@@ -25,5 +25,10 @@
   "MFRSD0" : 23,
   "NATIONAL" : 24,
   "ESE_RAM" : 25,
-  "MEGARAM" : 26
+  "MEGARAM" : 26,
+  "MEGASCC" : 27,
+  "MEGAASCII8" : 28,
+  "MEGAASCII16" : 29,
+  "TURBO_R_FDC" : 30,
+  "YAMAHA_SFG" : 31
 }

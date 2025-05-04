@@ -18,7 +18,8 @@
    output                   opcode_out,
    output logic [15:0]      opcode_PC_start,
    //I/O
-   output            [15:0] audio,
+   output            [15:0] audio_L,
+   output            [15:0] audio_R,
    input             [10:0] ps2_key,
    input              [5:0] joy[2],
    //Cassete
@@ -81,12 +82,15 @@ cpu_bus_if cpu_bus(clock_bus.clk, reset);
 //  -----------------------------------------------------------------------------
 //  -- Audio MIX
 //  -----------------------------------------------------------------------------
-wire [15:0] compr[7:0];
+wire [15:0] compr_L[7:0], compr_R[7:0];
 wire  [9:0] sysAudio    = {4'b0, keybeep,5'b00000} + {5'b0, (tape_in & ~tape_motor_on),4'b0000};
 wire [16:0] fm          = {3'b00, sysAudio, 4'b0000};
-wire [16:0] audio_mix   = {device_sound[15], device_sound} + fm;
-assign compr            = '{ {1'b1, audio_mix[13:0], 1'b0}, 16'h8000, 16'h8000, 16'h8000, 16'h7FFF, 16'h7FFF, 16'h7FFF,  {1'b0, audio_mix[13:0], 1'b0}};
-assign audio            = compr[audio_mix[16:14]];
+wire [16:0] audio_mix_L   = {device_sound_L[15], device_sound_L} + fm;
+wire [16:0] audio_mix_R   = {device_sound_R[15], device_sound_R} + fm;
+assign compr_L            = '{ {1'b1, audio_mix_L[13:0], 1'b0}, 16'h8000, 16'h8000, 16'h8000, 16'h7FFF, 16'h7FFF, 16'h7FFF,  {1'b0, audio_mix_L[13:0], 1'b0}};
+assign compr_R            = '{ {1'b1, audio_mix_R[13:0], 1'b0}, 16'h8000, 16'h8000, 16'h8000, 16'h7FFF, 16'h7FFF, 16'h7FFF,  {1'b0, audio_mix_R[13:0], 1'b0}};
+assign audio_L            = compr_L[audio_mix_L[16:14]];
+assign audio_R            = compr_R[audio_mix_R[16:14]];
 
 //  -----------------------------------------------------------------------------
 //  -- T80 CPU
@@ -187,7 +191,7 @@ assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
                   slot_oe_rq              ? d_from_slots    :                       // Prioritní data.
                                             device_data & ram_dout & d_from_slots;
 
-wire signed [15:0] device_sound;
+wire signed [15:0] device_sound_L, device_sound_R;
 
 assign ram_addr = slots_ram_addr & device_ram_addr;
 assign sdram_ce = slots_ram_ce   | device_ram_ce;
@@ -211,7 +215,8 @@ devices #(.sysCLK(sysCLK)) devices
    .FDD_bus(FDD_bus),
    .io_device(io_device),
    .io_memory(io_memory),
-   .sound(device_sound),
+   .sound_L(device_sound_L),
+   .sound_R(device_sound_R),
    .data(device_data),
    .data_oe_rq(device_oe_rq),
    .data_to_mapper(data_to_mapper),

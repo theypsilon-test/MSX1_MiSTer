@@ -35,7 +35,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-module dev_oplL (
+module dev_opll (
     cpu_bus_if.device_mp   cpu_bus,
     device_bus             device_bus,
     clock_bus_if.base_mp   clock_bus,
@@ -66,13 +66,13 @@ module dev_oplL (
             wire cs_io_active = (cpu_bus.addr[7:0] & io_device[i].mask) == io_device[i].port;
             wire cs_enable = io_device[i].enable && cs_io_active && io_en && opll_enabled[i];
             wire cs_dev_bus = (device_bus.typ == DEV_OPLL && device_bus.we && i == device_bus.num);
-            IKAOPLL #(.FULLY_SYNCHRONOUS(0), .FAST_RESET(1), .ALTPATCH_CONFIG_MODE(0), .USE_PIPELINED_MULTIPLIER(1)) ika_opll_opll_int (
+            IKAOPLL #(.FULLY_SYNCHRONOUS(1), .FAST_RESET(1), .ALTPATCH_CONFIG_MODE(0), .USE_PIPELINED_MULTIPLIER(1)) ika_opll_opll_int (
                 .i_XIN_EMUCLK       (cpu_bus.clk),
                 .i_phiM_PCEN_n      (~clock_bus.ce_3m58_n),
                 .i_IC_n             (~cpu_bus.reset),
                 .i_ALTPATCH_EN      (1'b0),
                 .i_CS_n             (~(cs_enable || cs_dev_bus)),
-                .i_WR_n             (~((cpu_bus.wr && cpu_bus.req) || device_bus.we)),
+                .i_WR_n             (~(cpu_bus.wr || device_bus.we)),
                 .i_A0               (cpu_bus.addr[0]),
                 .i_D                (cpu_bus.data),
                 .i_ACC_SIGNED_MOVOL (5'sd9),

@@ -13,5 +13,6 @@
   "PSG":11,
   "PPI":12,
   "RESET_STATUS":13,
-  "TC8566AF":14
+  "TC8566AF":14,
+  "DEV_OPM":15
 }
