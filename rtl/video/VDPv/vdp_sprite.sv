@@ -218,8 +218,7 @@ module VDP_SPRITE (
 );
     // Signals declaration
     logic FF_SP_EN;
-    logic [8:0] FF_CUR_Y, FF_PREV_CUR_Y;
-    logic SPLIT_SCRN;
+    logic [8:0] FF_CUR_Y;
 
     logic FF_VDPS0RESETACK, FF_VDPS5RESETACK;
 
@@ -300,8 +299,8 @@ module VDP_SPRITE (
     always_ff @(posedge CLK21M or posedge RESET) begin
         if (RESET) begin
             FF_SP_EN <= 1'b0;
-        end else if (DOTSTATE == 2'b01 && DOTCOUNTERX == 9'd0) begin
-            FF_SP_EN <= W_ACTIVE;
+        end else if (DOTSTATE == 2'b01 && DOTCOUNTERX == 9'd256 + 9'd8) begin
+            FF_SP_EN <= ~REG_R8_SP_OFF & W_ACTIVE;
         end
     end
 
@@ -386,15 +385,6 @@ module VDP_SPRITE (
         end
     end
 
-    always_ff @(posedge CLK21M) begin
-        if (DOTSTATE == 2'b01 && DOTCOUNTERX == 0) begin
-            FF_PREV_CUR_Y <= FF_CUR_Y;
-        end
-    end
-
-    // detect a split screen
-    assign SPLIT_SCRN = FF_CUR_Y != (FF_PREV_CUR_Y + 1);
-
     // VRAM ADDRESS GENERATOR
     always_ff @(posedge CLK21M) begin
         // LATCHING ADDRESS SIGNALS
@@ -419,7 +409,7 @@ module VDP_SPRITE (
                 end
                 SPSTATE_YTEST_DRAW: begin
                     if (DOTCOUNTERX == 9'd264) //256 + 8
-                        SPVRAMACCESSING <= ~REG_R8_SP_OFF & FF_SP_EN;
+                        SPVRAMACCESSING <= FF_SP_EN;
                 end
                 SPSTATE_PREPARE: begin
                     if (SPPREPAREEND)
@@ -790,7 +780,7 @@ always_ff @(posedge CLK21M or posedge RESET) begin
                     // Reset drawing for next cycle
                     if (DOTCOUNTERX == 9'd0) begin
                         SPPREDRAWLOCALPLANENUM <= 3'b0;
-                        SPPREDRAWEND <= SPLIT_SCRN || REG_R8_SP_OFF;
+                        SPPREDRAWEND <= REG_R8_SP_OFF;
                         LASTCC0LOCALPLANENUM = 3'b0;
                         SPCC0FOUND = 1'b0;
                     end else if (DOTCOUNTERX[4:0] == 5'd0) begin
