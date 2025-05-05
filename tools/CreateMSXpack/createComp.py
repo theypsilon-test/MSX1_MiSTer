@@ -8,6 +8,49 @@ ROM_DIR = 'ROM'
 XML_DIR_COMP = 'Computer_test'
 DIR_SAVE = 'MSX_test'
 
+def get_device_param(constants, device_name, attributes):
+    """
+    Returns the device parameters based on the device type and its attributes.
+    
+    :param device: Device type.
+    :param parameters: Device attributes.
+    :return: Tuple of device parameters.
+    """
+    params = constants['deviceParams'].get(device_name, {})
+    if not params:
+        value = convert_to_8bit(attributes.get('param', '0'))
+        return value
+    else:
+        ret = 0
+        for param_name, param_property in params.items():
+            value = 0
+            if param_name in attributes:
+                value = attributes[param_name]
+                if param_property['param_type'] == 'int':
+                    value = convert_to_int(value)
+                    if 'div' in param_property and param_property['div'] is not None:
+                        value = value // param_property['div']
+                    if param_property['min'] is not None and value < param_property['min']:
+                        print(f"Device '{device_name}' parameter '{param_name}' value {value} is less than minimum {param_property['min']} setting to default value {param_property['default']}")
+                        value = param_property['default']
+                    if param_property['max'] is not None and value > param_property['max']:
+                        print(f"Device '{device_name}' parameter '{param_name}' value {value} is greater than maximum {param_property['max']} setting to default value {param_property['default']}")
+                        value = param_property['default']
+                elif param_property['param_type'] == 'enum':
+                    if value not in param_property['enums']:
+                        print(f"Device '{device_name}' parameter '{param_name}' value {value} is not in enum list {param_property['enums']} setting to default value {param_property['enums'][param_property['default']]}")
+                        value = param_property['default']
+                    else:
+                        value = param_property['enums'].index(value)
+                if "value_offset" in param_property and param_property["value_offset"] is not None:
+                    value = value << param_property["value_offset"]
+                if "values" in param_property and param_property["values"] is not None:
+                    value = param_property['values'][value]
+                #print(f"Device '{device_name}' parameter '{param_name}' value is {value}")
+            ret  = ret | value
+        #print(f"Device '{device_name}' return 0x{ret:02X}")
+        return ret
+
 def parse_msx_block(root):
     """
     Parses a 'block' element from the XML and returns a dictionary with its properties.
@@ -300,39 +343,12 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
         if 'device' in block:
             (typ, attributes) = block.pop('device', (None, None))
             if typ in constants['device']:
+                
+                device_param = get_device_param(constants, typ, attributes)
+
                 params[0] = constants['device'][typ]
-                if (typ == "WD2793" or typ == "TC8566AF"):
-                    fdd_count = 1
-                    if "fdd_count" in attributes:
-                        fdd_count = convert_to_8bit(attributes['fdd_count'])
-                        if fdd_count > 2 or fdd_count < 1:
-                            print(f"Error: FDD count '{fdd_count}' in slot {slot}/{subslot} is not in range 1-2 Setting to 1")
-                            fdd_count = 1
-                    
-                    if fdd_count == 2:
-                        parameter = 0xC0        # 0x80 = 2 drive
-                    else:
-                        parameter = 0x40        # 0x40 = 1 drive
-                
-                    if (typ == "WD2793") :                        
-                        if "style" in attributes:
-                            if attributes["style"] == "Philips" :
-                                parameter = parameter | 0x00; 
-                            elif attributes["style"] == "National" :
-                                parameter = parameter | 0x01
-                
-                    if (typ == "TC8566AF") :
-                        if "ioRegs" in attributes:
-                            if attributes["ioRegs"] == "7FF2" :
-                                parameter = parameter | 0x01; 
-                            elif attributes["ioRegs"] == "7FF8" :
-                                parameter = parameter | 0x02; 
+                params[1] = device_param
 
-                    params[1] = parameter
-
-                if "param" in attributes:
-                    params[1] = convert_to_8bit(attributes['param'])
-                
                 add_block_type_to_file(address, "DEVICE", params, outfile, constants)
 
                 device_mask = None
@@ -345,8 +361,7 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
                         device_mask = 0xFF  #Default value
                     params[0] = device_port
                     params[1] = device_mask
-                    if "param" in attributes:
-                        params[2] = convert_to_8bit(attributes['param'])
+                    params[2] = device_param
                     add_block_type_to_file(address, "IO_DEVICE", params, outfile, constants)
             else :
                 print(f"Error: unknown device '{typ}' in slot {slot}/{subslot}") 
@@ -468,8 +483,9 @@ def create_msx_config_device(device, outfile, files_with_sha1, constants):
 
         if 'mask'     in parameters : port_mask = convert_to_8bit(parameters['mask'])
         if 'port'     in parameters : port      = convert_to_8bit(parameters['port'])
-        if 'param'    in parameters : param     = convert_to_8bit(parameters['param'])
+        #if 'param'    in parameters : param     = convert_to_8bit(parameters['param'])
         
+        param = get_device_param(constants, device, parameters)
         size = (rom_size + 16383) // 16384
         
         if device not in constants['device'] :

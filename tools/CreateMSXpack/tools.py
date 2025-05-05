@@ -1,6 +1,7 @@
 import os
 import hashlib
 import json
+from typing import Union
 
 def calculate_sha1(file_path):
     """
@@ -50,6 +51,9 @@ def load_constants():
     
     with open('device.json', 'r') as file:
         constants['device'] = json.load(file)
+     
+    with open('deviceParams.json', 'r') as file:
+        constants['deviceParams'] = json.load(file)
 
     return constants
 
@@ -80,7 +84,7 @@ def convert_to_int_or_string(text):
     except ValueError:
         return text
     
-def convert_to_int(text):
+def convert_to_int_old(text):
     if text is None:
         return None
     try:
@@ -112,6 +116,31 @@ def convert_to_8bit(num: str) -> int:
                 return value
             else:
                 return None
+        
+        # Pokud se nejedná o validní číslo ani hexadecimální formát
+        return None
+    
+    except ValueError:
+        # Pokud převod selže, vrátíme None
+        return None
+    
+def convert_to_int(num: Union[str, int]) -> int:
+    if isinstance(num, int):
+        return num
+    
+    if not isinstance(num, str):
+        print("Not a string")
+        return None
+    try:
+        # Zkusíme nejprve převést jako celé číslo
+        if num.isdigit():
+            value = int(num)
+            return value
+        
+        # Zkusíme převést jako hexadecimální číslo
+        if num.startswith("0x") or num.startswith("0X"):
+            value = int(num, 16)
+            return value
         
         # Pokud se nejedná o validní číslo ani hexadecimální formát
         return None
