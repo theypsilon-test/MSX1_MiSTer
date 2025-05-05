@@ -1,6 +1,12 @@
 <?xml version="1.0" ?>
 <msxConfig>
-  <type>MSX2</type>
+  <cpu>Z80</cpu>                   <!-- Z80 --> 
+  <wait_count>1</wait_count>       <!-- 0 - 3 -->  
+  <cpu_frequency>0</cpu_frequency> <!-- 0-3.58, 1-5.39, 2-10.7-->
+  <device mask="0xFC" port="0x98" VDP_ID="0x0">V99xx</device>
+  <device mask="0xF8" port="0xA0" system="true">PSG</device>
+  <device mask="0xF8" port="0xA8">PPI</device>
+  <device mask="0xFE" port="0xB4">RTC</device>
   <kbd_layout>/yX/cWdlZv//ZP//cHMh////YP9hRgH///9XUCZUAv//MFUxMgQD//+AUzNRRwX//0MnNTRWBv///0I3UgcQ//8iQDZEABH//yMkQRdFEv///yD/FRP//2Ngdxb/FP//////////df///////////////////3L/dv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Yv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////hIH///+Cg4b/h4X///////90//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8=</kbd_layout>
   <primary slot="0">
     <secondary slot="0">
@@ -19,13 +25,13 @@
       <block>
         <memory size="131072" pattern="4">RAM</memory>
         <mapper>MSX2_RAM</mapper>
-        <device mask="0xFC" port="0xFC" param="8">MEM_MAPPER</device>
+        <device mask="0xFC" port="0xFC" size="131072">MEM_MAPPER</device>
       </block>
     </secondary>
     <secondary slot="3">
       <block start="1" count="1">
         <memory SHA1="959060445e92eb980ddd9df3ef9cfefcae2de1d0" filename="vg8235-39_disk.rom">ROM</memory>
-        <device style="Philips">WD2793</device>
+        <device style="Philips" fdd_count="1">WD2793</device>
       </block>
       <block start="2" count="1">
         <ref to_block="1">DEVICE</ref>
