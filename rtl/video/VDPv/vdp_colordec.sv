@@ -66,8 +66,7 @@ module VDP_COLORDEC (
     input  logic            CLK21M,
     input  logic [1:0]      DOTSTATE,
     output logic [3:0]      PPALETTEADDR_OUT,
-    input  logic [7:0]      PALETTEDATARB_OUT,
-    input  logic [7:0]      PALETTEDATAG_OUT,
+    input  logic [8:0]      PALETTEDATARGB_OUT,
     input  logic            VDPMODETEXT1,
     input  logic            VDPMODETEXT1Q,
     input  logic            VDPMODETEXT2,
@@ -132,9 +131,9 @@ module VDP_COLORDEC (
                 FF_VIDEO_B <= FF_YJK_B;
             end else if (!VDPMODEGRAPHIC7 || REG_R25_YJK) begin
                 // PALETTE COLOR (NOT GRAPHIC7, SPRITE ON YJK MODE, YAE COLOR ON YJK MODE)
-                FF_VIDEO_R <= {PALETTEDATARB_OUT[6:4], 3'b000};
-                FF_VIDEO_G <= {PALETTEDATAG_OUT[2:0], 3'b000};
-                FF_VIDEO_B <= {PALETTEDATARB_OUT[2:0], 3'b000};
+                FF_VIDEO_R <= {PALETTEDATARGB_OUT[8:6], 3'b000};
+                FF_VIDEO_G <= {PALETTEDATARGB_OUT[5:3], 3'b000};
+                FF_VIDEO_B <= {PALETTEDATARGB_OUT[2:0], 3'b000};
             end else begin
                 // GRAPHIC7
                 FF_VIDEO_R <= {FF_GRP7_COLOR_CODE[4:2], 3'b000};

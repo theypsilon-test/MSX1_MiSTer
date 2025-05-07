@@ -133,9 +133,8 @@ module VDP_REGISTER (
     output logic VDPCMDTRCLRREQ,
 
     input logic [3:0] PALETTEADDR_OUT,
-    output logic [7:0] PALETTEDATARB_OUT,
-    output logic [7:0] PALETTEDATAG_OUT,
 
+    output logic [8:0] PALETTEDATARGB_OUT,
     // INTERRUPT
     output logic CLR_VSYNC_INT,
     output logic CLR_HSYNC_INT,
@@ -210,8 +209,7 @@ module VDP_REGISTER (
     logic VDPR17INCREGNUM;
     logic [7:0] PALETTEADDR;
     logic PALETTEWE;
-    logic [7:0] PALETTEDATARB_IN;
-    logic [7:0] PALETTEDATAG_IN;
+    logic [8:0] PALETTEDATARGB_IN;
     logic [3:0] PALETTEWRNUM;
     logic FF_PALETTE_WR_REQ;
     logic FF_PALETTE_WR_ACK;
@@ -318,20 +316,13 @@ module VDP_REGISTER (
         end
     end
 
-    RAM U_PALETTEMEMRB (
+    PALETE_RAM U_PALETTEMEMRGB (
         .ADR(PALETTEADDR),
         .CLK(CLK21M),
         .WE(PALETTEWE),
-        .DBO(PALETTEDATARB_IN),
-        .DBI(PALETTEDATARB_OUT)
-    );
-
-    RAM U_PALETTEMEMG (
-        .ADR(PALETTEADDR),
-        .CLK(CLK21M),
-        .WE(PALETTEWE),
-        .DBO(PALETTEDATAG_IN),
-        .DBI(PALETTEDATAG_OUT)
+        .DBO(PALETTEDATARGB_IN),
+        .DBI(PALETTEDATARGB_OUT),
+        .RESET(RESET)
     );
 
     // PROCESS OF CPU READ REQUEST
@@ -449,8 +440,7 @@ module VDP_REGISTER (
             VDPCMDREGDATA           <= '0;
             VDPCMDREGWRREQ          <= 1'b0;
             VDPCMDTRCLRREQ          <= 1'b0;
-            PALETTEDATARB_IN        <= '0;
-            PALETTEDATAG_IN         <= '0;
+            PALETTEDATARGB_IN       <= '0;
             FF_PALETTE_WR_REQ       <= 1'b0;
             PALETTEWRNUM            <= '0;
         end else if (REQ == 1'b1 && WRT == 1'b0) begin
@@ -510,12 +500,13 @@ module VDP_REGISTER (
                 end
                 2'b10: begin // PORT#2: PALETTE WRITE
                     if (VDPP2IS1STBYTE == 1'b1) begin
-                        PALETTEDATARB_IN <= DBO;
+                        PALETTEDATARGB_IN[2:0] <= DBO[2:0];
+                        PALETTEDATARGB_IN[8:6] <= DBO[6:4];
                         VDPP2IS1STBYTE <= 1'b0;
                     end else begin
                         // パレットはRGBのデータが揃った時に一度に書き換える。
                         // (実機で動作を確認した)
-                        PALETTEDATAG_IN <= DBO;
+                        PALETTEDATARGB_IN[5:3] <= DBO[2:0];
                         PALETTEWRNUM <= VDPR16PALNUM;
                         FF_PALETTE_WR_REQ <= ~FF_PALETTE_WR_ACK;
                         VDPP2IS1STBYTE <= 1'b1;
