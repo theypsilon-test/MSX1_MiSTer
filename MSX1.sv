@@ -215,7 +215,7 @@ MSX::config_cart_t cart_conf[2];
 MSX::block_t       slot_layout[64];
 MSX::lookup_RAM_t  lookup_RAM[16];
 MSX::lookup_SRAM_t lookup_SRAM[4];
-MSX::io_device_t   io_device[16][3];
+MSX::io_device_t   io_device[32][3];
 MSX::io_device_mem_ref_t io_memory[8];
 MSX::slot_expander_t slot_expander[4];
 MSX::msx_config_t msx_config;

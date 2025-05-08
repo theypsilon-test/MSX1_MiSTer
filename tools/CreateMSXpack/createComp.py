@@ -63,8 +63,16 @@ def parse_msx_block(root):
     count = convert_to_int_or_string(root.attrib.get("count", None))
     
     for element in root:
-        result[element.tag] = (get_int_or_string_value(element), element.attrib) 
+        value = (get_int_or_string_value(element), element.attrib)
 
+        if element.tag not in result:
+            result[element.tag] = value
+        else:
+            if isinstance(result[element.tag], tuple):
+                result[element.tag] = [result[element.tag], value]
+            else:
+                result[element.tag].append(value)
+    
     # Adjust the count to not exceed the limit
     if 'count' in  result :
         if count is not None:
@@ -227,12 +235,17 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
         if 'memory' in block:
             (typ, attributes) = block.pop('memory', (None, None)) 
             if typ == 'ROM' :
-                if 'SHA1' not in attributes:
+                filename = None	
+                if 'exactFilename' in attributes: 
+                    filename = attributes['exactFilename']
+                elif 'SHA1' not in attributes:
                     print(f"Missing SHA1 for ROM in slot {slot}/{subslot}")               
                 elif attributes['SHA1'] not in files_with_sha1:
                     print(f"ROM SHA1 not found: {attributes['SHA1']} (ROM name: {attributes['filename']}) in slot {slot}/{subslot}")
                 else :
                     filename = files_with_sha1[attributes['SHA1']]
+                
+                if filename:
                     file_size = os.path.getsize(filename)
                     file_skip_bytes = 0
                     if 'skip' in attributes:
@@ -242,17 +255,18 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
                     
                     params[0] = (file_size + 16383) // 16384
                     add_block_type_to_file(address, typ, params, outfile, constants)
-                    if filename:
-                        with open(filename, 'rb') as source_file:
-                            if file_skip_bytes > 0:
-                                source_file.seek(file_skip_bytes)
 
-                            data = source_file.read(file_size)
-                            outfile.write(data)
-                            current_size = len(data)
-                            padding_needed = ((current_size + 16383) // 16384) * 16384 - current_size
-                            if padding_needed > 0:
-                                outfile.write(b'\xff' * padding_needed)
+                    with open(filename, 'rb') as source_file:
+                        if file_skip_bytes > 0:
+                            source_file.seek(file_skip_bytes)
+
+                        data = source_file.read(file_size)
+                        outfile.write(data)
+                        current_size = len(data)
+                        padding_needed = ((current_size + 16383) // 16384) * 16384 - current_size
+                        if padding_needed > 0:
+                            outfile.write(b'\xff' * padding_needed)
+
                     filename = None
             elif typ == 'RAM' :
                 if "size" in attributes :
@@ -341,30 +355,34 @@ def create_msx_config_block(slot, subslot, blocks, outfile, files_with_sha1, con
                 params[0] = value
                 add_block_type_to_file(address, "SLOT", params, outfile, constants)
         if 'device' in block:
-            (typ, attributes) = block.pop('device', (None, None))
-            if typ in constants['device']:
-                
-                device_param = get_device_param(constants, typ, attributes)
+            device = block.pop('device')
+            if isinstance(device, tuple):
+                device = [device]
+            
+            for (typ, attributes) in device:
+                if typ in constants['device']:
+                    
+                    device_param = get_device_param(constants, typ, attributes)
 
-                params[0] = constants['device'][typ]
-                params[1] = device_param
+                    params[0] = constants['device'][typ]
+                    params[1] = device_param
 
-                add_block_type_to_file(address, "DEVICE", params, outfile, constants)
+                    add_block_type_to_file(address, "DEVICE", params, outfile, constants)
 
-                device_mask = None
-                device_port = None
-                if "mask" in attributes:
-                    device_mask = convert_to_8bit(attributes['mask'])
-                if "port" in attributes:
-                    device_port = convert_to_8bit(attributes['port'])
-                    if device_mask is None:
-                        device_mask = 0xFF  #Default value
-                    params[0] = device_port
-                    params[1] = device_mask
-                    params[2] = device_param
-                    add_block_type_to_file(address, "IO_DEVICE", params, outfile, constants)
-            else :
-                print(f"Error: unknown device '{typ}' in slot {slot}/{subslot}") 
+                    device_mask = None
+                    device_port = None
+                    if "mask" in attributes:
+                        device_mask = convert_to_8bit(attributes['mask'])
+                    if "port" in attributes:
+                        device_port = convert_to_8bit(attributes['port'])
+                        if device_mask is None:
+                            device_mask = 0xFF  #Default value
+                        params[0] = device_port
+                        params[1] = device_mask
+                        params[2] = device_param
+                        add_block_type_to_file(address, "IO_DEVICE", params, outfile, constants)
+                else :
+                    print(f"Error: unknown device '{typ}' in slot {slot}/{subslot}") 
         
         if 'ref' in block:
             (typ, attributes) = block.pop('ref', (None, None))

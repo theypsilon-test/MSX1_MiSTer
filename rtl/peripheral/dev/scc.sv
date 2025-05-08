@@ -47,13 +47,15 @@ module dev_scc (
     assign sound = (io_device[0].enable ? {sound_SCC[0][14], sound_SCC[0]} : '0) +
                    (io_device[1].enable ? {sound_SCC[1][14], sound_SCC[1]} : '0);
 
-    always @(posedge cpu_bus.clk) begin
+    always_ff @(posedge cpu_bus.clk) begin
         if (cpu_bus.reset) begin
             scc_mode    <= 2'b00;
             scc_plus    <= 2'b00;
-        end else if (device_bus.typ == DEV_SCC && device_bus.num < 2) begin
-            scc_mode[device_bus.num[0]]    <= device_bus.mode;
-            scc_plus[device_bus.num[0]]    <= device_bus.param;
+        end else begin
+            scc_mode[0] <= io_device[0].device_ref == device_bus.device_ref ? device_bus.mode : scc_mode[0];
+            scc_mode[1] <= io_device[1].device_ref == device_bus.device_ref ? device_bus.mode : scc_mode[1];
+            scc_plus[0] <= io_device[0].device_ref == device_bus.device_ref ? device_bus.param : scc_plus[0];
+            scc_plus[1] <= io_device[1].device_ref == device_bus.device_ref ? device_bus.param : scc_plus[1];
         end
     end
 
@@ -62,18 +64,17 @@ module dev_scc (
     logic [1:0] scc_mode;
     logic [1:0] scc_plus;
 
-    wire cs = device_bus.typ == DEV_SCC && device_bus.en;
-
-    assign data = cs && cpu_bus.rd ? data_SCC[device_bus.num[0]] : 8'hFF;
+    assign data = cpu_bus.rd ? data_SCC[0] & data_SCC[1] : 8'hFF;
 
     genvar i;
     generate
         for (i = 0; i < 2; i++) begin : SCC_INSTANCES
+            wire cs_dev_bus   = (io_device[i].enable && io_device[i].device_ref == device_bus.device_ref && device_bus.en);
             scc_wave SCC_i (
                 .clk(cpu_bus.clk),
                 .clkena(clock_bus.ce_3m58_n),
                 .reset(cpu_bus.reset),
-                .req(cs && (cpu_bus.rd || cpu_bus.wr) && device_bus.num == i),
+                .req(cs_dev_bus && (cpu_bus.rd || cpu_bus.wr)),
                 .ack(),
                 .wrt(cpu_bus.wr && cpu_bus.req),
                 .adr(cpu_bus.addr[7:0]),

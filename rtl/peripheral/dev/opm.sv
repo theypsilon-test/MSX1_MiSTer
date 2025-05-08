@@ -43,8 +43,7 @@ module dev_opm #(parameter COUNT=3) (
     output signed [15:0]   sound_L,
     output signed [15:0]   sound_R,
     output         [7:0]   data,
-    output                 irq,
-    output                 data_oe_rq
+    output                 irq
 );
 
     assign sound_L = (io_device[0].enable ? sound_OPM_L[0] : '0) +
@@ -58,6 +57,8 @@ module dev_opm #(parameter COUNT=3) (
     assign irq = ~((io_device[0].enable ? irq_n[0] : 1'b1) &
                    (io_device[1].enable ? irq_n[1] : 1'b1) &
                    (io_device[2].enable ? irq_n[2] : 1'b1)) ;
+
+    
     
     wire io_en = cpu_bus.iorq && ~cpu_bus.m1;
 
@@ -65,24 +66,19 @@ module dev_opm #(parameter COUNT=3) (
     logic         [7:0] data_OPM[3];
     logic         [2:0] data_OPM_OE;
     logic               irq_n[3];
-
-        
-    wire device_cs = device_bus.typ == DEV_OPM && device_bus.en;
+    logic         [7:0] irq_vector[3];
     
-    assign data = data_OPM_OE[0] ? data_OPM[0] : 8'hFF &
-                  data_OPM_OE[1] ? data_OPM[1] : 8'hFF &
-                  data_OPM_OE[2] ? data_OPM[2] : 8'hFF;
-    
-    //device_cs && cpu_bus.rd ? data_OPM[device_bus.num[1:0]] : 8'hFF;
-    
-    assign data_oe_rq = device_cs && cpu_bus.rd ? 1'b1 : 1'b0;
+    assign data = ((cpu_bus.m1 && cpu_bus.iorq) ? irq_vector[0] & irq_vector[1] & irq_vector[2] : 8'hFF) &
+                  (data_OPM_OE[0] ? data_OPM[0] : 8'hFF) &
+                  (data_OPM_OE[1] ? data_OPM[1] : 8'hFF) &
+                  (data_OPM_OE[2] ? data_OPM[2] : 8'hFF);
 
     genvar i;
     generate
         for (i = 0; i < COUNT; i++) begin : OPM_INSTANCES
             wire cs_io_active = (cpu_bus.addr[7:0] & io_device[i].mask) == io_device[i].port;
-            wire cs_io        = io_device[i].enable && cs_io_active && io_en;
-            wire cs_dev       = (device_cs && i == device_bus.num);
+            wire cs_io        = (io_device[i].enable && cs_io_active && io_en);
+            wire cs_dev       = (io_device[i].enable && io_device[i].device_ref == device_bus.device_ref && device_bus.en);
 
             IKAOPM #(.FULLY_SYNCHRONOUS(1), .FAST_RESET(1), .USE_BRAM(0)) OPM_i (
                 .i_EMUCLK      (cpu_bus.clk),
@@ -90,7 +86,7 @@ module dev_opm #(parameter COUNT=3) (
                 .i_IC_n        (~cpu_bus.reset),
                 .o_phi1        (),
                 .i_CS_n        (~(cs_io || cs_dev)),
-                .i_WR_n        (~((cs_io && cpu_bus.wr) || (cs_dev && device_bus.we))),
+                .i_WR_n        (~cpu_bus.wr),
                 .i_RD_n        (~cpu_bus.rd),
                 .i_A0          (cpu_bus.addr[0]),
                 .i_D           (cpu_bus.data),
@@ -107,5 +103,15 @@ module dev_opm #(parameter COUNT=3) (
 				);
         end
     endgenerate
+
+    always_ff @(posedge cpu_bus.clk) begin
+        if (cpu_bus.reset) begin
+            irq_vector <= '{'1,'1,'1};
+        end else begin
+            irq_vector[0] <= io_device[0].device_ref == device_bus.device_ref ? device_bus.data : irq_vector[0];
+            irq_vector[1] <= io_device[1].device_ref == device_bus.device_ref ? device_bus.data : irq_vector[1];
+            irq_vector[2] <= io_device[2].device_ref == device_bus.device_ref ? device_bus.data : irq_vector[2];
+        end
+    end
 
 endmodule

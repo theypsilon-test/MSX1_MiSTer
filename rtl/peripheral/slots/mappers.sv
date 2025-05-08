@@ -265,13 +265,11 @@ module mappers (
                                 | gm2_out.sram_cs
                                 | national_out.sram_cs;
 
-    // Device control signals: Use the FM-PAC mapper's control signals
-    assign device_bus.typ   = cpu_bus.mreq ? block_info.device : DEV_NONE;
-    
     assign device_bus.we    = fm_pac_device_out.we | yamaha_sfg_device_out.we;
     assign device_bus.en    = fm_pac_device_out.en | yamaha_sfg_device_out.en | konami_SCC_device_out.en | mfrsd_device_out.en | mega_ram_device_out.en;
     assign device_bus.mode  = konami_SCC_device_out.mode & mfrsd_device_out.mode;
     assign device_bus.param = konami_SCC_device_out.param & mfrsd_device_out.param;
+    assign device_bus.device_ref = cpu_bus.mreq ? block_info.device_ref : '0;
 
     // SDCARD
     assign ext_SD_card_bus.rx             = ext_SD_card_ese.rx         | ext_SD_card_mfrsd.rx;

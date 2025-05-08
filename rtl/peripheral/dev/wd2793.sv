@@ -38,7 +38,8 @@
 module dev_WD2793 #(parameter sysCLK)
 (
    cpu_bus_if.device_mp    cpu_bus,
-   input  MSX::io_device_t io_device,
+   input             [1:0] model,
+   input             [1:0] floppy_drive_en,
    FDD_if.FDC_mp           FDD_bus,
    input                   cs,
    output            [7:0] data,
@@ -49,8 +50,8 @@ typedef enum logic [1:0] {DRIVE_NONE, DRIVE_A, DRIVE_B} drive_t;
 
 logic [7:0] philips_sideReg, philips_driveReg;
 
-wire area_philips   = (cpu_bus.addr[13:3] == 11'b11111111111) && io_device.param[1:0] == 2'h0;
-wire area_national  = (cpu_bus.addr[13:7] ==  7'b1111111) && io_device.param[1:0] == 2'h1;
+wire area_philips   = (cpu_bus.addr[13:3] == 11'b11111111111) && model == 2'h0;
+wire area_national  = (cpu_bus.addr[13:7] ==  7'b1111111) && model == 2'h1;
 wire area_device    = area_philips || area_national;
 wire device_cs      = cs && area_device && cpu_bus.mreq;
 

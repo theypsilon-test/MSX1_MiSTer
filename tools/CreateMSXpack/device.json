@@ -14,5 +14,5 @@
   "PPI":12,
   "RESET_STATUS":13,
   "TC8566AF":14,
-  "DEV_OPM":15
+  "OPM":15
 }

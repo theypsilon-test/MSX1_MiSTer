@@ -3,7 +3,7 @@ typedef enum logic {CAS_AUDIO_FILE,CAS_AUDIO_ADC} cas_audio_src_t;
 typedef enum logic [1:0] {Z80, R800, UNKN1, UNKN2} cpu_t;
 
 typedef enum logic [3:0] {CART_TYP_SCC, CART_TYP_SCC2, CART_TYP_FM_PAC, CART_TYP_MFRSD, CART_TYP_GM2, CART_TYP_FDC, CART_MEGASCC1, CART_MEGASCC2, CART_MEGA_ASCII_8, CART_MEGA_ASCII_16, MEGARAM, CART_TYP_ROM, CART_TYP_EMPTY } cart_typ_t;
-typedef enum logic [3:0] {DEV_NONE, DEV_OPLL, DEV_SCC, DEV_WD2793, DEV_MSX2_RAM, DEV_LATCH_PORT, DEV_KANJI, DEV_OCM_BOOT, DEV_VDP_TMS, DEV_VDP_V99xx, DEV_RTC, DEV_PSG, DEV_PPI, DEV_RESET_STATUS, DEV_TC8566AF, DEV_OPM } device_t;
+typedef enum logic [4:0] {DEV_NONE, DEV_OPLL, DEV_SCC, DEV_WD2793, DEV_MSX2_RAM, DEV_LATCH_PORT, DEV_KANJI, DEV_OCM_BOOT, DEV_VDP_TMS, DEV_VDP_V99xx, DEV_RTC, DEV_PSG, DEV_PPI, DEV_RESET_STATUS, DEV_TC8566AF, DEV_OPM } device_t;
 typedef enum logic [5:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTYPE, MAPPER_ASCII8, MAPPER_KOEI, MAPPER_WIZARDY, MAPPER_KONAMI, 
                           MAPPER_FMPAC, MAPPER_GM2, VY0010, MAPPER_KONAMI_SCC, MAPPER_MSX2, MAPPER_GENERIC16KB, MAPPER_CROSS_BLAIM, MAPPER_GENERIC8KB, 
                           MAPPER_HARRY_FOX, MAPPER_ZEMINA_80, MAPPER_ZEMINA_90, MAPPER_KONAMI_SCC_PLUS, 
@@ -299,12 +299,11 @@ interface vram_bus_if;
 endinterface
 
 interface device_bus;
-    device_t    typ;
+    logic [2:0] device_ref;
     logic       we;
     logic       en;
     logic       mode;
     logic       param;
-    logic [1:0] num;
     logic [7:0] data;
 endinterface
 
@@ -328,8 +327,8 @@ interface block_info;
     logic [15:0] sram_size;
     logic  [1:0] offset_ram;
     logic [26:0] base_ram;
+    logic [2:0]  device_ref;
     mapper_typ_t typ;
-    device_t     device;
     logic        id;
 endinterface
 
@@ -380,9 +379,8 @@ package MSX;
         logic  [3:0] ref_ram;
         logic  [1:0] ref_sram;
         logic  [1:0] offset_ram;
-        logic  [1:0] device_num;
+        logic  [2:0] device_ref;
         mapper_typ_t mapper;
-        device_t     device;
         logic        cart_num;
         logic        external;
     } block_t;    
@@ -407,6 +405,7 @@ package MSX;
         logic [7:0] port;
         logic [7:0] param;
         logic [2:0] mem_ref;
+        logic [2:0] device_ref;
         logic       enable;
     } io_device_t;
 

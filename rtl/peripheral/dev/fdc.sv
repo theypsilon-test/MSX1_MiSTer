@@ -39,7 +39,7 @@ module dev_FDC #(parameter sysCLK)
 (
    cpu_bus_if.device_mp    cpu_bus,
    device_bus              device_bus,
-   input MSX::io_device_t  io_device[16][3],
+   input MSX::io_device_t  io_device[32][3],
    FDD_if.FDC_mp           FDD_bus[3],
    output            [7:0] data,
    output                  data_oe_rq
@@ -47,23 +47,27 @@ module dev_FDC #(parameter sysCLK)
 
    assign data = wd2793_data[0] & wd2793_data[1] & wd2793_data[2]; //& TC8566AF_data;
    assign data_oe_rq = wd2793_oe_rq[0] | wd2793_oe_rq[1] | wd2793_oe_rq[2]; //| TC8566AF_data_oe_rq;
-   
+
    logic [7:0] wd2793_data[3];
    logic       wd2793_oe_rq[3];
    genvar i;
    generate
       for (i = 0; i < 3; i++) begin : FDC_INSTANCES
+         wire cs_dev                = (io_device[DEV_WD2793][i].device_ref == device_bus.device_ref && io_device[DEV_WD2793][i].enable);
+         wire [1:0] model           = io_device[DEV_WD2793][i].param[1:0];
+         wire [1:0] floppy_drive_en = io_device[DEV_WD2793][i].param[3:2];
          dev_WD2793 #(.sysCLK(sysCLK)) WD2793 (
             .cpu_bus(cpu_bus),
-            .io_device(io_device[DEV_WD2793][i]),
+            .model(model),
+            .floppy_drive_en(floppy_drive_en),
             .FDD_bus(FDD_bus[i]),
-            .cs(device_bus.typ == DEV_WD2793 && device_bus.num == i),
+            .cs(cs_dev),
             .data(wd2793_data[i]),
             .data_oe_rq(wd2793_oe_rq[i])
          );
       end
    endgenerate
-   
+
    /*
     wire [7:0] TC8566AF_data;
     wire TC8566AF_data_oe_rq;

@@ -59,13 +59,11 @@ module msx_slots (
     wire [1:0] offset_ram = active_block.offset_ram;
     wire       cart_num   = active_block.cart_num;
         
-    // Assign device number based on the current layout
-    assign device_bus.num = active_block.device_num;
-
     // Assign mapper type based on the current slot configuration
-    assign block_info.typ      = active_block.mapper;
-    assign block_info.device   = active_block.device;
-    assign block_info.base_ram = active_RAM.addr;
+    assign block_info.typ        = active_block.mapper;
+    assign block_info.device_ref = active_block.device_ref;
+    assign block_info.base_ram   = active_RAM.addr;
+        
 
     // Retrieve RAM and SRAM base addresses and sizes
     wire [26:0] base_ram   = active_RAM.addr;
@@ -92,9 +90,9 @@ module msx_slots (
     assign ram_addr = (memory_bus.sram_cs ? 27'(base_sram) : base_ram) + memory_bus.addr;
 
     // Assign mapper configuration based on the current slot and layout
-    assign block_info.rom_size  = 25'(ram_blocks) << 14;
-    assign block_info.sram_size = sram_size;
-    assign block_info.id        = cart_num;
+    assign block_info.rom_size   = 25'(ram_blocks) << 14;
+    assign block_info.sram_size  = sram_size;
+    assign block_info.id         = cart_num;
     assign block_info.offset_ram = offset_ram;
 
     // Mappers module instantiation for handling different mappers

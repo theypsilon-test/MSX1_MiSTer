@@ -6,7 +6,7 @@
             "min": 1,
             "max": 2,
             "default": 1,
-            "values": [0, 64, 192]
+            "values": [0, 4, 12]
         },
         "style": {
             "param_type": "enum",
@@ -24,7 +24,7 @@
             "min": 1,
             "max": 2,
             "default": 1,
-            "values": [0, 64, 192]
+            "values": [0, 4, 12]
         },
         "ioRegs": {
             "param_type": "enum",

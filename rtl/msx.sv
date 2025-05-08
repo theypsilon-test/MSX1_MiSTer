@@ -46,7 +46,7 @@
    input MSX::block_t       slot_layout[64],
    input MSX::lookup_RAM_t  lookup_RAM[16],
    input MSX::lookup_SRAM_t lookup_SRAM[4],
-   input MSX::io_device_t   io_device[16][3],
+   input MSX::io_device_t   io_device[32][3],
    input MSX::io_device_mem_ref_t io_memory[8],
    input MSX::msx_config_t  msx_config,
    //KBD

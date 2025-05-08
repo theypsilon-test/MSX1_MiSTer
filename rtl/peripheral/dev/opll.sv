@@ -47,11 +47,13 @@ module dev_opll (
                    (io_device[1].enable ? sound_OPLL[1] : '0) +
                    (io_device[2].enable ? sound_OPLL[2] : '0);
 
-    always @(posedge cpu_bus.clk) begin
+    always_ff @(posedge cpu_bus.clk) begin
         if (cpu_bus.reset) begin
             opll_enabled <= 3'b111;
-        end else if (device_bus.typ == DEV_OPLL && device_bus.num < 3) begin
-            opll_enabled[device_bus.num] <= device_bus.en;
+        end else begin
+            opll_enabled[0] <= io_device[0].device_ref == device_bus.device_ref ? device_bus.en : opll_enabled[0];
+            opll_enabled[1] <= io_device[1].device_ref == device_bus.device_ref ? device_bus.en : opll_enabled[1];
+            opll_enabled[2] <= io_device[2].device_ref == device_bus.device_ref ? device_bus.en : opll_enabled[2];
         end
     end
 
@@ -64,8 +66,9 @@ module dev_opll (
     generate
         for (i = 0; i < 3; i++) begin : OPLL_INSTANCES
             wire cs_io_active = (cpu_bus.addr[7:0] & io_device[i].mask) == io_device[i].port;
-            wire cs_enable = io_device[i].enable && cs_io_active && io_en && opll_enabled[i];
-            wire cs_dev_bus = (device_bus.typ == DEV_OPLL && device_bus.we && i == device_bus.num);
+            wire cs_enable    = (io_device[i].enable && cs_io_active && io_en && opll_enabled[i]);
+            wire cs_dev_bus   = (io_device[i].enable && io_device[i].device_ref == device_bus.device_ref && device_bus.we);
+            
             IKAOPLL #(.FULLY_SYNCHRONOUS(1), .FAST_RESET(1), .ALTPATCH_CONFIG_MODE(0), .USE_PIPELINED_MULTIPLIER(1)) ika_opll_opll_int (
                 .i_XIN_EMUCLK       (cpu_bus.clk),
                 .i_phiM_PCEN_n      (~clock_bus.ce_3m58_n),

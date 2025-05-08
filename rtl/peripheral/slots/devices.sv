@@ -43,7 +43,7 @@ module devices  #(parameter sysCLK)
     FDD_if.FDC_mp           FDD_bus[3],
     video_bus_if.device_mp  video_bus,
     vram_bus_if.device_mp   vram_bus,
-    input MSX::io_device_t  io_device[16][3],                       // Array of IO devices
+    input MSX::io_device_t  io_device[32][3],                       // Array of IO devices
     input MSX::io_device_mem_ref_t io_memory[8],                    // Array of memory references
     input MSX::kb_memory_t  kb_upload_memory,
     input MSX::user_config_t msx_user_config,

@@ -43,8 +43,15 @@ module dev_latch_port (
 );
 
     logic [7:0] data_to_mapper_ar[0:2];
-
-    assign data_to_mapper = device_bus.typ == DEV_LATCH_PORT ? data_to_mapper_ar[device_bus.num] : 8'hFF;
+    
+    always_comb begin : output_mux
+        data_to_mapper = 8'hFF;
+        for (int i = 0; i < 3; i++) begin
+            if (io_device[i].enable && io_device[i].device_ref == device_bus.device_ref ) begin
+                data_to_mapper = data_to_mapper_ar[i];
+            end
+        end        
+    end
 
     wire io_en = cpu_bus.iorq && ~cpu_bus.m1;
 
