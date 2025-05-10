@@ -82,7 +82,6 @@ module mapper_yamaha_sfg (
     assign device_out.data = '1;
 
     // Multiplexing output data
-    assign out.data     = '1;
     assign out.ram_cs   = cs && cpu_bus.rd && rom_mapped;
     assign out.rnw      = '1;
     assign out.addr     = cs ? {11'd0, (cpu_bus.addr & (block_info.rom_size[15:0] - 16'd1))} : {27{1'b1}};
