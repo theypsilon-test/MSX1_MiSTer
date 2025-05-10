@@ -2,11 +2,12 @@ import os
 import xml.etree.ElementTree as ET
 import struct
 import base64
+import argparse
 from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_int, convert_to_8bit
 
 ROM_DIR = 'ROM'
-XML_DIR_COMP = 'Computer_test'
-DIR_SAVE = 'MSX_test'
+XML_DIR_COMP = 'Computer_testy'
+DIR_SAVE = 'MSX'
 
 def get_device_param(constants, device_name, attributes):
     """
@@ -527,7 +528,7 @@ def create_msx_config_device(device, outfile, files_with_sha1, constants):
                     outfile.write(b'\xff' * padding_needed)
         
 
-def create_msx_config(config, file_name, path, files_with_sha1, constants):
+def create_msx_config(config, file_name, path, files_with_sha1, constants, outpt_dir):
     """
     Creates the MSX configuration file based on the parsed configuration data.
 
@@ -537,7 +538,7 @@ def create_msx_config(config, file_name, path, files_with_sha1, constants):
     :param files_with_sha1: Dictionary of files with their SHA1 hashes.
     :param constants: Dictionary with configuration constants.
     """
-    file_path = os.path.join(DIR_SAVE, path)
+    file_path = os.path.join(outpt_dir, path)
     os.makedirs(file_path, exist_ok=True)
     file_path = os.path.join(file_path, file_name + '.msx')
     
@@ -548,7 +549,7 @@ def create_msx_config(config, file_name, path, files_with_sha1, constants):
         create_msx_config_primary(config.get('primary', {}), outfile, files_with_sha1, constants)
         create_msx_config_kbd_layout(config.get('kbd_layout', None), outfile, constants) 
              
-def create_msx_conf(file_name, path, files_with_sha1, constants):
+def create_msx_conf(file_name, path, files_with_sha1, constants, outpt_dir):
     """
     Parses the XML configuration file and creates the corresponding MSX configuration file.
 
@@ -567,15 +568,30 @@ def create_msx_conf(file_name, path, files_with_sha1, constants):
         
         config = parse_msx_config(root)
         print(file_name)
-        create_msx_config(config, file_name, path, files_with_sha1, constants)
+        create_msx_config(config, file_name, path, files_with_sha1, constants, outpt_dir)
 
     except (ET.ParseError, FileNotFoundError) as e:
         print(f"Error processing file {file_path}: {e}")
 
-files_with_sha1 = find_files_with_sha1(ROM_DIR)
-constants = load_constants()
 
-xml_files = find_xml_files(XML_DIR_COMP)
 
-for file_name, path in xml_files:
-    create_msx_conf(file_name, path, files_with_sha1, constants)
+if __name__ == '__main__':   
+    parser = argparse.ArgumentParser(description="Process ROM and XML files")
+    parser.add_argument('--rom-dir', type=str, default=ROM_DIR,
+                        help='Path to the ROM files directory (default: %(default)s)')
+    parser.add_argument('--xml-dir', type=str, default=XML_DIR_COMP,
+                        help='Path to the XML files directory (default: %(default)s)')
+    parser.add_argument('--output-dir', type=str, default=DIR_SAVE,
+                        help='Path to the output directory (default: %(default)s)')
+
+    args = parser.parse_args()
+    
+    files_with_sha1 = find_files_with_sha1(args.rom_dir)
+    constants = load_constants()
+
+    xml_files = find_xml_files(args.xml_dir)
+    
+    outpt_dir = args.output_dir
+
+    for file_name, path in xml_files:
+        create_msx_conf(file_name, path, files_with_sha1, constants, outpt_dir)
