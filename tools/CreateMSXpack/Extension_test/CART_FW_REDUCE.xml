@@ -152,8 +152,10 @@
   </fw>
   <fw name="VY0010">
     <block start="1" count="1">
-      <filename>VY0010.ROM</filename>
-      <SHA1>8924e3e11eb1c8c1edcb7efa63c26d2bdc142473</SHA1>
+      <!-- <filename>VY0010.ROM</filename> -->
+      <!-- <SHA1>8924e3e11eb1c8c1edcb7efa63c26d2bdc142473</SHA1> -->
+      <filename>hbd-20w.rom</filename>
+      <SHA1>12f2cc79b3d09723840bae774be48c0d721ec1c6</SHA1>
       <device style="Philips" fdd_count="1">WD2793</device>
     </block>
   </fw>
