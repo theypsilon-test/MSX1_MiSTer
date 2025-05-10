@@ -188,7 +188,9 @@ assign active_slot =    //~map_valid                             ? default_slot 
 //  -----------------------------------------------------------------------------
 //  -- CPU data multiplex
 //  -----------------------------------------------------------------------------
-assign d_to_cpu = ~cpu_bus.device_mp.rd   ? 8'hFF           :
+logic bus_read;
+assign bus_read = cpu_bus.device_mp.rd || (cpu_bus.iorq && cpu_bus.device_mp.m1);
+assign d_to_cpu = ~bus_read               ? 8'hFF           :
                   device_oe_rq            ? device_data     :                       // Prioritní data.
                   slot_oe_rq              ? d_from_slots    :                       // Prioritní data.
                                             device_data & ram_dout & d_from_slots;
