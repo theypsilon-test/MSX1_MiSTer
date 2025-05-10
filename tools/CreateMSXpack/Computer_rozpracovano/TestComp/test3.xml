@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<msxConfig>
+  <cpu>Z80</cpu>                   <!-- Z80 --> 
+  <wait_count>1</wait_count>     <!-- 0 - 3 -->  
+  <cpu_frequency>0</cpu_frequency> <!-- 0-3.58, 1-5.39, 2-10.7-->
+  <device mask="0xFE" port="0x98" param="0x0">TMS99xx</device> <!-- param bit0 PAL / NTSC-->
+  <device mask="0xF8" port="0xA0" param="0x1">PSG</device> <!-- param bit 0 system PSG -->
+  <device mask="0xF8" port="0xA8" param="0x0">PPI</device> <!-- param bit 0 OCM config -->
+  <kbd_layout>/yX/cWdlZv//ZP//cHMh////YP9hRgH///9XUCZUAv//MFUxMgQD//+AUzNRRwX//0MnNTRWBv///0I3UgcQ//8iQDZEABH//yMkQRdFEv///yD/FRP//2Ngdxb/FP//////////df///////////////////3L/dv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Yv//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////hIH///+Cg4b/h4X///////90//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8=</kbd_layout>
+  <primary slot="0">
+    <secondary slot="0">
+      <block start="0" count="2">
+        <memory exactFilename = "..\testRom\testROM.rom">ROM</memory>
+      </block>
+      <block start="3" count="1">
+        <mapper>YAMAHA_SFG</mapper>
+        <device>OPM</device>
+      </block>
+    </secondary>
+  </primary>
+</msxConfig>
