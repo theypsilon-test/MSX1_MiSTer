@@ -461,7 +461,6 @@ msx #(.sysCLK(sysCLK)) MSX
    .msx_config(msx_config),
    .joy(joy),
    .kb_upload_memory(kb_upload_memory),
-   .debug_data_overlay(debug_data_overlay),
    .*
 );
 
@@ -567,9 +566,9 @@ video_mixer #(.GAMMA(1), .LINE_LENGTH(582)) video_mixer
    .gamma_bus(gamma_bus),
 
    .ce_pix(video_bus.display_mp.ce_pix),
-   .R(o_r),
-   .G(o_g),
-   .B(o_b),
+   .R(video_bus.display_mp.R),
+   .G(video_bus.display_mp.G),
+   .B(video_bus.display_mp.B),
    .HSync(video_bus.display_mp.HS),
    .VSync(video_bus.display_mp.VS),
    .HBlank(video_bus.display_mp.hblank),
@@ -586,32 +585,6 @@ video_mixer #(.GAMMA(1), .LINE_LENGTH(582)) video_mixer
    .VGA_HS(VGA_HS),
    .VGA_DE(vga_de)
 );
-/////////////////  DEBUG OVERLAY /////////////
-/*verilator tracing_on*/
-wire [7:0] o_r;
-wire [7:0] o_g;
-wire [7:0] o_b;
-wire [7:0] debug_data_overlay[8];
-
-overlay  #( .RGB(24'hFFFFFF) ) coverlay
-(
-        .reset(reset),
-        .i_r(video_bus.display_mp.R),
-        .i_g(video_bus.display_mp.G),
-        .i_b(video_bus.display_mp.B),
-        .i_hs(video_bus.display_mp.HS),
-        .i_vs(video_bus.display_mp.VS),
-        .i_vb(video_bus.display_mp.vblank),
-        .i_hb(video_bus.display_mp.hblank),
-        .i_clk(CLK_VIDEO),
-        .i_pix(video_bus.display_mp.ce_pix),
-
-        .o_r(o_r),
-        .o_g(o_g),
-        .o_b(o_b),
-        .debug_data(debug_data_overlay)
-);
-/*verilator tracing_off*/
 
 /////////////////  Tape In   /////////////////
 wire tape_adc, tape_adc_act, tape_in;

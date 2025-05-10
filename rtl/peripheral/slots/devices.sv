@@ -139,6 +139,7 @@ module devices  #(parameter sysCLK)
     );
 
     wire         [7:0] ym2148_data;
+    wire               ym2148_irq;
     dev_YM2148 ym2148 (
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
@@ -214,14 +215,14 @@ module devices  #(parameter sysCLK)
         .ram_cs(ocm_ram_cs),
         .ram_addr(ocm_ram_addr),
         .data(ocm_data),
-        .ps2_key(ps2_key),
+        
         .ff_dip_req(msx_user_config.ocm_dip),
         .mapper_limit(ocm_mapper_limit),
         .rst_key_lock(ocm_reset_lock),
         .swio_reset(ocm_reset_request),
         .megaSD_enable(ocm_megaSD_enable),
-        .cpu_wait(cpu_wait),
-        .cpu_clock_sel(cpu_clock_sel),
+        
+        
         .Slot1Mode(ocm_slot1_mode),                             
         .Slot2Mode(ocm_slot2_mode)
     );

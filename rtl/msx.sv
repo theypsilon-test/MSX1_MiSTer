@@ -52,7 +52,7 @@
    //KBD
    input MSX::kb_memory_t   kb_upload_memory,
    //SD FDC
-   FDD_if.FDC_mp           FDD_bus[3],
+   FDD_if.FDC_mp           FDD_bus[3]
    
    /*
    input                    img_mounted,
@@ -66,6 +66,7 @@
    input              [7:0] sd_buff_dout,
    output             [7:0] sd_buff_din,
    input                    sd_buff_wr
+	*/
 );
 
 device_bus device_bus();
