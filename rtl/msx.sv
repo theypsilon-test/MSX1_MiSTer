@@ -117,6 +117,7 @@ assign cpu_bus.cpu_mp.rd      = ~rd_n;
 assign cpu_bus.cpu_mp.wr      = ~wr_n;
 assign cpu_bus.cpu_mp.rfsh    = ~rfsh_n;
 assign cpu_bus.cpu_mp.cpu_clk = cpu_clk;
+assign cpu_bus.cpu_mp.interrupt = cpu_interrupt;
 assign cpu_bus.cpu_mp.req     = ~((iorq_n & mreq_n) | (wr_n & rd_n) | iack);
 
 logic iack;

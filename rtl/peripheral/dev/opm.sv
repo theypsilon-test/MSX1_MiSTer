@@ -57,8 +57,6 @@ module dev_opm #(parameter COUNT=3) (
     assign irq = ~((io_device[0].enable ? irq_n[0] : 1'b1) &
                    (io_device[1].enable ? irq_n[1] : 1'b1) &
                    (io_device[2].enable ? irq_n[2] : 1'b1)) ;
-
-    
     
     wire io_en = cpu_bus.iorq && ~cpu_bus.m1;
 
@@ -66,10 +64,8 @@ module dev_opm #(parameter COUNT=3) (
     logic         [7:0] data_OPM[3];
     logic         [2:0] data_OPM_OE;
     logic               irq_n[3];
-    logic         [7:0] irq_vector[3];
     
-    assign data = ((cpu_bus.m1 && cpu_bus.iorq) ? irq_vector[0] & irq_vector[1] & irq_vector[2] : 8'hFF) &
-                  (data_OPM_OE[0] ? data_OPM[0] : 8'hFF) &
+    assign data = (data_OPM_OE[0] ? data_OPM[0] : 8'hFF) &
                   (data_OPM_OE[1] ? data_OPM[1] : 8'hFF) &
                   (data_OPM_OE[2] ? data_OPM[2] : 8'hFF);
 
@@ -103,15 +99,5 @@ module dev_opm #(parameter COUNT=3) (
 				);
         end
     endgenerate
-
-    always_ff @(posedge cpu_bus.clk) begin
-        if (cpu_bus.reset) begin
-            irq_vector <= '{'1,'1,'1};
-        end else begin
-            irq_vector[0] <= io_device[0].device_ref == device_bus.device_ref ? device_bus.data : irq_vector[0];
-            irq_vector[1] <= io_device[1].device_ref == device_bus.device_ref ? device_bus.data : irq_vector[1];
-            irq_vector[2] <= io_device[2].device_ref == device_bus.device_ref ? device_bus.data : irq_vector[2];
-        end
-    end
 
 endmodule
