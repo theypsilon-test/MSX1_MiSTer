@@ -120,7 +120,7 @@ module TV80a#(
     assign WR_n_j  = WR_n_i;
 
     assign MREQ_n  = MREQ_n_i;
-    assign IORQ_n  = IORQ_n_i || IReq_Inhibit;
+    assign IORQ_n  = IORQ_n_i || (IReq_Inhibit && IntCycle_n);
     assign RD_n    = RD_n_i;
     assign WR_n    = WR_n_j;
     assign RFSH_n  = RFSH_n_i;
@@ -167,7 +167,7 @@ module TV80a#(
 
     always_ff @(negedge CLK_n) begin
         Wait_s <= WAIT_n;
-        if (TState == 3'd3 && BUSAK_n_i == '1) begin
+        if (((TState == 3'd3 && IntCycle_n) || (TState == 3'd2 && ~IntCycle_n)) && BUSAK_n_i == '1) begin
             DI_Reg <= DI;
         end
     end

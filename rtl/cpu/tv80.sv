@@ -386,7 +386,7 @@ module TV80#( parameter Mode      = 0,
                 Arith16_r     <= Arith16;
                 PreserveC_r   <= PreserveC;
 
-                if (Mode != 2'b11)
+                if (IMode != 2'b11)
                     IStatus <= IMode;
 
                 Z16_r <= ISet == 2'b10 && ~ALU_Op[2] && ALU_Op[0] && MCycle == 3'd3;
