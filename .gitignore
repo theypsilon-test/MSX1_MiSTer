@@ -66,3 +66,8 @@ verilator_modules/
 verilator_mod/obj_dir/
 verilator_mod/x64/
 verilator_mod/sim_modules/
+tools/CreateMSXpack/SeznamMSX/
+tools/MIDI/
+tools/testRom/
+tools/CreateMSXpack/Computer_testy_hotovo/
+tools/CreateMSXpack/Computer_testy/
