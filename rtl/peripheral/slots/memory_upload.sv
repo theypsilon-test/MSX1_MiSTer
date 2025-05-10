@@ -190,6 +190,7 @@ module memory_upload
                     slot_layout[block_num].cart_num   <= '0;
                     slot_layout[block_num].ref_sram   <= '0;
                     slot_layout[block_num].external   <= '0;
+                    slot_layout[block_num].device_ref <= '0;
                     lookup_SRAM[block_num[1:0]].size  <= '0;
                     slot_expander[block_num & 3].en   <= '0;
                     slot_expander[block_num & 3].wo   <= '1;
