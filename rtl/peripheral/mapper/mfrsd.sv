@@ -200,7 +200,7 @@ module mapper_mfrsd2 (
     input             [7:0] data_to_mapper
 );
 
-    wire cs = (block_info.typ == MAPPER_MFRSD2) && cpu_bus.mreq && config_reg.isMemoryMapperEnabled &&  config_reg.isSlotExpanderEnabled;
+    wire cs = (block_info.typ == MAPPER_MFRSD2) && cpu_bus.mreq && config_reg.isMemoryMapperEnabled && config_reg.isSlotExpanderEnabled;
 
     // Output assignments
     assign out.ram_cs = cs && (cpu_bus.rd || cpu_bus.wr);  // RAM chip select signal
