@@ -20,13 +20,6 @@
   </primary>
   <primary slot="3">
     <secondary slot="0">
-      <block start="0">
-        <memory pattern="3">RAM</memory>
-      </block>
-    </secondary>
-  </primary>
-  <primary slot="3">
-    <secondary slot="0">
       <block start="0" count="1">
         <memory SHA1="2fcb40413e7d373f0f2dbdc815ce18746ddf3684" filename = "cbios_sub.rom">ROM</memory>
       </block>
