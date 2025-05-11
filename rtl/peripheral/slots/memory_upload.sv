@@ -122,8 +122,7 @@ module memory_upload
         logic [5:0]  block_num;
         logic [2:0]  head_addr, read_cnt;
         logic [27:0] save_addr, save_addr2;
-        logic [3:0]  ref_device_io;
-        logic        ref_add, ref_sram_add, fw_space, ref_dev_block, ref_dev_mem, set_offset, ref_dev_mapper;
+        logic        ref_add, ref_sram_add, fw_space, ref_dev_block, ref_dev_mem, set_offset;
         logic [1:0]  slot, subslot, block, size, offset, ref_sram;
         logic [15:0] rom_fw_table;
         logic  [2:0] io_ref_mem, io_ref_mapper;
@@ -162,7 +161,6 @@ module memory_upload
                     ref_sram_add        <= '0;
                     ref_sram            <= '0;
                     ref_ram             <= '0;
-                    ref_device_io       <= '0;
                     ram_addr            <= '0;
                     crc_en              <= '0;
                     fw_space            <= '0;
@@ -171,7 +169,6 @@ module memory_upload
                     kb_upload_memory.rq <= '0;
                     ref_dev_block       <= '0;
                     ref_dev_mem         <= '0;
-                    ref_dev_mapper      <= '0;
                     set_offset          <= '0;
                     load_sram           <= '0;
                     reset               <= '0;
