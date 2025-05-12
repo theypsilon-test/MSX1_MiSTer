@@ -174,35 +174,37 @@ module mappers (
                                 & mfrsd_out.data 
                                 & ese_ram_out.data;
 
-    assign memory_bus.addr  = offset_out.addr
-                            & msx2_ram_out.addr
-                            & ascii8_out.addr
-                            & ascii16_out.addr
-                            & generic8k_out.addr
-                            & generic16k_out.addr
-                            & fm_pac_out.addr
-                            & yamaha_sfg_out.addr
-                            & konami_out.addr
-                            & konami_SCC_out.addr
-                            & gm2_out.addr
-                            & national_out.addr
-                            & crossBlaim_out.addr
-                            & harryFox_out.addr
-                            & zemina80_out.addr
-                            & zemina90_out.addr
-                            & mfrsd_out.addr
-                            & ese_ram_out.addr; //TODO MEGARAM NEMÁ napojen out nikam
+    assign memory_bus.addr      = offset_out.addr
+                                & msx2_ram_out.addr
+                                & ascii8_out.addr
+                                & ascii16_out.addr
+                                & generic8k_out.addr
+                                & generic16k_out.addr
+                                & fm_pac_out.addr
+                                & yamaha_sfg_out.addr
+                                & konami_out.addr
+                                & konami_SCC_out.addr
+                                & gm2_out.addr
+                                & national_out.addr
+                                & crossBlaim_out.addr
+                                & harryFox_out.addr
+                                & zemina80_out.addr
+                                & zemina90_out.addr
+                                & mfrsd_out.addr
+                                & ese_ram_out.addr
+                                & mega_ram_out.addr;
 
-    assign memory_bus.rnw   = offset_out.rnw
-                            & msx2_ram_out.rnw
-                            & ascii8_out.rnw
-                            & ascii16_out.rnw
-                            & fm_pac_out.rnw
-                            & konami_SCC_out.rnw
-                            & gm2_out.rnw
-                            & national_out.rnw
-                            & mfrsd_out.rnw
-                            & ese_ram_out.rnw;
+    assign memory_bus.rnw       = offset_out.rnw
+                                & msx2_ram_out.rnw
+                                & ascii8_out.rnw
+                                & ascii16_out.rnw
+                                & fm_pac_out.rnw
+                                & konami_SCC_out.rnw
+                                & gm2_out.rnw
+                                & national_out.rnw
+                                & mfrsd_out.rnw
+                                & ese_ram_out.rnw
+                                & mega_ram_out.rnw;
 
     assign memory_bus.ram_cs    = offset_out.ram_cs
                                 | msx2_ram_out.ram_cs
@@ -221,7 +223,8 @@ module mappers (
                                 | zemina80_out.ram_cs
                                 | zemina90_out.ram_cs
                                 | mfrsd_out.ram_cs
-                                | ese_ram_out.ram_cs;
+                                | ese_ram_out.ram_cs
+                                | mega_ram_out.ram_cs;
 
     assign memory_bus.sram_cs   = ascii8_out.sram_cs
                                 | ascii16_out.sram_cs
