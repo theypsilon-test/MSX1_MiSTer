@@ -14,82 +14,51 @@ module mappers (
     input                 [1:0] ocm_slot2_mode
 );
 
-    // Intermediate signals from each mapper
-    mapper_out none_out();              // Outputs from LINEAR mapper
-    mapper_out ascii8_out();            // Outputs from ASCII8 mapper
-    mapper_out ascii16_out();           // Outputs from ASCII16 mapper
-    mapper_out offset_out();            // Outputs from OFFSET mapper
-    mapper_out fm_pac_out();            // Outputs from FM-PAC mapper
-    mapper_out yamaha_sfg_out();        // Outputs from Yamaha SFG mapper
-    mapper_out konami_out();            // Outputs from KONAMI mapper
-    mapper_out konami_SCC_out();        // Outputs from KONAMI SCC mapper
-    mapper_out gm2_out();               // Outputs from Konami GameMaster mapper
-    mapper_out msx2_ram_out();          // Outputs from MSX2_RAM mapper
-    mapper_out crossBlaim_out();        // Outputs from crossBlaim mapper
-    mapper_out generic8k_out();         // Outputs from generic 8k mapper
-    mapper_out generic16k_out();        // Outputs from generic 16k mapper
-    mapper_out harryFox_out();          // Outputs from Harry Fox mapper
-    mapper_out zemina80_out();          // Outputs from Zemina 80 in 1 mapper
-    mapper_out zemina90_out();          // Outputs from Zemina 90 in 1 mapper
-    mapper_out mfrsd_out();             // Outputs from MFRSD3 mapper
-    mapper_out ese_ram_out();           // Outputs from ESE RAM mapper
-    mapper_out national_out();          // Outputs from NATIONAL mapper
-    mapper_out mega_ram_out();          // Outputs from MegaRam mapper
-    device_bus fm_pac_device_out();     // Device bus output for FM-PAC mapper
-    device_bus yamaha_sfg_device_out(); // Device bus output for Yamaha SFG mapper
-    device_bus konami_SCC_device_out(); // Device bus output for SCC mapper
-    device_bus mfrsd_device_out();      // Device bus output for MFRSD1 mapper
-    device_bus mega_ram_device_out();   // Device bus output for Megaram mapper
-
-    ext_sd_card_if ext_SD_card_mfrsd();
-    ext_sd_card_if ext_SD_card_ese();
-    
-    
-    
-    //Instantiate the LINEAR mapper
-    mapper_none mapper_none (
-        .cpu_bus(cpu_bus),
-        .block_info(block_info),
-        .out(none_out)
-    );
-
-    // Instantiate the ASCII8 mapper
-    mapper_ascii8 ascii8 (
-        .cpu_bus(cpu_bus),
-        .block_info(block_info),
-        .out(ascii8_out)
-    );
-
-    // Instantiate the ASCII16 mapper
-    mapper_ascii16 ascii16 (
-        .cpu_bus(cpu_bus),
-        .block_info(block_info),
-        .out(ascii16_out)
-    );
-
-    // Instantiate the OFFSET mapper
+    mapper_out offset_out();
     mapper_offset offset (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(offset_out)
     );
 
-    // Instantiate the KONAMI mapper
-    mapper_konami konami (
+    mapper_out msx2_ram_out();
+    mapper_msx2_ram msx2_ram (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
-        .out(konami_out)
+        .out(msx2_ram_out),
+        .data_to_mapper(data_to_mapper)
     );
 
-    // Instantiate the KONAMI SCC mapper
-    mapper_konami_scc konami_scc (
+    mapper_out ascii8_out();
+    mapper_ascii8 ascii8 (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
-        .out(konami_SCC_out),
-        .device_out(konami_SCC_device_out)
+        .out(ascii8_out)
     );
 
-    // Instantiate the FM-PAC mapper
+    mapper_out ascii16_out();
+    mapper_ascii16 ascii16 (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(ascii16_out)
+    );
+
+    mapper_out generic8k_out();
+    mapper_generic8k mapper_generic8k (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(generic8k_out)
+    );
+
+    mapper_out generic16k_out();
+    mapper_generic16k mapper_generic16k (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(generic16k_out)
+    );
+
+    mapper_out fm_pac_out();
+    device_bus fm_pac_device_out();
     mapper_fm_pac fm_pac (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
@@ -97,72 +66,77 @@ module mappers (
         .device_out(fm_pac_device_out)
     );
 
-    // Instantiate the Yamaha SFG mapper
+    mapper_out yamaha_sfg_out();
+    device_bus yamaha_sfg_device_out();
     mapper_yamaha_sfg yamaha_sfg (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(yamaha_sfg_out),
         .device_out(yamaha_sfg_device_out)
     );
-    
-    // Instantiate the Konami Gamemaster2 mapper
+
+    mapper_out konami_out();
+    mapper_konami konami (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(konami_out)
+    );
+
+    mapper_out konami_SCC_out();
+    device_bus konami_SCC_device_out();
+    mapper_konami_scc konami_scc (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(konami_SCC_out),
+        .device_out(konami_SCC_device_out)
+    );
+
+    mapper_out gm2_out();
     mapper_gamemaster2 gm2 (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(gm2_out)
     );
 
-    // Instantiate the MSX2 RAM mapper
-    mapper_msx2_ram msx2_ram (
-        .cpu_bus(cpu_bus),
-        .block_info(block_info),
-        .out(msx2_ram_out),
-        .data_to_mapper(data_to_mapper)
-    );
-   
-    // Instantiate the Cross Blaim mapper
+    mapper_out crossBlaim_out();
     mapper_crossBlaim mapper_crossBlaim (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(crossBlaim_out)
     );
 
-    // Instantiate the Generic 8k mapper
-    mapper_generic8k mapper_generic8k (
+    mapper_out national_out();
+    mapper_national national (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
-        .out(generic8k_out)
-    );
-    
-    // Instantiate the Generic 16k mapper
-    mapper_generic16k mapper_generic16k (
-        .cpu_bus(cpu_bus),
-        .block_info(block_info),
-        .out(generic16k_out)
+        .out(national_out)
     );
 
-    // Instantiate the Harry Fox mapper
+    mapper_out harryFox_out();
     mapper_harryFox mapper_harryFox (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(harryFox_out)
     );
 
-    // Instantiate the Zemina80in1 mapper
+    mapper_out zemina80_out();
     mapper_zemina80 mapper_zemina80 (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(zemina80_out)
     );
 
-    // Instantiate the Zemina90in1 mapper
+    mapper_out zemina90_out();
     mapper_zemina90 mapper_zemina90 (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
         .out(zemina90_out),
         .data_to_mapper(data_to_mapper)
     );
-
+    
+    mapper_out mfrsd_out();
+    device_bus mfrsd_device_out();
+    ext_sd_card_if ext_SD_card_mfrsd();
     mapper_mfrsd  mapper_mfrsd (
         .cpu_bus(cpu_bus),
         .ext_SD_card_bus(ext_SD_card_mfrsd),
@@ -174,14 +148,8 @@ module mappers (
         .slot_expander_force_en(slot_expander_force_en)
     );
 
-    // Instantiate the National mapper
-    mapper_national national (
-        .cpu_bus(cpu_bus),
-        .block_info(block_info),
-        .out(national_out)
-    );
-    
-    // Instantiate the OCM mapper
+    mapper_out ese_ram_out();
+    ext_sd_card_if ext_SD_card_ese();
     mapper_eseRam ese_ram (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
@@ -190,6 +158,8 @@ module mappers (
         .megaSD_enable(ocm_megaSD_enable)
     );
 
+    mapper_out mega_ram_out();
+    device_bus mega_ram_device_out();
     mapper_megaram mega_ram (
         .cpu_bus(cpu_bus),
         .block_info(block_info),
@@ -199,82 +169,87 @@ module mappers (
         .ocm_slot2_mode(ocm_slot2_mode)
     );
 
-    // Assign 
-    //assign slot_expander_en = slot_expander_en;
+    assign data                 = fm_pac_out.data 
+                                & national_out.data 
+                                & mfrsd_out.data 
+                                & ese_ram_out.data;
 
-    // Data: Use the FM-PAC mapper's data output, assuming it has priority
-    assign data = fm_pac_out.data & mfrsd_out.data & national_out.data & ese_ram_out.data;
-
-    // Combine outputs from the mappers
-    // Address: Combine addresses from all mappers using a bitwise AND operation
-    assign memory_bus.addr  = ascii8_out.addr 
-                            & ascii16_out.addr 
-                            & offset_out.addr 
+    assign memory_bus.addr  = offset_out.addr
+                            & msx2_ram_out.addr
+                            & ascii8_out.addr
+                            & ascii16_out.addr
+                            & generic8k_out.addr
+                            & generic16k_out.addr
                             & fm_pac_out.addr
                             & yamaha_sfg_out.addr
-                            & konami_out.addr 
-                            & gm2_out.addr 
-                            & konami_SCC_out.addr 
-                            & msx2_ram_out.addr 
-                            & crossBlaim_out.addr 
-                            & generic8k_out.addr 
-                            & generic16k_out.addr
-                            & harryFox_out.addr 
-                            & zemina80_out.addr 
-                            & zemina90_out.addr 
-                            & mfrsd_out.addr
+                            & konami_out.addr
+                            & konami_SCC_out.addr
+                            & gm2_out.addr
                             & national_out.addr
-                            & ese_ram_out.addr;
+                            & crossBlaim_out.addr
+                            & harryFox_out.addr
+                            & zemina80_out.addr
+                            & zemina90_out.addr
+                            & mfrsd_out.addr
+                            & ese_ram_out.addr; //TODO MEGARAM NEMÁ napojen out nikam
 
-    // Read/Write control: Combine read/write signals from all mappers using a bitwise AND operation
-    assign memory_bus.rnw   = ascii8_out.rnw 
-                            & ascii16_out.rnw 
-                            & offset_out.rnw 
-                            & fm_pac_out.rnw 
-                            & gm2_out.rnw 
-                            & msx2_ram_out.rnw 
+    assign memory_bus.rnw   = offset_out.rnw
+                            & msx2_ram_out.rnw
+                            & ascii8_out.rnw
+                            & ascii16_out.rnw
+                            & fm_pac_out.rnw
                             & konami_SCC_out.rnw
-                            & mfrsd_out.rnw
+                            & gm2_out.rnw
                             & national_out.rnw
+                            & mfrsd_out.rnw
                             & ese_ram_out.rnw;
 
-    // RAM chip select: Combine RAM chip select signals using a bitwise OR operation
-    assign memory_bus.ram_cs    = ascii8_out.ram_cs 
-                                | ascii16_out.ram_cs 
-                                | offset_out.ram_cs 
+    assign memory_bus.ram_cs    = offset_out.ram_cs
+                                | msx2_ram_out.ram_cs
+                                | ascii8_out.ram_cs
+                                | ascii16_out.ram_cs
+                                | generic8k_out.ram_cs
+                                | generic16k_out.ram_cs
                                 | fm_pac_out.ram_cs
                                 | yamaha_sfg_out.ram_cs
-                                | konami_out.ram_cs 
-                                | gm2_out.ram_cs 
-                                | konami_SCC_out.ram_cs 
-                                | msx2_ram_out.ram_cs 
-                                | crossBlaim_out.ram_cs 
-                                | generic8k_out.ram_cs 
-                                | generic16k_out.ram_cs
-                                | harryFox_out.ram_cs 
-                                | zemina80_out.ram_cs 
-                                | zemina90_out.ram_cs 
-                                | mfrsd_out.ram_cs
+                                | konami_out.ram_cs
+                                | konami_SCC_out.ram_cs
+                                | gm2_out.ram_cs
+                                | crossBlaim_out.ram_cs
                                 | national_out.ram_cs
+                                | harryFox_out.ram_cs
+                                | zemina80_out.ram_cs
+                                | zemina90_out.ram_cs
+                                | mfrsd_out.ram_cs
                                 | ese_ram_out.ram_cs;
 
-    // SRAM chip select: Combine SRAM chip select signals using a bitwise OR operation
-    assign memory_bus.sram_cs   = ascii8_out.sram_cs 
-                                | ascii16_out.sram_cs 
-                                | fm_pac_out.sram_cs 
+    assign memory_bus.sram_cs   = ascii8_out.sram_cs
+                                | ascii16_out.sram_cs
+                                | fm_pac_out.sram_cs
                                 | gm2_out.sram_cs
                                 | national_out.sram_cs;
 
-    assign device_bus.we    = fm_pac_device_out.we | yamaha_sfg_device_out.we;
-    assign device_bus.en    = fm_pac_device_out.en | yamaha_sfg_device_out.en | konami_SCC_device_out.en | mfrsd_device_out.en | mega_ram_device_out.en;
-    assign device_bus.mode  = konami_SCC_device_out.mode & mfrsd_device_out.mode;
-    assign device_bus.param = konami_SCC_device_out.param & mfrsd_device_out.param;
+    assign device_bus.we        = fm_pac_device_out.we 
+                                | yamaha_sfg_device_out.we;
+
+    assign device_bus.en        = fm_pac_device_out.en 
+                                | yamaha_sfg_device_out.en 
+                                | konami_SCC_device_out.en 
+                                | mfrsd_device_out.en 
+                                | mega_ram_device_out.en;
+
+    assign device_bus.mode      = konami_SCC_device_out.mode 
+                                & mfrsd_device_out.mode;
+
+    assign device_bus.param     = konami_SCC_device_out.param 
+                                & mfrsd_device_out.param;
+
     assign device_bus.device_ref = cpu_bus.mreq ? block_info.device_ref : '0;
 
     // SDCARD
-    assign ext_SD_card_bus.rx             = ext_SD_card_ese.rx         | ext_SD_card_mfrsd.rx;
-    assign ext_SD_card_bus.tx             = ext_SD_card_ese.tx         | ext_SD_card_mfrsd.tx;
-    assign ext_SD_card_bus.data_to_SD     = ext_SD_card_ese.data_to_SD & ext_SD_card_mfrsd.data_to_SD;
+    assign ext_SD_card_bus.rx             = ext_SD_card_ese.rx         |  ext_SD_card_mfrsd.rx;
+    assign ext_SD_card_bus.tx             = ext_SD_card_ese.tx         |  ext_SD_card_mfrsd.tx;
+    assign ext_SD_card_bus.data_to_SD     = ext_SD_card_ese.data_to_SD &  ext_SD_card_mfrsd.data_to_SD;
     assign ext_SD_card_mfrsd.data_from_SD = ext_SD_card_bus.data_from_SD;
     assign ext_SD_card_ese.data_from_SD   = ext_SD_card_bus.data_from_SD;
 
