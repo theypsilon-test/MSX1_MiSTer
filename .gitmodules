@@ -4,3 +4,6 @@
 [submodule "rtl/sound/ikaopm"]
 	path = rtl/sound/ikaopm
 	url = https://github.com/ika-musume/IKAOPM.git
+[submodule "rtl/sound/jt51"]
+	path = rtl/sound/jt51
+	url = https://github.com/jotego/jt51.git

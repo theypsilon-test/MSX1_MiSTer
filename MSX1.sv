@@ -251,6 +251,7 @@ wire      [15:0] sdram_sz;
 wire      [64:0] rtc;
 wire             reset;
 wire             hard_reset;
+wire      [31:0] uart_speed;
 /*verilator tracing_off*/
 //[0]     RESET
 //[2:1]   Aspect ratio
@@ -277,7 +278,7 @@ wire             hard_reset;
 //[41]    BORDER
 `include "build_id.v"
 localparam CONF_STR = {
-   "MSX1;",
+   "MSX1;UART115200,MIDI;",
    "-;",
    "FC1,MSX,Load ROM PACK,30000000;",
    "FC2,MSX,Load FW  PACK,30300000;",
@@ -379,7 +380,8 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(VDNUM)) hps_io
    .sdram_sz(sdram_sz),
    .RTC(rtc),
    .info_req(info_req),
-   .info(info)
+   .info(info),
+   .uart_speed(uart_speed)
 );
 
 /////////////////   CONFIG   /////////////////
@@ -462,6 +464,20 @@ msx #(.sysCLK(sysCLK)) MSX
    .joy(joy),
    .kb_upload_memory(kb_upload_memory),
    .*
+);
+
+//////////////////   UART ///////////////////
+wire [7:0] uart_rx_data;
+wire       uart_rx;
+
+uart_rx #(.sysCLK(sysCLK)) uart_rx_i
+(
+   .clk(clock_bus.base_mp.clk),
+   .reset(reset),
+   .rx(UART_RXD),
+   .uart_speed(uart_speed),
+   .data_rx(uart_rx),
+   .data(uart_rx_data)
 );
 
 //////////////////   SD   ///////////////////

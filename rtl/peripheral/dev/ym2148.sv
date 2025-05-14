@@ -40,23 +40,122 @@ module dev_YM2148 #(parameter COUNT=1) (
     device_bus             device_bus,
     clock_bus_if.base_mp   clock_bus,
     input MSX::io_device_t io_device[3],
+    input            [7:0] uart_rx_data,
+    input                  uart_rx,
     output         [7:0]   data,
     output                 irq
 );
 
+    localparam STAT_TXRDY = 0;
+    localparam STAT_RXRDY = 1;
+    localparam STAT_OE    = 4;
+    localparam STAT_FE    = 5;
+
+    localparam CMD_TXEN   = 0;
+    localparam CMD_TXIE   = 1;
+    localparam CMD_RXEN   = 2;
+    localparam CMD_RXIE   = 3;
+    localparam CMD_ER     = 4;
+    localparam CMD_IR     = 7;
+
     logic [7:0] irq_vector[2];
+    logic [7:0] status;
+    logic [7:0] cmd_reg;
+    logic [7:0] rx_buffer;
+    logic       rxIRQ;
+    logic       txIRQ;
 
     wire irq_vector_to_bus = cpu_bus.m1 && cpu_bus.iorq && cpu_bus.interrupt && io_device[0].enable;
 
-    assign data            = irq_vector_to_bus ? irq_vector[irq] : 8'hFF;
-    assign irq             = '0;            //Todo implementace
+    assign data            = irq_vector_to_bus                   ? irq_vector[irq] :
+                             dev_rd && cpu_bus.addr[2:0] == 3'd5 ? rx_buffer :
+                             dev_rd && cpu_bus.addr[2:0] == 3'd6 ? status :
+                                                                   8'hFF;
+    assign irq             = rxIRQ | txIRQ;
+
+    wire   dev_en = io_device[0].enable && io_device[0].device_ref == device_bus.device_ref && device_bus.we;
+    wire   dev_wr = dev_en && cpu_bus.req && cpu_bus.wr;
+    wire   dev_rd = dev_en && cpu_bus.rd;
 
     always_ff @(posedge cpu_bus.clk) begin
         if (cpu_bus.reset) begin
+            rx_buffer  <= '0;
+            status     <= '0;
+            rxIRQ      <= '0;
+            txIRQ      <= '0;
+            status     <= '0;
+            cmd_reg    <= '0;
             irq_vector <= '{'1,'1};
         end else begin
-            if (io_device[0].enable && io_device[0].device_ref == device_bus.device_ref && device_bus.we) begin
-                irq_vector[cpu_bus.addr[0]] <= cpu_bus.data;            // 1 - internal (MIDI) IRQ vector, 0 - external IRQ vector
+            if (dev_wr) begin
+                case(cpu_bus.addr[2:0])
+                    3'd3: irq_vector[1] <= cpu_bus.data;    // MIDI IRQ Vector 
+                    3'd4: irq_vector[0] <= cpu_bus.data;    // EXT  IRQ Vector 
+                    3'd5: begin                             // Data
+                        if (cmd_reg[CMD_TXEN]) begin
+                        /*
+                            if (syncTrans.pendingSyncPoint()) {
+                                // We're still sending the previous character, only buffer
+                                // this one. Don't accept any further characters.
+                                txBuffer2 = value;
+                                status &= byte(~STAT_TXRDY);
+                                txIRQ.reset();
+                            } else {
+                                // Immediately start sending this character. We're still
+                                // ready to accept a next character.
+                                send(value, time);
+                           }*/
+                           ;
+                        end
+                    end
+                    3'd6: begin                             // Command
+                        if (cpu_bus.data[CMD_IR]) begin     // RESET
+                            rx_buffer  <= '0;
+                            status     <= '0;
+                            rxIRQ      <= '0;
+                            txIRQ      <= '0;
+                            status     <= '0;
+                        end else if (cpu_bus.data[CMD_ER]) begin
+                            status[STAT_OE] <= 0;            
+                            status[STAT_FE] <= 0;
+                        end else begin
+                            cmd_reg <= cpu_bus.data;
+                            if (cpu_bus.data[CMD_RXEN]) begin
+                                rxIRQ              <= status[STAT_RXRDY];
+                            end else begin
+                                status[STAT_RXRDY] <= 0;
+                                rxIRQ              <= 0;
+                            end
+                            if (cpu_bus.data[CMD_TXEN]) begin
+                                if (~cmd_reg[CMD_TXEN]) begin
+                                    status[STAT_TXRDY] <= 1;
+                                    txIRQ              <= 1;
+                                end
+                            end else begin
+                                status[STAT_TXRDY] <= 0;
+                                txIRQ              <= 0;
+                            end
+                        end
+                    end
+                    default:;
+                endcase
+            end
+            //UART receive
+            if (cmd_reg[CMD_RXEN] && uart_rx) begin
+                if (status[STAT_RXRDY]) begin
+                    status[STAT_OE] <= 1;
+                end else begin
+                    rx_buffer <= uart_rx_data;
+                    status[STAT_RXRDY] <= 1;
+                    if (cmd_reg[CMD_RXIE]) begin
+                        rxIRQ <= 1;
+                    end
+                end
+            end
+            //Reset status after read data
+            if (dev_rd && cpu_bus.addr[2:0] == 3'd5) begin
+                rxIRQ <= 0;
+                status[STAT_RXRDY] <= 0;
             end
         end
     end

@@ -49,6 +49,8 @@ module devices  #(parameter sysCLK)
     input MSX::user_config_t msx_user_config,
     input            [10:0] ps2_key,
     input            [64:0] rtc_time,
+    input             [7:0] uart_rx_data,
+    input                   uart_rx,
     output    signed [15:0] sound_L,                                // Combined audio output
     output    signed [15:0] sound_R,                                // Combined audio output
     output            [7:0] data,                                   // Combined data output
@@ -146,6 +148,8 @@ module devices  #(parameter sysCLK)
         .clock_bus(clock_bus),
         .irq(ym2148_irq),
         .io_device(io_device[DEV_YM2148]),
+        .uart_rx_data(uart_rx_data),
+        .uart_rx(uart_rx),
         .data(ym2148_data)
     );
 

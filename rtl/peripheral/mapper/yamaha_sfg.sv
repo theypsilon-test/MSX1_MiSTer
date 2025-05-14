@@ -42,48 +42,40 @@ module mapper_yamaha_sfg (
     device_bus              device_out     // Interface for device output
 );
 
-    // Internal logic variables
-    logic       opm_en;                // OPM enable signal
-
-    // Initial setup
-    initial begin
-        opm_en    = 1'b0;
-    end
+    
 
     wire cs = (block_info.typ == MAPPER_YAMAHA_SFG) && cpu_bus.mreq;
 
-    // Main control logic
-    always_ff @(posedge cpu_bus.clk) begin
-        opm_en <= 1'b0;
-        device_out.we <= 1'b0;
+    logic rom_cs;
+    always_comb begin
+        device_out.en = 1'b0;
+        device_out.we = 1'b0;
+        rom_cs        = 1'b0;
         if (cs) begin
-            case (cpu_bus.addr[13:0])
-                14'h3FF0:
-                    opm_en <= cpu_bus.wr;
+            case(cpu_bus.addr[13:0])
+                14'h3FF0,
                 14'h3FF1:
-                    opm_en <= 1'b1;
+                    device_out.en = 1'b1;
+                14'h3FF2:
+                    ;
+                14'h3FF3,
                 14'h3FF4,
-                14'h3FF5:                   // IRQ_vector addr[0] 0 - internal IRQ vector, 1 - external IRQ vector
-                    if (cpu_bus.wr && cpu_bus.req) begin
-                        device_out.we <= 1'b1;
-                    end
-                default: ; // No action
+                14'h3FF5,
+                14'h3FF6:                   
+                    device_out.we = 1'b1;
+                14'h3FF7:                   
+                    ;
+                default: 
+                    rom_cs = 1'b1;
             endcase
-            if (cpu_bus.wr && cpu_bus.req && rom_mapped) begin
-                $display("Mapper write: %x %x %t", cpu_bus.addr, cpu_bus.data, $time);
-            end
         end
     end
 
-    // Mapper output signals
-    wire rom_mapped = cpu_bus.addr[13:0] < 14'h3FF0 ||  cpu_bus.addr[13:0] > 14'h3ff8;
-
-    assign device_out.en   = opm_en && ~rom_mapped;
     assign device_out.data = '1;
 
     // Multiplexing output data
-    assign out.ram_cs   = cs && cpu_bus.rd && rom_mapped;
+    assign out.ram_cs   = rom_cs && cpu_bus.rd;
     assign out.rnw      = '1;
-    assign out.addr     = cs ? {11'd0, (cpu_bus.addr & (block_info.rom_size[15:0] - 16'd1))} : {27{1'b1}};
+    assign out.addr     = rom_cs ? {11'd0, (cpu_bus.addr & (block_info.rom_size[15:0] - 16'd1))} : {27{1'b1}};
 
 endmodule

@@ -39,35 +39,42 @@ module dev_opm #(parameter COUNT=3) (
     cpu_bus_if.device_mp   cpu_bus,
     device_bus             device_bus,
     clock_bus_if.base_mp   clock_bus,
-    input MSX::io_device_t io_device[3],
+    input MSX::io_device_t io_device[COUNT],
     output signed [15:0]   sound_L,
     output signed [15:0]   sound_R,
     output         [7:0]   data,
     output                 irq
 );
-
-    assign sound_L = (io_device[0].enable ? sound_OPM_L[0] : '0) +
-                     (io_device[1].enable ? sound_OPM_L[1] : '0) +
-                     (io_device[2].enable ? sound_OPM_L[2] : '0);
-
-    assign sound_R = (io_device[0].enable ? sound_OPM_R[0] : '0) +
-                     (io_device[1].enable ? sound_OPM_R[1] : '0) +
-                     (io_device[2].enable ? sound_OPM_R[2] : '0);                   
     
-    assign irq = ~((io_device[0].enable ? irq_n[0] : 1'b1) &
-                   (io_device[1].enable ? irq_n[1] : 1'b1) &
-                   (io_device[2].enable ? irq_n[2] : 1'b1)) ;
-    
-    wire io_en = cpu_bus.iorq && ~cpu_bus.m1;
+    logic signed [15:0] sound_L_accum, sound_R_accum;
+    logic [7:0] data_comb;
+    logic irq_comb;
+    always_comb begin
+        sound_L_accum = '0;
+        sound_R_accum = '0;
+        data_comb     = '1;
+        irq_comb      = '1;
+        for (int i = 0; i < COUNT; i++) begin
+            if (io_device[i].enable) begin
+                sound_L_accum += sound_OPM_L[i];
+                sound_R_accum += sound_OPM_R[i];
+                data_comb     &= jt51_data_out[i];
+                irq_comb      &= irq_n[i];
+            end
+        end
+    end
 
-    logic signed [15:0] sound_OPM_L[0:2], sound_OPM_R[0:2];
-    logic         [7:0] data_OPM[3];
-    logic         [2:0] data_OPM_OE;
-    logic               irq_n[3];
+    assign sound_L = sound_L_accum;
+    assign sound_R = sound_R_accum;
+    assign irq     = ~irq_comb;
+    assign data    = data_comb;
+
+    logic signed [15:0] sound_OPM_L[COUNT], sound_OPM_R[COUNT];
+    logic         [7:0] jt51_data_out[COUNT];
+    logic               irq_n[COUNT];
+    logic               io_en;
     
-    assign data = (data_OPM_OE[0] ? data_OPM[0] : 8'hFF) &
-                  (data_OPM_OE[1] ? data_OPM[1] : 8'hFF) &
-                  (data_OPM_OE[2] ? data_OPM[2] : 8'hFF);
+    assign io_en = cpu_bus.iorq && ~cpu_bus.m1;
 
     genvar i;
     generate
@@ -75,28 +82,28 @@ module dev_opm #(parameter COUNT=3) (
             wire cs_io_active = (cpu_bus.addr[7:0] & io_device[i].mask) == io_device[i].port;
             wire cs_io        = (io_device[i].enable && cs_io_active && io_en);
             wire cs_dev       = (io_device[i].enable && io_device[i].device_ref == device_bus.device_ref && device_bus.en);
+            wire [7:0] data_tmp;
 
-            IKAOPM #(.FULLY_SYNCHRONOUS(1), .FAST_RESET(1), .USE_BRAM(0)) OPM_i (
-                .i_EMUCLK      (cpu_bus.clk),
-                .i_phiM_PCEN_n (~clock_bus.ce_3m58_n),
-                .i_IC_n        (~cpu_bus.reset),
-                .o_phi1        (),
-                .i_CS_n        (~(cs_io || cs_dev)),
-                .i_WR_n        (~cpu_bus.wr),
-                .i_RD_n        (~cpu_bus.rd),
-                .i_A0          (cpu_bus.addr[0]),
-                .i_D           (cpu_bus.data),
-                .o_D           (data_OPM[i]),
-                .o_D_OE        (data_OPM_OE[i]),
-                .o_CT1         (), //TODO dořešit
-                .o_CT2         (), //TODO dořešit
-                .o_IRQ_n       (irq_n[i]),
-                .o_SH1         (), //TODO dořešit
-                .o_SH2         (), //TODO dořešit
-                .o_SO          (), //TODO dořešit
-                .o_EMU_R       (sound_OPM_R[i]),
-                .o_EMU_L       (sound_OPM_L[i])
-				);
+            assign jt51_data_out[i] = (cs_io || cs_dev) && cpu_bus.rd ? data_tmp : '1;
+
+            jt51 jt51_i (
+                .rst(cpu_bus.reset),
+                .clk(cpu_bus.clk),
+                .cen_p1(clock_bus.ce_3m58_n),
+                .cs_n(~(cs_io || cs_dev)),
+                .wr_n(~(cpu_bus.wr && cpu_bus.req)),
+                .a0(cpu_bus.addr[0]),
+                .din(cpu_bus.data),
+                .dout(data_tmp),
+                .ct1(),
+                .ct2(),
+                .irq_n(irq_n[i]),
+                .sample(),
+                .left(sound_OPM_L[i]),
+                .right(sound_OPM_R[i]),
+                .xleft(),
+                .xright()
+            );
         end
     endgenerate
 
