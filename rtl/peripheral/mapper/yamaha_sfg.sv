@@ -56,8 +56,7 @@ module mapper_yamaha_sfg (
                 14'h3FF0,
                 14'h3FF1:
                     device_out.en = 1'b1;
-                14'h3FF2:
-                    ;
+                14'h3FF2,
                 14'h3FF3,
                 14'h3FF4,
                 14'h3FF5,

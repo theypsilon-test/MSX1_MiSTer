@@ -43,7 +43,8 @@ module dev_YM2148 #(parameter COUNT=1) (
     input            [7:0] uart_rx_data,
     input                  uart_rx,
     output         [7:0]   data,
-    output                 irq
+    output                 irq,
+    output logic [7:0] key_matrix[8]
 );
 
     localparam STAT_TXRDY = 0;
@@ -64,10 +65,12 @@ module dev_YM2148 #(parameter COUNT=1) (
     logic [7:0] rx_buffer;
     logic       rxIRQ;
     logic       txIRQ;
+    logic [7:0] key_row;
 
     wire irq_vector_to_bus = cpu_bus.m1 && cpu_bus.iorq && cpu_bus.interrupt && io_device[0].enable;
 
     assign data            = irq_vector_to_bus                   ? irq_vector[irq] :
+                             dev_rd && cpu_bus.addr[2:0] == 3'd2 ? matrix_data :
                              dev_rd && cpu_bus.addr[2:0] == 3'd5 ? rx_buffer :
                              dev_rd && cpu_bus.addr[2:0] == 3'd6 ? status :
                                                                    8'hFF;
@@ -89,6 +92,7 @@ module dev_YM2148 #(parameter COUNT=1) (
         end else begin
             if (dev_wr) begin
                 case(cpu_bus.addr[2:0])
+                    3'd2: key_row       <= cpu_bus.data;    // Keyboard row
                     3'd3: irq_vector[1] <= cpu_bus.data;    // MIDI IRQ Vector 
                     3'd4: irq_vector[0] <= cpu_bus.data;    // EXT  IRQ Vector 
                     3'd5: begin                             // Data
@@ -121,15 +125,18 @@ module dev_YM2148 #(parameter COUNT=1) (
                         end else begin
                             cmd_reg <= cpu_bus.data;
                             if (cpu_bus.data[CMD_RXEN]) begin
-                                rxIRQ              <= status[STAT_RXRDY];
+                                if (cpu_bus.data[CMD_RXIE]) begin
+                                    rxIRQ          <= status[STAT_RXRDY];
+                                end
                             end else begin
                                 status[STAT_RXRDY] <= 0;
                                 rxIRQ              <= 0;
                             end
+
                             if (cpu_bus.data[CMD_TXEN]) begin
                                 if (~cmd_reg[CMD_TXEN]) begin
                                     status[STAT_TXRDY] <= 1;
-                                    txIRQ              <= 1;
+                                    txIRQ              <= cpu_bus.data[CMD_TXIE];
                                 end
                             end else begin
                                 status[STAT_TXRDY] <= 0;
@@ -157,6 +164,55 @@ module dev_YM2148 #(parameter COUNT=1) (
                 rxIRQ <= 0;
                 status[STAT_RXRDY] <= 0;
             end
+        end
+    end
+
+    typedef enum logic [1:0] {
+        IDLE, READ_NOTE, READ_VELOCITY
+    } state_t;
+
+    state_t     state;
+    logic       status_note;
+    logic [6:0] note;
+    //logic [7:0] key_matrix[8];
+
+    always_ff @(posedge cpu_bus.clk) begin
+        if (cpu_bus.reset) begin
+            state                 <= IDLE;
+            status_note           <= '0;
+            key_matrix            <= '{'1, '1, '1, '1, '1, '1, '1, '1};
+        end else begin
+            if (uart_rx) begin
+                if (uart_rx_data[7]) begin
+                    if (uart_rx_data[6:5] == 2'b00) begin
+                        status_note <= uart_rx_data[4];
+                        state       <= READ_NOTE;
+                    end else begin
+                        state       <= IDLE;
+                    end
+                end else begin
+                    case(state)
+                        IDLE: ;
+                        READ_NOTE: begin
+                            note        <= uart_rx_data[6:0];
+                            state       <= READ_VELOCITY;
+                        end
+                        READ_VELOCITY: begin
+                            state       <= READ_NOTE;
+                            key_matrix[note[2:0]][note[5:3]] <= status_note && uart_rx_data != 0 ? 1'b0 : 1'b1;
+                        end
+                        default;
+                    endcase    
+                end
+            end
+        end
+    end
+
+    logic [7:0] matrix_data;
+    always_comb begin
+        matrix_data = '1;
+        for (int i = 0; i < 8; i++) begin
+            if (key_row[i]) matrix_data &= key_matrix[i];
         end
     end
 
