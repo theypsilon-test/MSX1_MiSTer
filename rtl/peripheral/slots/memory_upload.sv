@@ -12,9 +12,7 @@ module memory_upload
     input                 [7:0] ddr3_dout,
     input                       ddr3_ready,
     output                      ddr3_request,
-    output logic         [26:0] ram_addr,
-    output                [7:0] ram_din,
-    output logic                ram_ce,
+    memory_bus_if.device_mp     memory_bus,
     output MSX::kb_memory_t     kb_upload_memory,
     output MSX::slot_expander_t slot_expander[4],
     output MSX::block_t         slot_layout[64],
@@ -82,12 +80,16 @@ module memory_upload
     wire [8:0] fill_poss = 9'(ram_addr - lookup_RAM[ref_ram].addr);
 
     // Vstupní data RAM jsou vybírána podle vzoru
-    assign ram_din = (pattern == PATTERN_DDR)  ? ddr3_dout :
+    assign memory_bus.data    = (pattern == PATTERN_DDR)  ? ddr3_dout :
                      (pattern == PATTERN_FF)   ? 8'hFF     :
                      (pattern == PATTERN_ZERO) ? 8'h00     :
                      (pattern == PATTERN_03)   ? ((fill_poss[8]) ? ((fill_poss[1]) ? 8'hff : 8'h00) : ((fill_poss[1]) ? 8'h00 : 8'hff)) :
                      (pattern == PATTERN_04)   ? ((fill_poss[8]) ? ((fill_poss[0]) ? 8'h00 : 8'hff) : ((fill_poss[0]) ? 8'hff : 8'h00)) :
                      (pattern == PATTERN_05)   ? ((fill_poss[7]) ? 8'hff : 8'h00) : 8'hFF;
+    assign memory_bus.addr    = ram_addr;
+    assign memory_bus.ram_cs  = ram_ce;
+    assign memory_bus.rnw     = '0;
+    assign memory_bus.sram_cs = '0;
 
     // Definice stavového automatu
     typedef enum logic [3:0] {
@@ -112,9 +114,11 @@ module memory_upload
     state_t state = STATE_IDLE;
     state_t next_state = STATE_IDLE;
     pattern_t pattern;
-    logic [7:0] conf[8];
-    logic [3:0] ref_ram;
-    logic       crc_en;
+    logic [26:0] ram_addr;
+    logic  [7:0] conf[8];
+    logic  [3:0] ref_ram;
+    logic        crc_en;
+    logic        ram_ce;
 
     always @(posedge clk) begin
         logic [24:0] data_size;
