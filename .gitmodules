@@ -1,9 +1,9 @@
-[submodule "rtl/sound/ikaopll"]
-	path = rtl/sound/ikaopll
+[submodule "rtl/peripheral/SOUND/ikaopll"]
+	path = rtl/peripheral/SOUND/ikaopll
 	url = https://github.com/ika-musume/IKAOPLL.git
-[submodule "rtl/sound/ikaopm"]
-	path = rtl/sound/ikaopm
+[submodule "rtl/peripheral/SOUND/ikaopm"]
+	path = rtl/peripheral/SOUND/ikaopm
 	url = https://github.com/ika-musume/IKAOPM.git
-[submodule "rtl/sound/jt51"]
-	path = rtl/sound/jt51
+[submodule "rtl/peripheral/SOUND/jt51"]
+	path = rtl/peripheral/SOUND/jt51
 	url = https://github.com/jotego/jt51.git
