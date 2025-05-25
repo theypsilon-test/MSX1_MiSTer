@@ -326,7 +326,7 @@ localparam CONF_STR = {
    "T[21],Reset;",
    "R[10],Reset & Detach ROM Cartridge;",
    "R[21],Reset and close OSD;",
-   "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING,Exceeded number of IO_DEVICE,No CRC32 DB,Not find CRC32 in DB;",
+   "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING,Exceeded number of IO_DEVICE,No CRC32 DB,Not find CRC32 in DB,SMALL MEMORY;",
    "V,v",`BUILD_DATE
 };
 /*verilator tracing_on*/
