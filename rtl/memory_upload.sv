@@ -533,34 +533,40 @@ module memory_upload
                             end else begin
                                 if (~io_device[device_t'(conf[3])][0].enable) begin
                                     $display("BLOCK IO_DEVICE[%x][0] enable: 1 param:%x reference: %d", device_t'(conf[3]), conf[4], current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper);
-                                    io_device[device_t'(conf[3])][0].enable      <= 1'b1;
-                                    io_device[device_t'(conf[3])][0].param       <= conf[4];
-                                    io_device[device_t'(conf[3])][0].device_ref  <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
-                                    io_ref_mapper                                <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
-                                    current_io_ref_mapper                        <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
-                                    last_device_num                              <= 0;
+                                    temp_io_device                    = io_device[device_t'(conf[3])][0];
+                                    temp_io_device.enable             = 1'b1;
+                                    temp_io_device.param              = conf[4];
+                                    temp_io_device.device_ref         = current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
+                                    io_ref_mapper                    <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
+                                    current_io_ref_mapper            <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
+                                    last_device_num                  <= 0;
+                                    io_device[device_t'(conf[3])][0] <= temp_io_device;
                                 end else if (~io_device[device_t'(conf[3])][1].enable) begin
                                     $display("BLOCK IO_DEVICE[%x][1] enable: 1 param:%x reference: %d", device_t'(conf[3]), conf[4], current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper);
-                                    io_device[device_t'(conf[3])][1].enable      <= 1'b1;
-                                    io_device[device_t'(conf[3])][1].param       <= conf[4];
-                                    io_device[device_t'(conf[3])][1].device_ref  <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
-                                    io_ref_mapper                                <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
-                                    current_io_ref_mapper                        <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
-                                    last_device_num                              <= 1;
+                                    temp_io_device                    = io_device[device_t'(conf[3])][1];
+                                    temp_io_device.enable             = 1'b1;
+                                    temp_io_device.param              = conf[4];
+                                    temp_io_device.device_ref         = current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
+                                    io_ref_mapper                    <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
+                                    current_io_ref_mapper            <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
+                                    last_device_num                  <= 1;
+                                    io_device[device_t'(conf[3])][1] <= temp_io_device;
                                 end else if (~io_device[device_t'(conf[3])][2].enable) begin
                                     $display("BLOCK IO_DEVICE[%x][2] enable: 1 param:%x reference: %d", device_t'(conf[3]), conf[4], current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper);
-                                    io_device[device_t'(conf[3])][2].enable      <= 1'b1;
-                                    io_device[device_t'(conf[3])][2].param       <= conf[4];
-                                    io_device[device_t'(conf[3])][2].device_ref  <= current_io_ref_mapper == '0 ? io_ref_mapper     : current_io_ref_mapper;
-                                    io_ref_mapper                                <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
-                                    current_io_ref_mapper                        <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
-                                    last_device_num <= 2;
+                                    temp_io_device                    = io_device[device_t'(conf[3])][2];
+                                    temp_io_device.enable             = 1'b1;
+                                    temp_io_device.param              = conf[4];
+                                    temp_io_device.device_ref         = current_io_ref_mapper == '0 ? io_ref_mapper     : current_io_ref_mapper;
+                                    io_ref_mapper                    <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
+                                    current_io_ref_mapper            <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
+                                    last_device_num                  <= 2;
+                                    io_device[device_t'(conf[3])][2] <= temp_io_device;
                                 end else begin
-                                    error                             <= ERR_DEVICE_MISSING;                  // DEVICE JIZ NENI K DISPOZICI
-                                    state                             <= STATE_IDLE;
+                                    error                            <= ERR_DEVICE_MISSING;                  // DEVICE JIZ NENI K DISPOZICI
+                                    state                            <= STATE_IDLE;
                                     $display("DEVICE %x JIZ NENI K DISPOZICI", device_t'(conf[3]));
-                                    device                            <= DEV_NONE;
-                                    last_device                       <= DEV_NONE;
+                                    device                           <= DEV_NONE;
+                                    last_device                      <= DEV_NONE;
                                 end
                             end
                         end
