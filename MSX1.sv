@@ -207,6 +207,8 @@ FDD_if FDD_bus[3]();
 block_device_if block_device_FDD[6]();
 block_device_if block_device_SD();
 block_device_if block_device_nvram[4]();
+memory_bus_if memory_bus_msx();
+memory_bus_if memory_bus_upload();
 
 /*verilator tracing_off*/
 MSX::cpu_regs_t    cpu_regs;
@@ -422,9 +424,6 @@ clock #(.sysCLK(sysCLK)) clock
 wire  [7:0] R, G, B, cpu_din, cpu_dout;
 wire [15:0] cpu_addr, audio_L, audio_R;
 wire        cpu_wr, cpu_rd, cpu_mreq, cpu_iorq, cpu_m1;
-wire [26:0] ram_addr;
-wire  [7:0] ram_din, ram_dout;
-wire        ram_rnw, sdram_ce, bram_ce;
 wire        sd_tx, sd_rx;
 wire  [7:0] d_to_sd, d_from_sd;
 wire [31:0] opcode;
@@ -438,6 +437,7 @@ msx #(.sysCLK(sysCLK)) MSX
    .core_reset(reset),
    .core_hard_reset(hard_reset),
    .clock_bus(clock_bus.base_mp),
+   .memory_bus(memory_bus_msx),
    .video_bus(video_bus),
    .vram_bus(vram_bus),
    .ext_SD_card_bus(ext_SD_card_bus),
@@ -705,8 +705,8 @@ ddram buffer
    .*
 );
 /*verilator tracing_on*/
-assign ram_dout = sdram_ce ? sdram_dout :
-                             8'hFF;
+
+assign memory_bus_msx.q = memory_bus_msx.ram_cs ? sdram_dout : 8'hFF;
 
 wire         sdram_ready, sdram_rnw, dw_sdram_we, dw_sdram_ready;
 wire  [26:0] sdram_addr;
@@ -719,10 +719,10 @@ sdram sdram
    .doRefresh(1'd0),
 
    .ch1_dout(sdram_dout),
-   .ch1_din(upload ? upload_ram_din : ram_din),
-   .ch1_addr(upload ? upload_ram_addr : ram_addr),
-   .ch1_req(upload ? upload_ram_ce : sdram_ce),
-   .ch1_rnw(upload ? 1'd0 : ram_rnw),
+   .ch1_din(upload ? upload_ram_din : memory_bus_msx.data),
+   .ch1_addr(upload ? upload_ram_addr : memory_bus_msx.addr),
+   .ch1_req(upload ? upload_ram_ce : memory_bus_msx.ram_cs),
+   .ch1_rnw(upload ? 1'd0 : memory_bus_msx.rnw),
    .ch1_ready(sdram_ready),
 
    .ch2_dout(),

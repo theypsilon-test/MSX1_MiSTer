@@ -11,6 +11,7 @@
    ext_sd_card_if.device_mp ext_SD_card_bus,
    //Flash acces to SDRAM
    flash_bus_if.device_mp   flash_bus,
+   memory_bus_if.device_mp  memory_bus,          
    //debug
    output MSX::cpu_regs_t   cpu_regs,
    output  [31:0]           opcode,
@@ -38,13 +39,6 @@
    input             [15:0] ioctl_index,
    input             [26:0] ioctl_addr,
    //SDRAM/BRAM
-   output            [26:0] ram_addr,
-   output             [7:0] ram_din,
-   output                   ram_rnw,
-   output                   sdram_ce,
-   output                   bram_ce,
-   input              [7:0] ram_dout,
-   input              [1:0] sdram_size,
    input MSX::slot_expander_t slot_expander[4],
    input MSX::block_t       slot_layout[64],
    input MSX::lookup_RAM_t  lookup_RAM[16],
@@ -74,6 +68,8 @@
 
 device_bus device_bus();
 cpu_bus_if cpu_bus(clock_bus.clk, reset);
+memory_bus_if memory_bus_slots();
+memory_bus_if memory_bus_devices();
 
 //  -----------------------------------------------------------------------------
 //  -- reset
@@ -196,18 +192,19 @@ assign bus_read = cpu_bus.device_mp.rd || (cpu_bus.iorq && cpu_bus.device_mp.m1)
 assign d_to_cpu = ~bus_read               ? 8'hFF           :
                   device_oe_rq            ? device_data     :                       // Prioritní data.
                   slot_oe_rq              ? d_from_slots    :                       // Prioritní data.
-                                            device_data & ram_dout & d_from_slots;
+                                            device_data & memory_bus.q & d_from_slots;
 
 wire signed [15:0] device_sound_L, device_sound_R;
 
-assign ram_addr = slots_ram_addr & device_ram_addr;
-assign sdram_ce = slots_ram_ce   | device_ram_ce;
+
+assign memory_bus.addr   = memory_bus_slots.addr   & memory_bus_devices.addr;
+assign memory_bus.ram_cs = memory_bus_slots.ram_cs | memory_bus_devices.ram_cs;
+assign memory_bus.rnw    = memory_bus_slots.rnw;                                       // TODO device add
+assign memory_bus.data   = memory_bus_slots.data;                                     // TODO device add
 
 wire  [7:0] device_data;
 wire  [7:0] data_to_mapper;
 wire  [7:0] slot_config;
-wire [26:0] device_ram_addr;
-wire        device_ram_ce;
 wire        device_oe_rq;
 wire        keybeep;
 wire        reset_lock, reset_request, ocm_megaSD_enable;
@@ -227,8 +224,7 @@ devices #(.sysCLK(sysCLK)) devices
    .data(device_data),
    .data_oe_rq(device_oe_rq),
    .data_to_mapper(data_to_mapper),
-   .ram_cs(device_ram_ce),
-   .ram_addr(device_ram_addr),
+   .memory_bus(memory_bus_devices),
    .vram_bus(vram_bus),
    .video_bus(video_bus),
    .cpu_interrupt(cpu_interrupt),
@@ -253,8 +249,8 @@ devices #(.sysCLK(sysCLK)) devices
 );
 
 wire  [7:0] d_from_slots;
-wire [26:0] slots_ram_addr;
-wire        slots_ram_ce;
+//wire [26:0] slots_ram_addr;
+//wire        slots_ram_ce;
 wire        slot_oe_rq;
 msx_slots msx_slots
 (
@@ -269,13 +265,7 @@ msx_slots msx_slots
    .lookup_SRAM(lookup_SRAM),
    .data(d_from_slots),
    .data_oe_rq(slot_oe_rq),
-   .ram_addr(slots_ram_addr),
-   .ram_din(ram_din),
-   .ram_rnw(ram_rnw),
-   .ram_dout(ram_dout),
-   .sdram_ce(slots_ram_ce),
-   .bram_ce(bram_ce),
-   .sdram_size(sdram_size),
+   .memory_bus(memory_bus_slots),
    .active_slot(active_slot),
    .data_to_mapper(data_to_mapper),
    .ocm_megaSD_enable(ocm_megaSD_enable),

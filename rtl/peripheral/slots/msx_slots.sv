@@ -3,6 +3,7 @@ module msx_slots (
     cpu_bus_if.device_mp        cpu_bus,          // Interface for CPU communication
     ext_sd_card_if.device_mp    ext_SD_card_bus,  // Interface Ext SD card
     flash_bus_if.device_mp      flash_bus,        // Interface to emulate FLASH
+    memory_bus_if.device_mp     memory_bus,
     input MSX::slot_expander_t  slot_expander[4],
     input MSX::block_t          slot_layout[64],
     input MSX::lookup_RAM_t     lookup_RAM[16],
@@ -10,13 +11,6 @@ module msx_slots (
     input                 [1:0] active_slot,      // Currently active slot
     output                [7:0] data,             // Data output
     output                      data_oe_rq,       // Priority output
-    output               [26:0] ram_addr,         // RAM address
-    output                [7:0] ram_din,          // Data input to RAM
-    input                 [7:0] ram_dout,         // Data output from RAM
-    output                      ram_rnw,          // RAM read/write control
-    output                      sdram_ce,         // SDRAM chip enable
-    output                      bram_ce,          // BRAM chip enable
-    input                 [1:0] sdram_size,       // SDRAM size
 
     device_bus                  device_bus,       // Interface for device control
     input                 [7:0] data_to_mapper,
@@ -26,7 +20,7 @@ module msx_slots (
 );
     // Mapper and memory bus configuration
     block_info block_info();
-    memory_bus memory_bus();
+    memory_bus memory_bus_mappers();
 
     // Subslot 
     wire [1:0] active_subslot;
@@ -76,18 +70,11 @@ module msx_slots (
     assign data       = subslot_output_rq ? subslot_data : mapper_data;
     assign data_oe_rq = subslot_output_rq;
     
-    // RAM data input from CPU bus
-    assign ram_din = cpu_bus.data;
-
-    // Chip enable signals for BRAM and SDRAM
-    assign bram_ce = '0;  // Assuming BRAM is not used in this context, hence inactive
-    assign sdram_ce = ~subslot_output_rq && (memory_bus.ram_cs || memory_bus.sram_cs);
-
-    // RAM read/write control signal
-    assign ram_rnw = memory_bus.rnw | (memory_bus.ram_cs & ram_ro);
-
-    // RAM address calculation
-    assign ram_addr = (memory_bus.sram_cs ? 27'(base_sram) : base_ram) + memory_bus.addr;
+    assign memory_bus.addr    = (memory_bus_mappers.sram_cs ? 27'(base_sram) : base_ram) + memory_bus_mappers.addr;
+    assign memory_bus.rnw     = memory_bus_mappers.rnw | (memory_bus_mappers.ram_cs & ram_ro);
+    assign memory_bus.data    = cpu_bus.data;
+    assign memory_bus.ram_cs  = ~subslot_output_rq && (memory_bus_mappers.ram_cs || memory_bus_mappers.sram_cs);
+    assign memory_bus.sram_cs = '0;
 
     // Assign mapper configuration based on the current slot and layout
     assign block_info.rom_size   = 25'(ram_blocks) << 14;
@@ -102,7 +89,7 @@ module msx_slots (
         .clock_bus(clock_bus),
         .cpu_bus(cpu_bus),
         .device_bus(device_bus),
-        .memory_bus(memory_bus),
+        .memory_bus(memory_bus_mappers),
         .ext_SD_card_bus(ext_SD_card_bus),
         .flash_bus(flash_bus),
         .block_info(block_info),

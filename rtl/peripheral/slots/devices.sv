@@ -43,6 +43,7 @@ module devices  #(parameter sysCLK)
     FDD_if.FDC_mp           FDD_bus[3],
     video_bus_if.device_mp  video_bus,
     vram_bus_if.device_mp   vram_bus,
+    memory_bus_if.device_mp memory_bus,
     input MSX::io_device_t  io_device[32][3],                       // Array of IO devices
     input MSX::io_device_mem_ref_t io_memory[8],                    // Array of memory references
     input MSX::kb_memory_t  kb_upload_memory,
@@ -56,8 +57,6 @@ module devices  #(parameter sysCLK)
     output            [7:0] data,                                   // Combined data output
     output                  data_oe_rq,                             // Priorite data
     output            [7:0] data_to_mapper,                         // Data output to mapper
-    output           [26:0] ram_addr,
-    output                  ram_cs,
     output                  cpu_interrupt,
     input             [5:0] joy[2],
     input                   tape_in,
@@ -88,8 +87,9 @@ module devices  #(parameter sysCLK)
     assign reset_request = ocm_reset_request;
     assign reset_lock    = ocm_reset_lock;
 
-    assign ram_cs = kanji_ram_cs | ocm_ram_cs;
-    assign ram_addr = kanji_ram_addr & ocm_ram_addr;
+    assign memory_bus.ram_cs = kanji_ram_cs | ocm_ram_cs;
+    assign memory_bus.addr   = kanji_ram_addr & ocm_ram_addr;
+    assign memory_bus.rnw    =  '1;
 
     // VIDEO interfaces
     assign cpu_interrupt     = tms_interrupt | v99_interrupt | opm_irq | ym2148_irq;
