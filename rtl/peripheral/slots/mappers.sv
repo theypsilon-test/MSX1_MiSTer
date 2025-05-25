@@ -5,7 +5,7 @@ module mappers (
     flash_bus_if.device_mp      flash_bus,          // Interface to emulate FLASH
     block_info                  block_info,         // Struct containing block configuration and parameters
     device_bus                  device_bus,         // Interface for device control
-    memory_bus                  memory_bus,         // Interface for memory control
+    memory_bus_if.device_mp     memory_bus,         // Interface for memory control
     output                [7:0] data,               // Data output from the active mapper; defaults to FF if no mapper is active
     input                 [7:0] data_to_mapper,
     output                      slot_expander_force_en,
@@ -231,6 +231,8 @@ module mappers (
                                 | fm_pac_out.sram_cs
                                 | gm2_out.sram_cs
                                 | national_out.sram_cs;
+
+    assign memory_bus.data      = '1;
 
     assign device_bus.we        = fm_pac_device_out.we 
                                 | yamaha_sfg_device_out.we;

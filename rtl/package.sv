@@ -310,13 +310,6 @@ interface device_bus;
     logic [7:0] data;
 endinterface
 
-interface memory_bus;
-    logic [26:0] addr;
-    logic        rnw;
-    logic        sram_cs;
-    logic        ram_cs;
-endinterface
-
 interface memory_bus_if;
     logic [26:0] addr;
     logic [7:0]  data;
@@ -325,11 +318,11 @@ interface memory_bus_if;
     logic        sram_cs;
     logic        ram_cs;
     modport device_mp (
-        output   addr, data,rnw,sram_cs,ram_cs,
+        output   addr,data,rnw,sram_cs,ram_cs,
         input    q
     );
     modport ram_mp (
-        input    addr, data,rnw,sram_cs,ram_cs,
+        input    addr,data,rnw,sram_cs,ram_cs,
         output   q
     );
 endinterface

@@ -19,7 +19,7 @@ module msx_slots (
 );
 
     block_info block_info();
-    memory_bus memory_bus_mappers();
+    memory_bus_if memory_bus_mappers();
 
     wire [1:0] active_subslot;
     wire       subslot_output_rq;
@@ -68,6 +68,8 @@ module msx_slots (
     assign memory_bus.data    = cpu_bus.data;
     assign memory_bus.ram_cs  = ~subslot_output_rq && (memory_bus_mappers.ram_cs || memory_bus_mappers.sram_cs);
     assign memory_bus.sram_cs = '0;
+
+    assign memory_bus_mappers.q = memory_bus.q;
 
     assign block_info.rom_size   = 25'(ram_blocks) << 14;
     assign block_info.sram_size  = sram_size;
