@@ -209,6 +209,9 @@ block_device_if block_device_SD();
 block_device_if block_device_nvram[4]();
 memory_bus_if memory_bus_msx();
 memory_bus_if memory_bus_upload();
+memory_bus_if memory_bus_sdram_ch1();
+memory_bus_if memory_bus_sdram_ch2();
+memory_bus_if memory_bus_sdram_ch3();
 
 /*verilator tracing_off*/
 MSX::cpu_regs_t    cpu_regs;
@@ -703,12 +706,17 @@ ddram buffer
 );
 /*verilator tracing_on*/
 
-assign memory_bus_msx.q              = memory_bus_msx.ram_cs ? sdram_dout : 8'hFF;
-assign memory_bus_msx.sdram_ready    = sdram_ready;
-assign memory_bus_msx.sdram_done     = '1;
-assign memory_bus_upload.q           = memory_bus_upload.ram_cs ? sdram_dout : 8'hFF;
-assign memory_bus_upload.sdram_ready = sdram_ready;
-assign memory_bus_upload.sdram_done  = '1;
+system_memory system_memory(
+   .clk(clock_bus.base_mp.clk),
+   .memory_bus_msx(memory_bus_msx),
+   .memory_bus_upload(memory_bus_upload),
+   //.memory_bus_flash(),
+   //.memory_bus_backup(),
+   .memory_bus_sdram_ch1(memory_bus_sdram_ch1),
+   .memory_bus_sdram_ch2(memory_bus_sdram_ch2),
+   .memory_bus_sdram_ch3(memory_bus_sdram_ch3),
+   .upload(upload)
+);
 
 wire         sdram_ready, sdram_rnw, dw_sdram_we, dw_sdram_ready;
 wire  [26:0] sdram_addr;
@@ -720,12 +728,7 @@ sdram sdram
    .clk(clk_sdram),
    .doRefresh(1'd0),
 
-   .ch1_dout(sdram_dout),
-   .ch1_din(upload  ? memory_bus_upload.data   : memory_bus_msx.data),
-   .ch1_addr(upload ? memory_bus_upload.addr   : memory_bus_msx.addr),
-   .ch1_req(upload  ? memory_bus_upload.ram_cs : memory_bus_msx.ram_cs),
-   .ch1_rnw(upload  ? memory_bus_upload.rnw    : memory_bus_msx.rnw),
-   .ch1_ready(sdram_ready),
+   .memory_bus_ch1(memory_bus_sdram_ch1),
 
    .ch2_dout(),
    .ch2_din(flash_dout),
@@ -763,20 +766,6 @@ spram #(.addr_width(16),.mem_name("VRA3")) vram_hi
    .q(vram_bus.vram_mp.q_hi)
 );
 
-/*
-dpram #(.addr_width(18)) systemRAM
-(
-   .clock(clk21m),
-   .address_a(18'(upload_bram_rq ? upload_ram_addr : ram_addr)          ),
-   .wren_a( upload_bram_rq ? upload_ram_ce         : bram_ce & ~ram_rnw ),
-   .data_a( upload_bram_rq ? upload_ram_din        : ram_din            ),
-   .q_a(bram_dout),
-   .address_b(18'(sram_addr)),
-   .wren_b(sram_we),
-   .data_b(sd_buff_dout),
-   .q_b(sram_dout)
-);
-*/
 ///////////////// NVRAM BACKUP ////////////////
 wire [26:0]  backup_ram_addr;
 wire [7:0]   backup_ram_din, backup_ram_dout;
