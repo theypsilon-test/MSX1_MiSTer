@@ -67,7 +67,7 @@ module dev_YM2148 #(parameter COUNT=1) (
     logic       txIRQ;
     logic [7:0] key_row;
 
-    wire irq_vector_to_bus = cpu_bus.m1 && cpu_bus.iorq && cpu_bus.interrupt && io_device[0].enable;
+    wire irq_vector_to_bus = cpu_bus.m1 && cpu_bus.iorq && cpu_bus.int_rq && io_device[0].enable;
 
     assign data            = irq_vector_to_bus                   ? irq_vector[irq] :
                              dev_rd && cpu_bus.addr[2:0] == 3'd2 ? matrix_data :

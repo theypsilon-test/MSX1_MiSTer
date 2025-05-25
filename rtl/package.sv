@@ -174,7 +174,7 @@ interface cpu_bus_if(
     wire [15:0] addr;
     wire  [7:0] data;
     wire        req;
-    wire        interrupt;
+    wire        int_rq;
 
     modport cpu_mp (
         input   clk,
@@ -190,7 +190,7 @@ interface cpu_bus_if(
         output  addr,
         output  data,
         output  req,
-        output  interrupt
+        output  int_rq
     );
     
     modport device_mp (
@@ -207,7 +207,7 @@ interface cpu_bus_if(
         input   addr,
         input   data,
         input   req,
-        input   interrupt
+        input   int_rq
     );
 
 endinterface
