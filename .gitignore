@@ -71,3 +71,4 @@ tools/MIDI/
 tools/testRom/
 tools/CreateMSXpack/Computer_testy_hotovo/
 tools/CreateMSXpack/Computer_testy/
+.vscode/settings.json
