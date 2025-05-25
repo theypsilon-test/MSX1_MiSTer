@@ -70,11 +70,11 @@ module dev_YM2148 #(parameter COUNT=1) (
     wire irq_vector_to_bus = cpu_bus.m1 && cpu_bus.iorq && cpu_bus.int_rq && io_device[0].enable;
 
     assign data            = irq_vector_to_bus                   ? irq_vector[irq] :
-                             dev_rd && cpu_bus.addr[2:0] == 3'd2 ? matrix_data :
-                             dev_rd && cpu_bus.addr[2:0] == 3'd5 ? rx_buffer :
+                             dev_rd && cpu_bus.addr[2:0] == 3'd2 ? io_device[0].param[0] ? matrix_data : 8'hFF :
+                             dev_rd && cpu_bus.addr[2:0] == 3'd5 ? io_device[0].param[0] ? 8'hFF : rx_buffer   :
                              dev_rd && cpu_bus.addr[2:0] == 3'd6 ? status :
                                                                    8'hFF;
-    assign irq             = rxIRQ | txIRQ;
+    assign irq             = (rxIRQ | txIRQ) & io_device[0].param[0];
 
     wire   dev_en = io_device[0].enable && io_device[0].device_ref == device_bus.device_ref && device_bus.we;
     wire   dev_wr = dev_en && cpu_bus.req && cpu_bus.wr;

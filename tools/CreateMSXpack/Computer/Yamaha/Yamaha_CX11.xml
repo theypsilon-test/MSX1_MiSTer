@@ -24,6 +24,7 @@
         <memory SHA1="434651305f92aa770a89e40b81125fb22d91603d" filename = "sfg-01.rom">ROM</memory> <!-- Yamaha SFG-01 ROM -->
         <mapper>YAMAHA_SFG</mapper>
         <device variant="YM2151">OPM</device>
+        <device variant="SFG-01">YM2148</device>
       </block>    
     </secondary>
   </primary>
