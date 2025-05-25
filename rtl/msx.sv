@@ -11,7 +11,7 @@
    ext_sd_card_if.device_mp ext_SD_card_bus,
    //Flash acces to SDRAM
    flash_bus_if.device_mp   flash_bus,
-   memory_bus_if.device_mp  memory_bus,          
+   memory_bus_if.device_mp  memory_bus,
    //debug
    output MSX::cpu_regs_t   cpu_regs,
    output  [31:0]           opcode,
@@ -50,7 +50,7 @@
    input MSX::kb_memory_t   kb_upload_memory,
    //SD FDC
    FDD_if.FDC_mp           FDD_bus[3]
-   
+
    /*
    input                    img_mounted,
    input             [31:0] img_size,
@@ -122,7 +122,7 @@ assign cpu_bus.cpu_mp.req     = ~((iorq_n & mreq_n) | (wr_n & rd_n) | iack);
 
 logic iack;
 always @(posedge cpu_bus.clk) begin
-   if (cpu_bus.reset) 
+   if (cpu_bus.reset)
    iack <= 0;
    else begin
    if (iorq_n && mreq_n)
@@ -132,7 +132,7 @@ always @(posedge cpu_bus.clk) begin
          iack <= 1;
    end
 end
-  
+
 
 TV80a #(.Mode(0), .R800_MULU(1), .IOWait(1)) Z80
 (
@@ -174,7 +174,7 @@ end
 assign wait_n = wait_count == 3'd00 && ~dev_cpu_wait;
 
 //  -----------------------------------------------------------------------------
-//  -- Slots 
+//  -- Slots
 //  -----------------------------------------------------------------------------
 wire [1:0] active_slot;
 
@@ -190,17 +190,21 @@ assign active_slot =    //~map_valid                             ? default_slot 
 logic bus_read;
 assign bus_read = cpu_bus.device_mp.rd || (cpu_bus.iorq && cpu_bus.device_mp.m1);
 assign d_to_cpu = ~bus_read               ? 8'hFF           :
-                  device_oe_rq            ? device_data     :                       // Prioritní data.
-                  slot_oe_rq              ? d_from_slots    :                       // Prioritní data.
+                  device_oe_rq            ? device_data     :                       // prior data
+                  slot_oe_rq              ? d_from_slots    :                       // prior data
                                             device_data & memory_bus.q & d_from_slots;
 
 wire signed [15:0] device_sound_L, device_sound_R;
 
+//Bus splitter for devices and slots
+assign memory_bus.addr    = memory_bus_slots.addr    & memory_bus_devices.addr;
+assign memory_bus.ram_cs  = memory_bus_slots.ram_cs  | memory_bus_devices.ram_cs;
+assign memory_bus.sram_cs = memory_bus_slots.sram_cs | memory_bus_devices.sram_cs;
+assign memory_bus.rnw     = memory_bus_slots.rnw     & memory_bus_devices.rnw;
+assign memory_bus.data    = memory_bus_slots.data    & memory_bus_devices.data;
 
-assign memory_bus.addr   = memory_bus_slots.addr   & memory_bus_devices.addr;
-assign memory_bus.ram_cs = memory_bus_slots.ram_cs | memory_bus_devices.ram_cs;
-assign memory_bus.rnw    = memory_bus_slots.rnw;                                       // TODO device add
-assign memory_bus.data   = memory_bus_slots.data;                                     // TODO device add
+assign memory_bus_slots.q   = memory_bus.q;
+assign memory_bus_devices.q = memory_bus.q;
 
 wire  [7:0] device_data;
 wire  [7:0] data_to_mapper;
@@ -249,8 +253,6 @@ devices #(.sysCLK(sysCLK)) devices
 );
 
 wire  [7:0] d_from_slots;
-//wire [26:0] slots_ram_addr;
-//wire        slots_ram_ce;
 wire        slot_oe_rq;
 msx_slots msx_slots
 (

@@ -87,14 +87,16 @@ module devices  #(parameter sysCLK)
     assign reset_request = ocm_reset_request;
     assign reset_lock    = ocm_reset_lock;
 
-    assign memory_bus.ram_cs = kanji_ram_cs | ocm_ram_cs;
-    assign memory_bus.addr   = kanji_ram_addr & ocm_ram_addr;
-    assign memory_bus.rnw    =  '1;
+    assign memory_bus.addr    = kanji_ram_addr & ocm_ram_addr;
+    assign memory_bus.ram_cs  = kanji_ram_cs | ocm_ram_cs;
+    assign memory_bus.sram_cs = '0;
+    assign memory_bus.data    = '1;
+    assign memory_bus.rnw     = '1;
 
     // VIDEO interfaces
     assign cpu_interrupt     = tms_interrupt | v99_interrupt | opm_irq | ym2148_irq;
 
-    assign video_bus.R       = video_bus_tms.R              | video_bus_v99.R;          // default black 
+    assign video_bus.R       = video_bus_tms.R              | video_bus_v99.R;          // default black
     assign video_bus.G       = video_bus_tms.G              | video_bus_v99.G;          // default black
     assign video_bus.B       = video_bus_tms.B              | video_bus_v99.B;          // default black
     assign video_bus.DE      = video_bus_tms.DE             | video_bus_v99.DE;
@@ -103,19 +105,19 @@ module devices  #(parameter sysCLK)
     assign video_bus.hblank  = video_bus_tms.hblank         | video_bus_v99.hblank;
     assign video_bus.vblank  = video_bus_tms.vblank         | video_bus_v99.vblank;
     assign video_bus.ce_pix  = video_bus_tms.ce_pix         | video_bus_v99.ce_pix;
-    
+
     assign vram_bus.addr     = vram_bus_tms.device_mp.addr  & vram_bus_v99.device_mp.addr;
     assign vram_bus.data     = vram_bus_tms.device_mp.data  & vram_bus_v99.device_mp.data;
     assign vram_bus.we_lo    = vram_bus_tms.device_mp.we_lo | vram_bus_v99.device_mp.we_lo;
     assign vram_bus.we_hi    = vram_bus_tms.device_mp.we_hi | vram_bus_v99.device_mp.we_hi;
-    
+
     assign vram_bus_tms.q_lo = vram_bus.q_lo;
     assign vram_bus_tms.q_hi = vram_bus.q_hi;
     assign vram_bus_v99.q_lo = vram_bus.q_lo;
     assign vram_bus_v99.q_hi = vram_bus.q_hi;
-    
+
     //MSX2 memory limiter
-    
+
     // Definice instancí zařízení s výstupy pro propojení
     wire signed [15:0] opll_sound;
     dev_opll opll (
@@ -125,7 +127,7 @@ module devices  #(parameter sysCLK)
         .io_device(io_device[DEV_OPLL]),
         .sound(opll_sound)
     );
-    
+
     wire signed [15:0] opm_sound_L, opm_sound_R;
     wire         [7:0] opm_data;
     wire               opm_irq;
@@ -192,7 +194,7 @@ module devices  #(parameter sysCLK)
         .FDD_bus(FDD_bus),
         .data(fdc_data),
         .data_oe_rq(fdc_data_oe_rq)
-    );    
+    );
 
     wire [26:0] kanji_ram_addr;
     wire        kanji_ram_cs;
@@ -219,15 +221,15 @@ module devices  #(parameter sysCLK)
         .ram_cs(ocm_ram_cs),
         .ram_addr(ocm_ram_addr),
         .data(ocm_data),
-        
+
         .ff_dip_req(msx_user_config.ocm_dip),
         .mapper_limit(ocm_mapper_limit),
         .rst_key_lock(ocm_reset_lock),
         .swio_reset(ocm_reset_request),
         .megaSD_enable(ocm_megaSD_enable),
-        
-        
-        .Slot1Mode(ocm_slot1_mode),                             
+
+
+        .Slot1Mode(ocm_slot1_mode),
         .Slot2Mode(ocm_slot2_mode)
     );
 
@@ -243,7 +245,7 @@ module devices  #(parameter sysCLK)
         .interrupt(tms_interrupt),
         .border(msx_user_config.border)
     );
-    
+
     wire  [7:0] v99_data;
     wire        v99_interrupt;
     dev_v99 v99 (
@@ -290,7 +292,7 @@ module devices  #(parameter sysCLK)
         .ps2_key(ps2_key),
         .slot_config(slot_config),
         .keybeep(keybeep)
-    ); 
+    );
 
     wire [7:0] reset_status_data;
     dev_reset_status dev_reset_status (
