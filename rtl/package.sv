@@ -317,13 +317,15 @@ interface memory_bus_if;
     logic        rnw;
     logic        sram_cs;
     logic        ram_cs;
+    logic        sdram_ready;
+    logic        sdram_done;
     modport device_mp (
         output   addr,data,rnw,sram_cs,ram_cs,
-        input    q
+        input    q,sdram_ready,sdram_done
     );
     modport ram_mp (
         input    addr,data,rnw,sram_cs,ram_cs,
-        output   q
+        output   q,sdram_ready,sdram_done
     );
 endinterface
 

@@ -23,7 +23,6 @@ module memory_upload
     output MSX::io_device_mem_ref_t io_memory[8],
     output MSX::msx_config_t    msx_config,
 
-    input                       sdram_ready,
     output logic                load_sram,
     output error_t              error,
     output logic                reset
@@ -610,7 +609,7 @@ module memory_upload
                     state      <= STATE_FILL_RAM;
                 end
                 STATE_FILL_RAM: begin
-                    if (sdram_ready && ~ram_ce) begin                        // RAM je připravená
+                    if (memory_bus.sdram_ready && ~ram_ce) begin             // RAM je připravená
                         data_size <= data_size - 25'd1;                      // Snížíme velikost dat
                         ram_ce    <= 1'b1;
                     end

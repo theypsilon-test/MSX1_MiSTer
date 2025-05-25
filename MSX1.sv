@@ -641,7 +641,6 @@ memory_upload memory_upload(
     .ddr3_ready(ddr3_ready),
     .ddr3_request(ddr3_request_download),
     .memory_bus(memory_bus_upload),
-    .sdram_ready(sdram_ready),
     .kb_upload_memory(kb_upload_memory),
     .slot_expander(slot_expander),
     .slot_layout(slot_layout),
@@ -704,7 +703,12 @@ ddram buffer
 );
 /*verilator tracing_on*/
 
-assign memory_bus_msx.q = memory_bus_msx.ram_cs ? sdram_dout : 8'hFF;
+assign memory_bus_msx.q              = memory_bus_msx.ram_cs ? sdram_dout : 8'hFF;
+assign memory_bus_msx.sdram_ready    = sdram_ready;
+assign memory_bus_msx.sdram_done     = '1;
+assign memory_bus_upload.q           = memory_bus_upload.ram_cs ? sdram_dout : 8'hFF;
+assign memory_bus_upload.sdram_ready = sdram_ready;
+assign memory_bus_upload.sdram_done  = '1;
 
 wire         sdram_ready, sdram_rnw, dw_sdram_we, dw_sdram_ready;
 wire  [26:0] sdram_addr;
