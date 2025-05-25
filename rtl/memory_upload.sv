@@ -520,14 +520,16 @@ module memory_upload
                             device <= device_t'(conf[3]);
                             last_device <= device_t'(conf[3]);
                             if (device_t'(conf[3]) == DEV_TC8566AF || device_t'(conf[3]) == DEV_WD2793) begin       //FIXED DEVICE position ID
-                                io_device[device_t'(conf[3])][fw_space ? {1'b0, cart_id} : 'd2].enable     <= 1'b1;
-                                io_device[device_t'(conf[3])][fw_space ? {1'b0, cart_id} : 'd2].param      <= conf[4];
-                                io_device[device_t'(conf[3])][fw_space ? {1'b0, cart_id} : 'd2].device_ref <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
-                                io_ref_mapper                                                              <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
-                                current_io_ref_mapper                                                      <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
-                                last_device_num                                                            <= fw_space                    ? {1'b0, cart_id} : 'd2;
-                                $display("BLOCK IO_DEVICE[%x] IS FIXED pos:%x reference %d", device_t'(conf[3]), fw_space ? {1'b0, cart_id} : 'd2, current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper );
-                                $display("BLOCK IO_DEVICE[%x][%x] enable: 1 param:%x", device_t'(conf[3]), fw_space ? {1'b0, cart_id} : 'd2, conf[4]);
+                                temp_io_device            = io_device[device_t'(conf[3])][fw_space ? {1'b0, cart_id} : 2'd2];
+                                temp_io_device.enable     = 1'b1;
+                                temp_io_device.param      = conf[4];
+                                temp_io_device.device_ref = current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
+                                io_device[device_t'(conf[3])][fw_space ? {1'b0, cart_id} : 2'd2] <= temp_io_device;
+                                io_ref_mapper                                       <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
+                                current_io_ref_mapper                               <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
+                                last_device_num                                     <= fw_space ? {1'b0, cart_id} : 2'd2;
+                                $display("BLOCK IO_DEVICE[%x] IS FIXED pos:%x reference %d", device_t'(conf[3]), fw_space ? {1'b0, cart_id} : 2'd2, current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper );
+                                $display("BLOCK IO_DEVICE[%x][%x] enable: 1 param:%x", device_t'(conf[3]), fw_space ? {1'b0, cart_id} : 2'd2, conf[4]);
                             end else begin
                                 if (~io_device[device_t'(conf[3])][0].enable) begin
                                     $display("BLOCK IO_DEVICE[%x][0] enable: 1 param:%x reference: %d", device_t'(conf[3]), conf[4], current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper);
@@ -685,21 +687,23 @@ module memory_upload
                     end
 
                     if (device == DEV_TC8566AF || device == DEV_WD2793) begin
+                        temp_io_device = io_device[device][last_device_num];
                         if (fw_space) begin
                             if (cart_id) begin
                                 msx_config.fdd[3:2] <= conf[4][3:2];
-                                io_device[device][last_device_num].param[7:6] <= 1;
+                                temp_io_device.param[7:6] = 2'd1;
                                 $display("Change FDD layout. Slot %d: %x ", cart_id, conf[4][3:2]);
                             end else begin
                                 msx_config.fdd[1:0] <= conf[4][3:2];
-                                io_device[device][last_device_num].param[7:6] <= 0;
+                                temp_io_device.param[7:6] = 2'd0;
                                 $display("Change FDD layout. Internal: %x) ", conf[4][3:2]);
                             end
                         end else begin
                             msx_config.fdd[5:4] <= conf[4][3:2];
-                            io_device[device][last_device_num].param[7:6] <= 2;
+                            temp_io_device.param[7:6] = 2'd2;
                             $display("Change FDD layout. Internal: %x) ", conf[4][3:2]);
                         end
+                        io_device[device][last_device_num] <= temp_io_device;
                     end
                 end
                 STATE_SEARCH_CRC32_INIT: begin
