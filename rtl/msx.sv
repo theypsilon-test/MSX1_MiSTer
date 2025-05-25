@@ -194,9 +194,11 @@ assign d_to_cpu = ~bus_read               ? 8'hFF           :
                   slot_oe_rq              ? d_from_slots    :                       // prior data
                                             device_data & memory_bus.q & d_from_slots;
 
-wire signed [15:0] device_sound_L, device_sound_R;
 
-//Bus splitter for devices and slots
+//  -----------------------------------------------------------------------------
+//  -- devices and slots split
+//  -----------------------------------------------------------------------------
+
 assign memory_bus.addr    = memory_bus_slots.addr    & memory_bus_devices.addr;
 assign memory_bus.ram_cs  = memory_bus_slots.ram_cs  | memory_bus_devices.ram_cs;
 assign memory_bus.sram_cs = memory_bus_slots.sram_cs | memory_bus_devices.sram_cs;
@@ -215,6 +217,7 @@ wire        reset_lock, reset_request, ocm_megaSD_enable;
 wire [1:0]  ocm_slot2_mode;
 wire        ocm_slot1_mode;
 wire [1:0]  cpu_clock_sel;
+wire signed [15:0] device_sound_L, device_sound_R;
 devices #(.sysCLK(sysCLK)) devices
 (
    .clock_bus(clock_bus),
