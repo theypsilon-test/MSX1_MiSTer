@@ -89,7 +89,7 @@ module dev_opm #(parameter COUNT=3) (
             jt51 jt51_i (
                 .rst(cpu_bus.reset),
                 .clk(cpu_bus.clk),
-                .cen_p1(clock_bus.ce_3m58_n),
+                .cen_p1(clock_bus.ce_1m79_n),
                 .cs_n(~(cs_io || cs_dev)),
                 .wr_n(~(cpu_bus.wr && cpu_bus.req)),
                 .a0(cpu_bus.addr[0]),

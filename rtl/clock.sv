@@ -46,12 +46,22 @@ always @(posedge clock_bus.clk, posedge reset) begin
          msdiv <= msdiv - 1; 
 end
 
+logic ce_3m58_n_half;
+always @(posedge clock_bus.clk, posedge reset) begin
+   if (reset)
+      ce_3m58_n_half <= 1'b0;
+   else
+      if (clkdiv6 == 3'd2)
+         ce_3m58_n_half <= ~ce_3m58_n_half;
+end
+
 assign clock_bus.ce_10m7_p = clkdiv4[0];
 assign clock_bus.ce_10m7_n = ~clkdiv4[0];
 assign clock_bus.ce_5m39_p = &clkdiv4;
 assign clock_bus.ce_5m39_n = ~clkdiv4[1] & clkdiv4[0];
 assign clock_bus.ce_3m58_p = clkdiv6 == 3'd5;               
 assign clock_bus.ce_3m58_n = clkdiv6 == 3'd2;
+assign clock_bus.ce_1m79_n = clkdiv6 == 3'd2 & ce_3m58_n_half;
 assign clock_bus.ce_1k     = msdiv == 0;                //1ms
 assign clock_bus.ce_10hz   = div == 0;                  //100ms
 
