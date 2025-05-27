@@ -43,8 +43,7 @@ module dev_YM2148 #(parameter COUNT=1) (
     input            [7:0] uart_rx_data,
     input                  uart_rx,
     output         [7:0]   data,
-    output                 irq,
-    output logic [7:0] key_matrix[8]
+    output                 irq
 );
 
     localparam STAT_TXRDY = 0;
@@ -65,16 +64,23 @@ module dev_YM2148 #(parameter COUNT=1) (
     logic [7:0] rx_buffer;
     logic       rxIRQ;
     logic       txIRQ;
+    logic       kbIRQ;
     logic [7:0] key_row;
+
+    logic [5:0] key_map  [0:48] = '{6'h07, 6'h00, 6'h01, 6'h02, 6'h04, 6'h05, 6'h06, 6'h08, 6'h09, 6'h0B, 
+                                    6'h0C, 6'h0D, 6'h0E, 6'h10, 6'h11, 6'h13, 6'h14, 6'h15, 6'h16, 6'h18,
+                                    6'h19, 6'h1B, 6'h1C, 6'h1D, 6'h1E, 6'h20, 6'h21, 6'h23, 6'h24, 6'h25,
+                                    6'h26, 6'h28, 6'h29, 6'h2B, 6'h2C, 6'h2D, 6'h2E, 6'h30, 6'h31, 6'h33, 
+                                    6'h34, 6'h35, 6'h36, 6'h38, 6'h39, 6'h3B, 6'h3C, 6'h3D, 6'h3E};
 
     wire irq_vector_to_bus = cpu_bus.m1 && cpu_bus.iorq && cpu_bus.int_rq && io_device[0].enable;
 
     assign data            = irq_vector_to_bus                   ? irq_vector[irq] :
-                             dev_rd && cpu_bus.addr[2:0] == 3'd2 ? io_device[0].param[0] ? matrix_data : 8'hFF :
-                             dev_rd && cpu_bus.addr[2:0] == 3'd5 ? io_device[0].param[0] ? 8'hFF : rx_buffer   :
+                             dev_rd && cpu_bus.addr[2:0] == 3'd2 ? io_device[0].param[0] ? 8'hFF : matrix_data : 
+                             dev_rd && cpu_bus.addr[2:0] == 3'd5 ? io_device[0].param[0] ? rx_buffer : 8'hFF :
                              dev_rd && cpu_bus.addr[2:0] == 3'd6 ? status :
                                                                    8'hFF;
-    assign irq             = (rxIRQ | txIRQ) & io_device[0].param[0];
+    assign irq             = ((rxIRQ | txIRQ) & io_device[0].param[0]) | (kbIRQ & ~io_device[0].param[0]);
 
     wire   dev_en = io_device[0].enable && io_device[0].device_ref == device_bus.device_ref && device_bus.we;
     wire   dev_wr = dev_en && cpu_bus.req && cpu_bus.wr;
@@ -86,6 +92,7 @@ module dev_YM2148 #(parameter COUNT=1) (
             status     <= '0;
             rxIRQ      <= '0;
             txIRQ      <= '0;
+            kbIRQ      <= '0;
             status     <= '0;
             cmd_reg    <= '0;
             irq_vector <= '{'1,'1};
@@ -118,6 +125,7 @@ module dev_YM2148 #(parameter COUNT=1) (
                             status     <= '0;
                             rxIRQ      <= '0;
                             txIRQ      <= '0;
+                            kbIRQ      <= '0;
                             status     <= '0;
                         end else if (cpu_bus.data[CMD_ER]) begin
                             status[STAT_OE] <= 0;            
@@ -131,6 +139,7 @@ module dev_YM2148 #(parameter COUNT=1) (
                             end else begin
                                 status[STAT_RXRDY] <= 0;
                                 rxIRQ              <= 0;
+                                kbIRQ              <= 0;
                             end
 
                             if (cpu_bus.data[CMD_TXEN]) begin
@@ -159,9 +168,14 @@ module dev_YM2148 #(parameter COUNT=1) (
                     end
                 end
             end
+            //KB recive
+            if (cmd_reg[CMD_RXIE] && kbIRQrq) begin
+                kbIRQ <= 1;
+            end
             //Reset status after read data
             if (dev_rd && cpu_bus.addr[2:0] == 3'd5) begin
                 rxIRQ <= 0;
+                kbIRQ <= 0;
                 status[STAT_RXRDY] <= 0;
             end
         end
@@ -174,9 +188,11 @@ module dev_YM2148 #(parameter COUNT=1) (
     state_t     state;
     logic       status_note;
     logic [6:0] note;
-    //logic [7:0] key_matrix[8];
+    logic       kbIRQrq;
+    logic [7:0] key_matrix[8];
 
     always_ff @(posedge cpu_bus.clk) begin
+        kbIRQrq <= '0;
         if (cpu_bus.reset) begin
             state                 <= IDLE;
             status_note           <= '0;
@@ -199,7 +215,10 @@ module dev_YM2148 #(parameter COUNT=1) (
                         end
                         READ_VELOCITY: begin
                             state       <= READ_NOTE;
-                            key_matrix[note[2:0]][note[5:3]] <= status_note && uart_rx_data != 0 ? 1'b0 : 1'b1;
+                            if (note > 8'h23 && note < 8'h55) begin
+                                key_matrix[key_map[note - 8'h24][5:3]][key_map[note - 8'h24][2:0]] <= status_note && uart_rx_data != 0 ? 1'b0 : 1'b1;
+                                kbIRQrq <= '1;
+                            end
                         end
                         default;
                     endcase    
@@ -211,7 +230,7 @@ module dev_YM2148 #(parameter COUNT=1) (
     logic [7:0] matrix_data;
     always_comb begin
         matrix_data = '1;
-        for (int i = 0; i < 8; i++) begin
+        for (int i = 7; i >= 0; i--) begin
             if (key_row[i]) matrix_data &= key_matrix[i];
         end
     end
