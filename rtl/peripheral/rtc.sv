@@ -29,6 +29,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+// Revrite to SystemVerilog 2024 Molekula
 
 module rtc (
     input  logic                 clk21m,      // Clock signal
