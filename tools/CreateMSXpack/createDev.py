@@ -2,13 +2,13 @@ import os
 import xml.etree.ElementTree as ET
 import struct
 import logging
-from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_8bit, convert_to_int
+from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_8bit, convert_to_int, get_device_param
 
 # Nastavení logování
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ROM_DIR = 'ROM_test'
+ROM_DIR = 'ROM'
 XML_DIR = 'Extension_test'
 DIR_SAVE = 'MSX_test'
 
@@ -90,19 +90,8 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
             device_id = constants['device'][block['device']]
             param_dev = 0
             parameter = 0
-            if block['device'] == 'WD2793' :
-                fdd_count = convert_to_int(element.attrib.get('fdd_count','1'))
-                if fdd_count > 2 or fdd_count < 1:
-                    logger.warning(f"Count of FDD minimum 1 or maximum 2. Set to 1")
-                    fdd_count = 1
-
-                style = element.attrib.get('style','Philips')
-                if style == "Philips" :
-                    param_dev = 0x0
-                elif style == "National" :
-                    param_dev = 0x1
-
-                param_dev |= 0xC0 if fdd_count == 2 else 0x40
+            if (element.attrib):
+                param_dev = get_device_param(constants, block['device'], element.attrib)
 
             result.append(create_block_entry(constants, 'DEVICE', address, param1=device_id, param2 = param_dev, param3=parameter))
             if device_port is not None:

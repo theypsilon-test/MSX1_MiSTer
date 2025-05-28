@@ -3,54 +3,11 @@ import xml.etree.ElementTree as ET
 import struct
 import base64
 import argparse
-from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_int, convert_to_8bit
+from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_int, convert_to_8bit, get_device_param
 
 ROM_DIR = 'ROM'
 XML_DIR_COMP = 'Computer_testy'
 DIR_SAVE = 'MSX'
-
-def get_device_param(constants, device_name, attributes):
-    """
-    Returns the device parameters based on the device type and its attributes.
-    
-    :param device: Device type.
-    :param parameters: Device attributes.
-    :return: Tuple of device parameters.
-    """
-    params = constants['deviceParams'].get(device_name, {})
-    if not params:
-        value = convert_to_8bit(attributes.get('param', '0'))
-        return value
-    else:
-        ret = 0
-        for param_name, param_property in params.items():
-            value = 0
-            if param_name in attributes:
-                value = attributes[param_name]
-                if param_property['param_type'] == 'int':
-                    value = convert_to_int(value)
-                    if 'div' in param_property and param_property['div'] is not None:
-                        value = value // param_property['div']
-                    if param_property['min'] is not None and value < param_property['min']:
-                        print(f"Device '{device_name}' parameter '{param_name}' value {value} is less than minimum {param_property['min']} setting to default value {param_property['default']}")
-                        value = param_property['default']
-                    if param_property['max'] is not None and value > param_property['max']:
-                        print(f"Device '{device_name}' parameter '{param_name}' value {value} is greater than maximum {param_property['max']} setting to default value {param_property['default']}")
-                        value = param_property['default']
-                elif param_property['param_type'] == 'enum':
-                    if value not in param_property['enums']:
-                        print(f"Device '{device_name}' parameter '{param_name}' value {value} is not in enum list {param_property['enums']} setting to default value {param_property['enums'][param_property['default']]}")
-                        value = param_property['default']
-                    else:
-                        value = param_property['enums'].index(value)
-                if "value_offset" in param_property and param_property["value_offset"] is not None:
-                    value = value << param_property["value_offset"]
-                if "values" in param_property and param_property["values"] is not None:
-                    value = param_property['values'][value]
-                #print(f"Device '{device_name}' parameter '{param_name}' value is {value}")
-            ret  = ret | value
-        #print(f"Device '{device_name}' return 0x{ret:02X}")
-        return ret
 
 def parse_msx_block(root):
     """
