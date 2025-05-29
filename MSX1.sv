@@ -706,7 +706,7 @@ ddram buffer
 );
 /*verilator tracing_on*/
 
-system_memory system_memory(
+system_memory #(.BRAM_WIDTH(18)) system_memory(
    .clk(clock_bus.base_mp.clk),
    .memory_bus_msx(memory_bus_msx),
    .memory_bus_upload(memory_bus_upload),
