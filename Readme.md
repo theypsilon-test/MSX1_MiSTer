@@ -1,17 +1,17 @@
 # MSX1/MSX2 for [MiSTer Board](https://github.com/MiSTer-devel/Main_MiSTer/wiki)
 
 # Features MSX1
-- Reference HW Philips VG8020/00
+- reference HW Philips SVG8020/00
 - RAM 64kB in slot 3
 - Sound YM2149(PSG)
-- Support two cartridges
-- Automatic detect cartridge mapper. (Konami, Konami SCC, ASCII8, ASCII16, Linear64k) 
+- Support two cartrige
+- Automatic detect cartrige mapper. (Konami, Konami SCC, ASCII8, ASCII16, Linear64k) 
 - Manual select mapper (R-TYPE)
 - Joystick.
 - FDD support (VY0010). Use DSK image
-- Cassette support. Analog or CAS emulation
+- Cassete support. Analog or CAS emmulation
 - PAL/NTSC mode
-- Load bios for experiments
+- Load bios for experimets
 
 ## Memory limitations
 - No SDRAM 
@@ -35,20 +35,20 @@
 Load them manually from the menu
 
 # Features MSX2
-- Reference HW Philips VG8240/00
+- reference HW Philips SVG8240/00
 - RAM in slot 3/2
 - Sound YM2149(PSG)
 - Video V9938
-- Support two cartridges
-- Cartridge emulation (ROM, SCC, SCC+, FM-PAC, Gamemaster2)
-- Automatic detect cartridge mapper. (Konami, Konami SCC, ASCII8, ASCII16, Linear64k) 
+- Support two cartrige
+- Cartrige emulation (ROM, SCC, SCC+, FM-PAC, Gamemaster2)
+- Automatic detect cartrige mapper. (Konami, Konami SCC, ASCII8, ASCII16, Linear64k) 
 - Manual select mapper (R-TYPE)
 - Joystick.
 - FDD support.
 - RTC support
-- Cassette support. Analog or CAS emulation
+- Cassete support. Analog or CAS emmulation
 - PAL/NTSC mode
-- Load bios for experiments
+- Load bios for experimets
 
 ## Memory limitations
 - No SDRAM 
@@ -70,9 +70,6 @@ Load them manually from the menu
 
 ## ROM BIOS
 Copy bios files to Games/MSX1 folder or load them manually from the menu
-- BIOS files use the `.MSX` file extension.
-- Use the script `tools/CreateMSXPack/createMSXpack.py` to generate them.
-- Refer to the XML files in the `Computer` and `Extension` directories to determine which BIOS ROM files are needed.
-- Copy the required ROM files into the `tools/CreateMSXPack/ROM` directory.
-- Then, run the `createMSXpack.py` script.
-- The generated `.MSX` files will be located in the `tools/CreateMSXPack/MSX` directory.
+- boot0.rom MSX2 BIOS 
+- boot1.rom MSX2 EXT
+- boot2.rom MSX2 DSK
