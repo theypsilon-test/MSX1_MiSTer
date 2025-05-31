@@ -36,9 +36,9 @@
 //
 
 module mapper_mirror (
-    cpu_bus_if.device_mp    cpu_bus,       // Interface for CPU communication
-    block_info              block_info,    // Struct containing mapper configuration and parameters
-    mapper_out              out            // Interface for mapper output
+    cpu_bus_if.device_mp    cpu_bus,
+    block_info              block_info,
+    mapper_out              out
 );
 
     wire cs = (block_info.typ == MAPPER_MIRROR) && cpu_bus.mreq && (cpu_bus.rd || cpu_bus.wr);
@@ -48,16 +48,10 @@ module mapper_mirror (
 
     logic [3:0]  prefix;
     logic [15:0] ram_addr;
-
+    
     assign prefix   = (cpu_bus.addr[15:13] + {1'b0, block_info.offset_ram, 1'b0}) % block_count;
     assign ram_addr = {prefix[2:0], cpu_bus.addr[12:0]};
-  
-    always_ff @(posedge cpu_bus.clk) begin
-        if (cs && cpu_bus.req && cpu_bus.rd) begin
-            $display("MIRROR %04h(%0d) -> %08h rom_size: %08h start_addr: %04h block_count: %d prefix: %d (%t)", cpu_bus.addr, cpu_bus.addr[15:13], out.addr, size, block_info.offset_ram, block_count, prefix, $time);
-        end
-    end
-
+   
     assign out.ram_cs = cs;
     assign out.addr   = cs ? {11'b0, ram_addr} : {27{1'b1}};
     assign out.rnw    = ~(cs && cpu_bus.wr);
