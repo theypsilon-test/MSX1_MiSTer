@@ -405,7 +405,7 @@ package MSX;
     
     typedef struct {
         logic [26:0] addr;
-        logic [15:0] size;
+        logic [16:0] size;
         logic        ro;
     } lookup_RAM_t;
     

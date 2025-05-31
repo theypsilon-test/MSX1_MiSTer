@@ -92,7 +92,7 @@ module msx_slots (
     assign block_info.base_ram   = active_RAM.addr;
 
     wire [26:0] base_ram   = active_RAM.addr;
-    wire [15:0] ram_blocks = active_RAM.size;
+    wire [16:0] ram_blocks = active_RAM.size;
     wire        ram_ro     = active_RAM.ro;
     wire [26:0] base_sram  = active_SRAM.addr;
     wire [15:0] sram_size  = active_SRAM.size;
@@ -108,7 +108,7 @@ module msx_slots (
 
     assign memory_bus_mappers.q = memory_bus.q;
 
-    assign block_info.rom_size   = 25'(ram_blocks) << 14;
+    assign block_info.rom_size   = 25'(ram_blocks) << 13;
     assign block_info.sram_size  = sram_size;
     assign block_info.id         = cart_num;
     assign block_info.offset_ram = offset_ram;
