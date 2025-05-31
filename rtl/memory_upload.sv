@@ -58,6 +58,7 @@ module memory_upload
         if (rom_eject) begin
             ioctl_size[2] <= 27'd0;
             ioctl_size[3] <= 27'd0;
+            load <= 1'b1;
         end
 
         // Obnovovací signál pro načtení
