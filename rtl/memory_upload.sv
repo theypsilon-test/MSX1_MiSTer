@@ -125,7 +125,7 @@ module memory_upload
         logic [5:0]  block_num;
         logic [2:0]  head_addr, read_cnt;
         logic [27:0] save_addr, save_addr2;
-        logic        ref_add, ref_sram_add, fw_space, ref_dev_block, ref_dev_mem, set_offset;
+        logic        ref_add, ref_sram_add, fw_space, ref_dev_block, ref_dev_mem, set_offset, fix_offset;
         logic [1:0]  slot, subslot, block, size, offset, ref_sram;
         logic [15:0] rom_fw_table;
         logic  [2:0] io_ref_mem, io_ref_mapper;
@@ -173,6 +173,7 @@ module memory_upload
                     ref_dev_block       <= '0;
                     ref_dev_mem         <= '0;
                     set_offset          <= '0;
+                    fix_offset          <= '0;
                     load_sram           <= '0;
                     reset               <= '0;
                 end
@@ -509,10 +510,11 @@ module memory_upload
                             end
                         end
                         BLOCK_MAPPER: begin
-                            $display("BLOCK MAPPER %d offset enable %d offset %d", conf[3], conf[4][7], conf[4][1:0]);
+                            $display("BLOCK MAPPER %d offset enable %d offset %d set_offset %d fix_offset %d", conf[3], conf[4][7], conf[4][1:0],conf[4][7],conf[4][6]);
                             mapper     <= mapper_typ_t'(conf[3]);
                             offset     <= conf[4][1:0];
                             set_offset <= conf[4][7];
+                            fix_offset <= conf[4][6];
                             state      <= STATE_SET_LAYOUT;
                         end
                         BLOCK_DEVICE: begin
@@ -637,6 +639,7 @@ module memory_upload
                         ref_add      <= '0;
                         ref_sram_add <= '0;
                         set_offset   <= '0;
+                        fix_offset   <= '0;
                         mapper       <= MAPPER_NONE;
                         state        <= next_state;
                         next_state   <= STATE_LOAD_CONF;
@@ -644,7 +647,8 @@ module memory_upload
 
                     block  <= block + 2'b01;                 // Další blok
                     size   <= size - 2'b01;                  // Snížíme počet
-                    offset <= offset + 2'b01;
+                    if (!fix_offset)
+                        offset <= offset + 2'b01;
 
                     if (ref_add) begin
                         slot_layout[{slot, subslot, block}].ref_ram    <= ref_ram;
