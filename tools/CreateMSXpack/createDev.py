@@ -9,8 +9,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 ROM_DIR = 'ROM'
-XML_DIR = 'Extension_test'
-DIR_SAVE = 'MSX_test'
+XML_DIR = 'Extension'
+DIR_SAVE = 'MSX'
 
 def create_block_entry(constants: dict, block_type: str, address: int, sha1: str = None, param1: int = 0, param2: int = 0, param3: int = 0, file_skip_bytes: int = 0, file_size: int = 0) -> dict:
     block_entry = {
@@ -34,6 +34,7 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
     start = int(root.attrib.get("start", 0))
     count = int(root.attrib.get("count", 4))
     offset = int(root.attrib.get("offset", -1))
+    fix_offset = int(root.attrib.get("fix_offset", -1))
 
     for element in root:
         if element.tag in ['SHA1', 'filename', 'device', 'mapper', 'sram', 'ram', 'device_param']:
@@ -80,6 +81,8 @@ def parse_fw_block(root: ET.Element, subslot: int, files_with_sha1: dict, consta
             param2 = 0
             if offset > -1 and offset < 4 :
                 param2 = 0x80 + offset
+            if fix_offset > -1 and fix_offset < 4 :
+                param2 = 0x80 + 0x40 + fix_offset
             result.append(create_block_entry(constants, 'MAPPER', address, param1=constants['mapper'][block['mapper']], param2=param2))
         else:
             logger.warning(f"Unknown mapper type: {block['mapper']} see file mapper.json")
@@ -298,4 +301,5 @@ constants = load_constants()
 xml_files = find_xml_files(XML_DIR)
 
 for file_name, path in xml_files:
+    print(f"NAME: {file_name}")
     create_fw_conf(file_name, path, files_with_sha1, constants)
