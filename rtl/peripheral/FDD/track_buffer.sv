@@ -81,8 +81,8 @@ module track_buffer #(ID = 0)
             block_device[0].buff_din <= dpram_sd_buff_din;
         end
     end
-
-    track_dpram track_dpram (
+    
+    dpram #(.addr_width(13), .mem_name(ID)) track_dpram (
         .clock(clk),
         .address_a(reg_USEL ? block_device[1].buff_addr[12:0] : block_device[0].buff_addr[12:0]),
         .data_a(reg_USEL ? block_device[1].buff_dout : block_device[0].buff_dout),
@@ -94,43 +94,5 @@ module track_buffer #(ID = 0)
         .data_b(0),
         .q_b(buffer_q)
     );
-
-endmodule
-
-
-module track_dpram #(parameter DATAWIDTH=8, ADDRWIDTH=13)
-(
-	input	                     clock,
-
-	input	     [ADDRWIDTH-1:0] address_a,
-	input	     [DATAWIDTH-1:0] data_a,
-	input	                     wren_a,
-	output reg [DATAWIDTH-1:0] q_a,
-
-	input	     [ADDRWIDTH-1:0] address_b,
-	input	     [DATAWIDTH-1:0] data_b,
-	input	                     wren_b,
-	output reg [DATAWIDTH-1:0] q_b
-);
-
-logic [DATAWIDTH-1:0] ram[0:(1<<ADDRWIDTH)-1];
-
-always_ff@(posedge clock) begin
-	if(wren_a) begin
-		ram[address_a] <= data_a;
-		q_a <= data_a;
-	end else begin
-		q_a <= ram[address_a];
-	end
-end
-
-always_ff@(posedge clock) begin
-	if(wren_b) begin
-		ram[address_b] <= data_b;
-		q_b <= data_b;
-	end else begin
-		q_b <= ram[address_b];
-	end
-end
 
 endmodule
