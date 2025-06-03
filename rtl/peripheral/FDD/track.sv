@@ -1,4 +1,4 @@
-module track #(DELAYms = 3, MAX_TRACKS = 80)
+module track #(DELAYms = 3, MAX_TRACKS = 80, ID = 0)
 (
     input  logic        clk,
     input  logic        msclk,  //clk at 1ms
@@ -57,7 +57,7 @@ module track #(DELAYms = 3, MAX_TRACKS = 80)
     assign track   = reg_track[USEL];
     assign TRACK0n = reg_track[USEL] != 0; //|| MOTORn; TODO
 
-    track_buffer track_buffer (
+    track_buffer #(.ID(ID)) track_buffer (
         .clk(clk),
         .reset(reset),
 

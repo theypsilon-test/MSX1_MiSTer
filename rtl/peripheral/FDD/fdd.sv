@@ -1,4 +1,4 @@
-module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
+module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, ID=0, TEST=0)
 (
     input  logic              clk,
     input  logic              reset,
@@ -106,7 +106,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, TEST=0)
     logic  [7:0] buffer_q;
     logic        track_ready;
 
-    track #(.DELAYms(3), .MAX_TRACKS(80)) FDD_track(
+    track #(.DELAYms(3), .MAX_TRACKS(80), .ID(ID)) FDD_track(
         .clk(clk),
         .msclk(msclk),
         .reset(reset),

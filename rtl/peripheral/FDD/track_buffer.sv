@@ -1,4 +1,4 @@
-module track_buffer 
+module track_buffer #(ID = 0)
 (
     input  logic        clk,
     input  logic        reset,
