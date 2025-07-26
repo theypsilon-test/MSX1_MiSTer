@@ -63,3 +63,4 @@ tools/CreateMSXpack/SeznamMSX/
 tools/MIDI/
 tools/testRom/
 .vscode/settings.json
+releases/
