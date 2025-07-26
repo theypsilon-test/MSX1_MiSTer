@@ -303,8 +303,8 @@ localparam CONF_STR = {
    "H2F4,ROM,Load,31100000;",
    "h6S3,DSK,Mount Drive 1;",
    "h7S4,DSK,Mount Drive 2;",
-   "-;",
-   "SC4,VHD,Load SD card;",
+   "h12-;",
+   "h12SC4,VHD,Load SD card;",
    "h3O[12],Reset after Mount,No,Yes;",
    "H10-;",
    "H10R[38],SRAM Save;",
@@ -347,7 +347,8 @@ assign status_menumask[3] = io_device[DEV_OCM_BOOT][0].enable;
 assign status_menumask[9:4] = msx_config.fdd[5:0];
 assign status_menumask[10] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
 assign status_menumask[11] = msx_user_config.cas_audio_src == CAS_AUDIO_ADC;
-assign status_menumask[15:12] = '0;
+assign status_menumask[12] = io_device[DEV_OCM_BOOT][0].enable || cart_conf[0].typ == CART_TYP_MFRSD;
+assign status_menumask[15:13] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 
 assign info_req = error != ERR_NONE;
