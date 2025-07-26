@@ -506,7 +506,7 @@ def create_msx_config(config, file_name, path, files_with_sha1, constants, outpt
         create_msx_config_primary(config.get('primary', {}), outfile, files_with_sha1, constants)
         create_msx_config_kbd_layout(config.get('kbd_layout', None), outfile, constants) 
              
-def create_msx_conf(file_name, path, files_with_sha1, constants, outpt_dir):
+def create_msx_conf(file_name, path, files_with_sha1, constants, outpt_dir, root_dir):
     """
     Parses the XML configuration file and creates the corresponding MSX configuration file.
 
@@ -515,7 +515,7 @@ def create_msx_conf(file_name, path, files_with_sha1, constants, outpt_dir):
     :param files_with_sha1: Dictionary of files with their SHA1 hashes.
     :param constants: Dictionary with configuration constants.
     """
-    file_path = os.path.join(XML_DIR_COMP, path, file_name + '.xml')
+    file_path = os.path.join(root_dir, path, file_name + '.xml')
     try:
         tree = ET.parse(file_path)
         root = tree.getroot()
@@ -551,4 +551,4 @@ if __name__ == '__main__':
     outpt_dir = args.output_dir
 
     for file_name, path in xml_files:
-        create_msx_conf(file_name, path, files_with_sha1, constants, outpt_dir)
+        create_msx_conf(file_name, path, files_with_sha1, constants, outpt_dir, args.xml_dir)

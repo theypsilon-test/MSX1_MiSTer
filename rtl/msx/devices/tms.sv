@@ -47,7 +47,7 @@ module dev_tms (
 );
 
     wire  [7:0] q, R, G, B;
-    wire        interrupt_n, HS_n, VS_n, hblank, vblank, blank_n;    
+    wire        interrupt_n, HS_n, VS_n, hblank, vblank, blank_n, ce_pix;    
     wire        vram_we;
     wire  [7:0] vram_data;
     wire [13:0] vramm_addr;
@@ -64,7 +64,7 @@ module dev_tms (
     assign video_bus.DE     = io_device[0].enable ? blank_n             : '0;
     assign video_bus.hblank = io_device[0].enable ? hblank              : '0;
     assign video_bus.vblank = io_device[0].enable ? vblank              : '0;
-    assign video_bus.ce_pix = io_device[0].enable ? clock_bus.ce_5m39_n : '0;
+    assign video_bus.ce_pix = io_device[0].enable ? ce_pix              : '0;
 
     assign vram_bus.addr    = io_device[0].enable ? {2'b00,vramm_addr}  : '1;
     assign vram_bus.data    = io_device[0].enable ? vram_data           : '1;
@@ -101,7 +101,8 @@ module dev_tms (
         .hblank_o(hblank),
         .vblank_o(vblank),
         .blank_n_o(blank_n),
-        .is_pal_i(io_device[0].param[0])
+        .is_pal_i(io_device[0].param[0]),
+        .ce_pix(ce_pix)
     );
 
 endmodule

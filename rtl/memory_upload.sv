@@ -58,6 +58,7 @@ module memory_upload
         if (rom_eject) begin
             ioctl_size[2] <= 27'd0;
             ioctl_size[3] <= 27'd0;
+            load <= 1'b1;
         end
 
         // Obnovovací signál pro načtení
@@ -125,7 +126,7 @@ module memory_upload
         logic [5:0]  block_num;
         logic [2:0]  head_addr, read_cnt;
         logic [27:0] save_addr, save_addr2;
-        logic        ref_add, ref_sram_add, fw_space, ref_dev_block, ref_dev_mem, set_offset;
+        logic        ref_add, ref_sram_add, fw_space, ref_dev_block, ref_dev_mem, set_offset, fix_offset;
         logic [1:0]  slot, subslot, block, size, offset, ref_sram;
         logic [15:0] rom_fw_table;
         logic  [2:0] io_ref_mem, io_ref_mapper;
@@ -173,6 +174,7 @@ module memory_upload
                     ref_dev_block       <= '0;
                     ref_dev_mem         <= '0;
                     set_offset          <= '0;
+                    fix_offset          <= '0;
                     load_sram           <= '0;
                     reset               <= '0;
                 end
@@ -401,8 +403,8 @@ module memory_upload
                                                                                       , {conf[5] == 8'd0, conf[5],14'd0});
 
                             lookup_RAM[ref_ram].addr <= lookup_RAM[slot_layout[conf[3][5:0]].ref_ram].addr + {4'b0000, conf[4] == 8'd0, conf[4],14'd0};      // Copy reference + offset
-                            lookup_RAM[ref_ram].size <= {8'd0, conf[5]};                                                                            // Uložíme velikost RAM
-                            lookup_RAM[ref_ram].ro   <= conf[6][0];                                                                                 // Vypneme ochranu paměti RAM
+                            lookup_RAM[ref_ram].size <= {8'd0, conf[5],1'b0};                                                                                // Uložíme velikost RAM
+                            lookup_RAM[ref_ram].ro   <= conf[6][0];                                                                                          // Vypneme ochranu paměti RAM
 
                             mapper                   <= MAPPER_OFFSET;
                             offset                   <= '0;                        // Offset posunu RAM
@@ -413,7 +415,7 @@ module memory_upload
                         BLOCK_RAM: begin
                             $display("BLOCK RAM ref_RAM:%x addr:%x size %d ", ref_ram, ram_addr, {conf[3] == 8'd0, conf[3],14'd0});
                             lookup_RAM[ref_ram].addr <= ram_addr;                  // Uložíme adresu RAM
-                            lookup_RAM[ref_ram].size <= {8'd0, conf[3]};           // Uložíme velikost RAM
+                            lookup_RAM[ref_ram].size <= {8'd0, conf[3],1'b0};      // Uložíme velikost RAM
                             lookup_RAM[ref_ram].ro   <= '0;                        // Vypneme ochranu paměti RAM
                             mapper                   <= MAPPER_OFFSET;
                             offset                   <= '0;                        // Offset posunu RAM
@@ -455,7 +457,7 @@ module memory_upload
                             pattern                  <= PATTERN_DDR;
                             if (fw_space) begin                                    // Pokud se  bude jednat o ROM z FW musíme dle indexu najít adresu v DDR
                                 $display("BLOCK FW ROM ID: %x ref_RAM:%x addr:%x size %d ", conf[3], ref_ram, ram_addr, {conf[4],conf[5],14'd0});
-                                lookup_RAM[ref_ram].size <= {conf[4],conf[5]};                   // Uložíme velikost ROM
+                                lookup_RAM[ref_ram].size <= {conf[4],conf[5],1'b0};              // Uložíme velikost ROM
                                 data_size                <= {conf[4][2:0],conf[5],14'd0};
                                 save_addr2               <= ddr3_addr - 1'b1;                    // Uložíme adresu pokračování -1 kvůli prefetch
                                 ddr3_addr                <= DDR3_BASE_FW_ADDR + {12'b0, rom_fw_table} + {18'b0, conf[3],2'b00};
@@ -464,7 +466,7 @@ module memory_upload
                                 next_state               <= STATE_READ_ADRFILL_FW_ROM;           // Pokračujeme nastavením ROM
                             end else begin
                                 $display("BLOCK ROM ref_RAM:%x addr:%x size %d ", ref_ram, ram_addr, {conf[3],14'd0});
-                                lookup_RAM[ref_ram].size <= {8'd0, conf[3]};         // Uložíme velikost ROM
+                                lookup_RAM[ref_ram].size <= {8'd0, conf[3],1'b0};    // Uložíme velikost ROM
                                 data_size                <= {3'b0, conf[3],14'd0};   // Velikost nahrávaných dat
                                 state                    <= STATE_FILL_RAM;
                             end
@@ -478,7 +480,7 @@ module memory_upload
                                 if (ioctl_size[conf[3][0] ? 3'd3 : 3'd2] > '0) begin
                                     $display("BLOCK CART %d LOAD START ref: %d addr:%x size:%x - %x", conf[3][0], ref_ram, ram_addr, ioctl_size[conf[3][0] ? 3 : 2], ioctl_size[conf[3][0] ? 3 : 2][26:14]);
                                     lookup_RAM[ref_ram].addr <= ram_addr;                                                   // Uložíme adresu ROM
-                                    lookup_RAM[ref_ram].size <= {3'b0, ioctl_size[conf[3][0] ? 3'd3 : 3'd2][26:14]};        // Uložíme velikost ROM
+                                    lookup_RAM[ref_ram].size <= {3'b0, ioctl_size[conf[3][0] ? 3'd3 : 3'd2][26:13]};        // Uložíme velikost ROM
                                     lookup_RAM[ref_ram].ro   <= '1;                                                         // Uložíme ochranu paměti ROM
                                     state                    <= STATE_FILL_RAM;                                             // Načítáme ROM
                                     next_state               <= STATE_SEARCH_CRC32_INIT;                                    // Po nahrání budeme hledat CRC
@@ -509,10 +511,11 @@ module memory_upload
                             end
                         end
                         BLOCK_MAPPER: begin
-                            $display("BLOCK MAPPER %d offset enable %d offset %d", conf[3], conf[4][7], conf[4][1:0]);
+                            $display("BLOCK MAPPER %d offset enable %d offset %d set_offset %d fix_offset %d", conf[3], conf[4][7], conf[4][1:0],conf[4][7],conf[4][6]);
                             mapper     <= mapper_typ_t'(conf[3]);
                             offset     <= conf[4][1:0];
                             set_offset <= conf[4][7];
+                            fix_offset <= conf[4][6];
                             state      <= STATE_SET_LAYOUT;
                         end
                         BLOCK_DEVICE: begin
@@ -637,6 +640,7 @@ module memory_upload
                         ref_add      <= '0;
                         ref_sram_add <= '0;
                         set_offset   <= '0;
+                        fix_offset   <= '0;
                         mapper       <= MAPPER_NONE;
                         state        <= next_state;
                         next_state   <= STATE_LOAD_CONF;
@@ -644,7 +648,8 @@ module memory_upload
 
                     block  <= block + 2'b01;                 // Další blok
                     size   <= size - 2'b01;                  // Snížíme počet
-                    offset <= offset + 2'b01;
+                    if (!fix_offset)
+                        offset <= offset + 2'b01;
 
                     if (ref_add) begin
                         slot_layout[{slot, subslot, block}].ref_ram    <= ref_ram;

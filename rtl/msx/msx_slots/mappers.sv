@@ -58,6 +58,13 @@ module mappers (
         .out(offset_out)
     );
 
+    mapper_out mirror_out();
+    mapper_mirror mirror (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(mirror_out)
+    );
+
     mapper_out msx2_ram_out();
     mapper_msx2_ram msx2_ram (
         .cpu_bus(cpu_bus),
@@ -212,6 +219,7 @@ module mappers (
                                 & ese_ram_out.data;
 
     assign memory_bus.addr      = offset_out.addr
+                                & mirror_out.addr
                                 & msx2_ram_out.addr
                                 & ascii8_out.addr
                                 & ascii16_out.addr
@@ -232,6 +240,7 @@ module mappers (
                                 & mega_ram_out.addr;
 
     assign memory_bus.rnw       = offset_out.rnw
+                                & mirror_out.rnw
                                 & msx2_ram_out.rnw
                                 & ascii8_out.rnw
                                 & ascii16_out.rnw
@@ -244,6 +253,7 @@ module mappers (
                                 & mega_ram_out.rnw;
 
     assign memory_bus.ram_cs    = offset_out.ram_cs
+                                | mirror_out.ram_cs
                                 | msx2_ram_out.ram_cs
                                 | ascii8_out.ram_cs
                                 | ascii16_out.ram_cs

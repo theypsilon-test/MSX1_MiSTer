@@ -55,6 +55,7 @@ module emu
    input  [11:0] HDMI_HEIGHT,
    output        HDMI_FREEZE,
    output        HDMI_BLACKOUT,
+   output        HDMI_BOB_DEINT,
 
 `ifdef MISTER_FB
    // Use framebuffer in DDRAM
@@ -183,6 +184,7 @@ assign VGA_SCALER  = 0;
 assign VGA_DISABLE = 0;
 assign HDMI_FREEZE = 0;
 assign HDMI_BLACKOUT = 0;
+assign HDMI_BOB_DEINT = 0;
 
 assign AUDIO_S = 1;
 assign AUDIO_L = audio_L;
@@ -852,7 +854,7 @@ blockDevMux #(.VDNUM(VDNUM)) blockDevMux
    .img_readonly(img_readonly)
 );
 ///////////////// FDD EMULATE /////////////////
-fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd0 (
+fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80), .ID("FDD0")) fdd0 (
    .clk(clock_bus.base_mp.clk),
    .reset(reset),
    .FDD_bus(FDD_bus[0]),
@@ -865,7 +867,7 @@ fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd0 (
    .sector_size('{2,2}),            // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
    .density('{0,0})                // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
 );
-fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd1 (
+fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80), .ID("FDD1")) fdd1 (
    .clk(clock_bus.base_mp.clk),
    .reset(reset),
    .FDD_bus(FDD_bus[1]),
@@ -878,7 +880,7 @@ fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd1 (
    .sector_size('{2,2}),            // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
    .density('{0,0})                // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
 );
-fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80)) fdd2 (
+fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80), .ID("FDD2")) fdd2 (
    .clk(clock_bus.base_mp.clk),
    .reset(reset),
    .FDD_bus(FDD_bus[2]),

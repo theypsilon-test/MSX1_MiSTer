@@ -11,7 +11,7 @@ typedef enum logic [5:0] {MAPPER_NONE, MAPPER_OFFSET, MAPPER_ASCII16, MAPPER_RTY
                           MAPPER_NATIONAL, MAPPER_ESE_RAM, 
                           MAPPER_MEGARAM, MAPPER_MEGASCC, MAPPER_MEGAASCII8, MAPPER_MEGAASCII16,
                           MAPPER_TURBO_R_FDC,
-                          MAPPER_YAMAHA_SFG,
+                          MAPPER_YAMAHA_SFG,MAPPER_MIRROR,
                           MAPPER_UNUSED} mapper_typ_t;
 typedef enum logic [3:0] {BLOCK_RAM, BLOCK_ROM, BLOCK_SRAM, BLOCK_DEVICE, BLOCK_MAPPER, BLOCK_CART, BLOCK_REF_MEM, BLOCK_REF_DEV, BLOCK_IO_DEVICE, BLOCK_EXPANDER, BLOCK_REF_SHARED_MEM} block_t;
 typedef enum logic [2:0] {CONF_BLOCK, CONF_DEVICE, CONF_LAYOUT, CONF_CARTRIGE, CONF_BLOCK_FW, CONF_UNUSED5, CONF_UNUSED6, CONF_END} conf_t;
@@ -405,7 +405,7 @@ package MSX;
     
     typedef struct {
         logic [26:0] addr;
-        logic [15:0] size;
+        logic [16:0] size;
         logic        ro;
     } lookup_RAM_t;
     
