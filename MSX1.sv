@@ -15,7 +15,6 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 //============================================================================
-/*verilator tracing_off*/
 module emu
 (
    //Master input clock
@@ -199,7 +198,6 @@ assign BUTTONS = 0;
 localparam VDNUM = 7;
 localparam sysCLK = 21477270;
 
-/*verilator tracing_on*/
 video_bus_if video_bus();
 clock_bus_if clock_bus(clk_core, clk_sdram);
 ext_sd_card_if ext_SD_card_bus();
@@ -215,7 +213,6 @@ memory_bus_if memory_bus_sdram_ch1();
 memory_bus_if memory_bus_sdram_ch2();
 memory_bus_if memory_bus_sdram_ch3();
 
-/*verilator tracing_off*/
 MSX::cpu_regs_t    cpu_regs;
 MSX::user_config_t msx_user_config;
 MSX::config_cart_t cart_conf[2];
@@ -227,7 +224,6 @@ MSX::io_device_mem_ref_t io_memory[8];
 MSX::slot_expander_t slot_expander[4];
 MSX::msx_config_t msx_config;
 
-/*verilator tracing_on*/
 wire             forced_scandoubler;
 wire             scandoubler;
 wire      [21:0] gamma_bus;
@@ -259,7 +255,7 @@ wire      [64:0] rtc;
 wire             reset;
 wire             hard_reset;
 wire      [31:0] uart_speed;
-/*verilator tracing_off*/
+
 //[0]     RESET
 //[2:1]   Aspect ratio
 //[5:3]   Scandoubler
@@ -331,7 +327,6 @@ localparam CONF_STR = {
    "I,BAD MSX CONF,NOT SUPPORTED CONF,NOT SUPPORTED BLOCK,BAD MSX FW CONF,NOT FW CONF,DEVICE MISSING,Exceeded number of IO_DEVICE,No CRC32 DB,Not find CRC32 in DB,SMALL MEMORY;",
    "V,v",`BUILD_DATE
 };
-/*verilator tracing_on*/
 assign hard_reset = RESET || status[0] || upload_reset;
 assign reset = hard_reset || status[10] || status[21] || (status[12] && img_mounted[4] && io_device[DEV_WD2793][0].enable) ;
 
@@ -409,7 +404,6 @@ user_config user_config
    .ocmMode(io_device[DEV_OCM_BOOT][0].enable)
 );
 /////////////////   CLOCKS   /////////////////
-/*verilator tracing_on*/
 wire clk_core, clk_sdram, locked_sdram;
 pll pll
 (
@@ -552,7 +546,6 @@ sd_card sd_card
     .mosi(sdmosi),
     .miso(vsdmiso)
 );
-/*verilator tracing_off*/
 /////////////////  VIDEO  /////////////////
 wire       vga_de;
 wire [1:0] ar    = status[2:1];
@@ -632,7 +625,6 @@ wire        load_sram;
 error_t     error;
 MSX::kb_memory_t  kb_upload_memory;
 
-/*verilator tracing_on*/
 memory_upload memory_upload(
     .clk(clock_bus.base_mp.clk),
     .upload(upload),
@@ -660,7 +652,6 @@ memory_upload memory_upload(
     .error(error),
     .reset(upload_reset)
 );
-/*verilator tracing_off*/
 wire  [26:0] flash_addr;
 wire   [7:0] flash_dout;
 wire         flash_req, flash_ready, flash_done;
@@ -707,7 +698,6 @@ ddram buffer
    .debug_wr(opcode_out),
    .*
 );
-/*verilator tracing_on*/
 
 system_memory #(.BRAM_WIDTH(18)) system_memory(
    .clk(clock_bus.base_mp.clk),
@@ -750,7 +740,6 @@ sdram sdram
    .ch3_done(),
    .*
 );
-/*verilator tracing_off*/
 // VDP video RAM
 spram #(.addr_width(16),.mem_name("VRA2")) vram_lo
 (
@@ -830,9 +819,6 @@ tape cass
    .enable(cas_load)
 );
 
-/*verilator tracing_on*/
-
-
 blockDevMux #(.VDNUM(VDNUM)) blockDevMux
 (
    .clk(clock_bus.base_mp.clk),
@@ -894,5 +880,5 @@ fdd #(.sysCLK(sysCLK), .SECTORS(9), .SECTOR_SIZE(512), .TRACKS(80), .ID("FDD2"))
    .sector_size('{2,2}),            // 0 - 128B / 1 - 256B / 2 - 512B / 3 - 1024B
    .density('{0,0})                // 0 - 250kbit     / 1 - 500kbit    / 2 - 1000kbit
 );
-/*verilator tracing_off*/
+
 endmodule
