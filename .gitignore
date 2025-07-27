@@ -63,7 +63,6 @@ tools/CreateMSXpack/SeznamMSX/
 tools/MIDI/
 tools/testRom/
 .vscode/settings.json
-releases/
 tools/Distribute.bat
 tools/Computer_rozpracovano/
 tools/Extension_test/
