@@ -109,7 +109,7 @@ always @(posedge clk) begin
       end else if (request_load[num]) begin
          rd <= 1'b1;
       end else begin
-         num <= (num == 2'b11) ? 0 : num + 2'b1;
+         num <= (num == 2'b11) ? 2'd0 : num + 2'b1;
       end
    end
 end

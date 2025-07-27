@@ -124,7 +124,7 @@ module wd279x_demodulator #(parameter sysCLK)
             end
 
             if (mfm_a1) begin
-                a1_cnt     <= a1_cnt + 1;
+                a1_cnt     <= a1_cnt + 2'd1;
                 crc_calc   <= 1;
                 crcwr      <= (a1_cnt == 0);
                 DAM_valid  <= 0;
@@ -140,7 +140,7 @@ module wd279x_demodulator #(parameter sysCLK)
                     sec_id_cnt <= 0;
                     IDAM       <= 1;
                 end else if (IDAM_valid && (mfm_data == 8'hFB || mfm_data == 8'hF8)) begin
-                    DATA_counter <= 128 << IDAM_data[3][1:0];
+                    DATA_counter <= 10'd128 << IDAM_data[3][1:0];
                     DAM_valid    <= 1;
                     DAM_deleted  <= (mfm_data == 8'hF8);
                 end else begin
@@ -151,7 +151,7 @@ module wd279x_demodulator #(parameter sysCLK)
             // Ukládání IDAM dat a CRC kontrola
             if (IDAM && fdd_rx) begin
                 IDAM_data[sec_id_cnt] <= fdd_data;
-                sec_id_cnt <= sec_id_cnt + 1;
+                sec_id_cnt <= sec_id_cnt + 3'd1;
 
                 if (sec_id_cnt == 3)
                     crc_calc <= 0;
@@ -166,7 +166,7 @@ module wd279x_demodulator #(parameter sysCLK)
 
             // Přenos datového sektoru
             if (DAM_valid && DATA_counter > 0 && fdd_rx) begin
-                DATA_counter <= DATA_counter - 1;
+                DATA_counter <= DATA_counter - 10'd1;
                 if (DATA_counter == 1) begin
                     DAM_valid <= 0;
                     crc_calc <= 0;
@@ -176,7 +176,7 @@ module wd279x_demodulator #(parameter sysCLK)
 
             // Zápis CRC bajtů po datech
             if (check_crc > 0 && fdd_rx) begin
-                check_crc <= check_crc - 1;
+                check_crc <= check_crc - 2'd1;
                 DAM_crc[2 - check_crc] <= fdd_data;
             end
         end

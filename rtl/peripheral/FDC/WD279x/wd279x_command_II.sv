@@ -94,13 +94,15 @@ module wd279x_command_II  #(parameter WD279_57=1)
 	logic reg_CRC_ERROR;
 	logic reg_LOST_DATA;
 	logic reg_RECORD_NOT_FOUND;
-	logic reg_WRITE_PROTECTED;
+	//logic reg_WRITE_PROTECTED;
 	logic reg_RECORD_TYPE;
 
 	logic [4:0] wait_count;
 	logic [2:0] index_count;
 	logic       last_index;
 	logic [1:0] crc_count;
+
+	assign SSO = 0; //TODO: Implement SSO for WD2795/7
 
 	assign busy = state != STATE_IDLE;
 	assign status = command[7:6]            != 2'b10 ? 8'h00 : {READYn, 1'b0, reg_RECORD_TYPE, reg_RECORD_NOT_FOUND, reg_CRC_ERROR, reg_LOST_DATA, DRQ, busy};
@@ -114,14 +116,14 @@ module wd279x_command_II  #(parameter WD279_57=1)
 			reg_CRC_ERROR <= 0;
 			reg_LOST_DATA <= 0;
 			reg_RECORD_NOT_FOUND <= 0;
-			reg_WRITE_PROTECTED <= 0;
+//			reg_WRITE_PROTECTED <= 0;
 			reg_RECORD_TYPE <= 0;
 			HLD <= 0;
 			INTRQ <= 0;
 			if (WD279_57) SSO <= 0;
 		end else begin
 			last_index <= INDEXn;
-			if (last_index && !INDEXn) index_count <= index_count + 1;
+			if (last_index && !INDEXn) index_count <= index_count + 3'd1;
 			if (INTRQ_ACK) INTRQ <= 0;
 			case(state)
 				STATE_IDLE: begin
@@ -132,7 +134,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 							reg_CRC_ERROR <= 0;
 							reg_LOST_DATA <= 0;
 							reg_RECORD_NOT_FOUND <= 0;
-							reg_WRITE_PROTECTED <= 0;
+							//reg_WRITE_PROTECTED <= 0;
 							reg_RECORD_TYPE <= 0;
 							state <= STATE_PREPARE;
 						end
@@ -148,12 +150,12 @@ module wd279x_command_II  #(parameter WD279_57=1)
 						end
 						HLD <= 1;
 						state <= STATE_CHECK;
-						wait_count <= command[2] ? 15 : 0 ;		//WAIT 15ms or 0ms
+						wait_count <= command[2] ? 5'd15 : 5'd0 ;		//WAIT 15ms or 0ms
 					end				
 				end
 				STATE_CHECK:
 					if (wait_count > 0) begin
-						if (msclk) wait_count <= wait_count - 1;
+						if (msclk) wait_count <= wait_count - 5'd1;
 					end else begin
 						state <= STATE_CHECK_II;
 						index_count <= 0;
@@ -161,7 +163,7 @@ module wd279x_command_II  #(parameter WD279_57=1)
 							if (!WPROTn) begin
 								INTRQ <= 1;
 								state <= STATE_IDLE;
-								reg_WRITE_PROTECTED <= 1;
+								//reg_WRITE_PROTECTED <= 1;
 							end
 						end
 					end
@@ -194,11 +196,11 @@ module wd279x_command_II  #(parameter WD279_57=1)
 				end
 				STATE_CRC_CHECK: begin
 					if (crc_count > 0 ) begin
-						if (data_rx) crc_count <= crc_count - 1;
+						if (data_rx) crc_count <= crc_count - 2'd1;
 					end else begin
 						if (DAM_CRC_valid) begin
 							if (command[4]) begin			//Multiple
-								sector_out <= sector + 1;
+								sector_out <= sector + 8'd1;
 								sector_write <= 1;
 								//$display("Command II m(%d) Track Side sector: %X %X %X NEXT", command[4], track, command[3], sector + 1);
 								state <= STATE_CHECK;

@@ -1,4 +1,4 @@
-module motor #(parameter TIMEOUTms = 30000, DELAYms = 3) (
+module motor #(parameter TIMEOUTms = 16'd30000, DELAYms = 3'd3) (
     input  logic        clk,
     input  logic        msclk,  // 1ms clock
     input  logic        reset,
@@ -20,16 +20,16 @@ module motor #(parameter TIMEOUTms = 30000, DELAYms = 3) (
                 end else if (USEL == i) begin
                     if (!MOTORn) begin
                         if (motor_delay[i] != 0 && msclk) 
-                            motor_delay[i] <= motor_delay[i] - 1;  // Probíhá rozjezd
+                            motor_delay[i] <= motor_delay[i] - 3'd1;  // Probíhá rozjezd
                         else 
                             motor_timeout[i] <= TIMEOUTms;         // Motor běží
                     end else if (motor_timeout[i] > 0 && msclk) begin
-                        motor_timeout[i] <= motor_timeout[i] - 1;  // Čekání na vypnutí
+                        motor_timeout[i] <= motor_timeout[i] - 16'd1;  // Čekání na vypnutí
                     end else begin
                         motor_delay[i] <= DELAYms;                 // Reset rozjezdu po vypnutí
                     end
                 end else if (motor_timeout[i] > 0 && msclk) begin
-                    motor_timeout[i] <= motor_timeout[i] - 1;      // Čekání na vypnutí (ostatní motory)
+                    motor_timeout[i] <= motor_timeout[i] - 16'd1;      // Čekání na vypnutí (ostatní motory)
                 end else begin
                     motor_delay[i] <= DELAYms;
                 end

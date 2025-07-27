@@ -1,4 +1,4 @@
-module track #(DELAYms = 3, MAX_TRACKS = 80, ID = 0)
+module track #(DELAYms = 3'd3, MAX_TRACKS = 80, ID = 0)
 (
     input  logic        clk,
     input  logic        msclk,  //clk at 1ms
@@ -35,18 +35,18 @@ module track #(DELAYms = 3, MAX_TRACKS = 80, ID = 0)
             last_STEPn <= STEPn;
             
             if (msclk && track_delay > 0) begin
-                track_delay <= track_delay - 1;
+                track_delay <= track_delay - 3'd1;
             end
 
             if (!STEPn && last_STEPn && track_delay == 0) begin
                 if (SDIRn) begin
                     if (reg_track[USEL] < MAX_TRACKS) begin
-                        reg_track[USEL] <= reg_track[USEL] + 1;
+                        reg_track[USEL] <= reg_track[USEL] + 7'd1;
                         track_delay <= DELAYms;
                     end
                 end else begin
                     if (reg_track[USEL] > 0) begin
-                        reg_track[USEL] <= reg_track[USEL] - 1;
+                        reg_track[USEL] <= reg_track[USEL] - 7'd1;
                         track_delay <= DELAYms;
                     end
                 end

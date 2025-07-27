@@ -78,7 +78,7 @@ always_ff @(posedge clk) begin
                 counter <= 1;
             end else begin
                 clk_rx  <= 0;
-                counter <= counter + 1;
+                counter <= counter + 14'd1;
             end
         end else begin
             counter <= {1'b0,baudrate[13:1]};

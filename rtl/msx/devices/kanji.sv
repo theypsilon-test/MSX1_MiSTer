@@ -94,7 +94,7 @@ module kanji (
 
     wire [6:0] hangul_data = hangul ? data[6:0] : {1'b0, data[5:0]};
 
-    always_ff @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk) begin
         if (reset) begin
             addr1 <= 27'h00000;
             addr2 <= 27'h20000;

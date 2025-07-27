@@ -143,11 +143,11 @@ module wd279x #(parameter WD279_57=1, parameter sysCLK)
 	end
 
 	//Data register Používá třeba seek
-	logic reg_lost_data;
+	//logic reg_lost_data;		//TODO: Implement lost data
 	always_ff @(posedge clk) begin
 		if (~MRn)	begin
 			reg_data <= 0;
-			reg_lost_data <= 0;
+	//		reg_lost_data <= 0;
 		end	else begin
 			if (write_rq && A == A_DATA) begin
 				//$display("SET DATA  %X", DIN);
@@ -159,9 +159,9 @@ module wd279x #(parameter WD279_57=1, parameter sysCLK)
 			end
 
 			if (enable_write_reg_data_II && fdd_rx) begin
-				if (DRQ) begin
-					reg_lost_data <= 1;
-				end
+	//			if (DRQ) begin
+	//				reg_lost_data <= 1;
+	//			end
 				reg_data <= fdd_data;
 				DRQ <= 1;
 			end

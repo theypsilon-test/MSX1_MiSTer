@@ -13,7 +13,7 @@
    flash_bus_if.device_mp   flash_bus,
    memory_bus_if.device_mp  memory_bus,
    //debug
-   output MSX::cpu_regs_t   cpu_regs,
+   output MSX::cpu_regs_t   cpu_regs,   
    output  [31:0]           opcode,
    output  [1:0]            opcode_num,
    output                   opcode_out,
@@ -71,6 +71,13 @@ cpu_bus_if cpu_bus(clock_bus.clk, reset);
 memory_bus_if memory_bus_slots();
 memory_bus_if memory_bus_devices();
 
+//TODO tempoary disabled
+assign cpu_regs        = '{default: '0};
+assign opcode_num      = '0;
+assign opcode_out      = '0;
+assign opcode_PC_start = '0;
+assign opcode          = '0;
+
 //  -----------------------------------------------------------------------------
 //  -- reset
 //  -----------------------------------------------------------------------------
@@ -101,7 +108,7 @@ wire cpu_interrupt;
 
 logic cpu_clk;
 always_comb begin
-   case(cpu_clock_sel)
+   case(msx_config.cpu_clock_sel[1:0])
       2'b00: cpu_clk = clock_bus.ce_3m58_n;
       2'b01: cpu_clk = clock_bus.ce_10m7_n;
       2'b10: cpu_clk = clock_bus.ce_5m39_n;
@@ -158,7 +165,7 @@ TV80a #(.Mode(0), .R800_MULU(1), .IOWait(1)) Z80
 //  -----------------------------------------------------------------------------
 //  -- WAIT CPU
 //  -----------------------------------------------------------------------------
-logic wait_n, dev_cpu_wait;
+logic wait_n;
 logic [2:0] wait_count = 0;
 logic last_m1;
 
@@ -171,7 +178,7 @@ always_ff @(negedge cpu_bus.cpu_clk) begin
    end
 end
 
-assign wait_n = wait_count == 3'd00 && ~dev_cpu_wait;
+assign wait_n = wait_count == 3'd00; // && ~dev_cpu_wait; //TODO OCM
 
 //  -----------------------------------------------------------------------------
 //  -- Slots
@@ -216,7 +223,8 @@ wire        keybeep;
 wire        reset_lock, reset_request, ocm_megaSD_enable;
 wire [1:0]  ocm_slot2_mode;
 wire        ocm_slot1_mode;
-wire [1:0]  cpu_clock_sel;
+//wire [1:0]  dev_cpu_clock_sel;
+//wire        dev_cpu_wait;
 wire signed [15:0] device_sound_L, device_sound_R;
 devices #(.sysCLK(sysCLK)) devices
 (
@@ -248,8 +256,8 @@ devices #(.sysCLK(sysCLK)) devices
    .msx_user_config(msx_user_config),
    .reset_lock(reset_lock),
    .reset_request(reset_request),
-   .cpu_wait(dev_cpu_wait),
-   .cpu_clock_sel(cpu_clock_sel),
+   //.cpu_wait(dev_cpu_wait),
+   //.cpu_clock_sel(dev_cpu_clock_sel),
    .ocm_megaSD_enable(ocm_megaSD_enable),
    .ocm_slot1_mode(ocm_slot1_mode),
    .ocm_slot2_mode(ocm_slot2_mode)

@@ -73,7 +73,7 @@ module fmmod (
                 if (bitcount > 0) begin
                     bitout   <= cursft[14];
                     cursft   <= {cursft[13:0], 1'b1};
-                    bitcount <= bitcount - 1;
+                    bitcount <= bitcount - 4'd1;
                 end else begin
                     txend <= 1'b1;
                     if (!nxtemp) begin

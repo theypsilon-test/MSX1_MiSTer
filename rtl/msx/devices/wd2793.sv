@@ -65,7 +65,7 @@ assign FDD_bus.USEL   = 0;                //TODO zatim jeden image
 assign FDD_bus.MOTORn = ~(motor && drive == DRIVE_A);
 assign FDD_bus.SIDEn  = ~side;
 
-wire [1:0] dbg_status = {drq, intrq};
+//wire [1:0] dbg_status = {drq, intrq};
 
 always @(posedge cpu_bus.clk) begin
    if (cpu_bus.reset) begin
@@ -136,9 +136,8 @@ always_comb begin
 end
 
 logic [15:0] crc;
-logic fdc_we;
-
-assign fdc_we = data_oe_rq && wdcs && drq;
+//logic fdc_we;
+//assign fdc_we = data_oe_rq && wdcs && drq;
 
 wire [7:0] d_from_wd17;
 wire drq, intrq;
@@ -163,7 +162,7 @@ wd279x #(.WD279_57(0),.sysCLK(sysCLK)) wd2793_i
    .READYn(FDD_bus.READYn),
    .WPROTn(FDD_bus.WPROTn),
    .RAWRDn(FDD_bus.READ_DATAn),
-   .DDENn(0),              //TODO      Režim FM/MFM
+   .DDENn(1'b0),              //TODO      Režim FM/MFM
    .SSO()                 //Pouze WD2795/7
 );
 
