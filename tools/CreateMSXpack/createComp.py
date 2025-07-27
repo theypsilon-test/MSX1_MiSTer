@@ -451,6 +451,9 @@ def create_msx_config_device(device, outfile, files_with_sha1, constants):
         filename = None
         
         if 'ROM_SHA1' in parameters : 
+            if parameters['ROM_SHA1'] not in files_with_sha1 :
+                raise Exception(f"ROM missing! SHA1 {parameters['ROM_SHA1']} not find. Computer SKIP")
+
             filename = files_with_sha1[parameters['ROM_SHA1']]
             if filename:
                 if 'rom_skip' in parameters : rom_skip  = convert_to_int(parameters['rom_skip'])
@@ -499,12 +502,17 @@ def create_msx_config(config, file_name, path, files_with_sha1, constants, outpt
     os.makedirs(file_path, exist_ok=True)
     file_path = os.path.join(file_path, file_name + '.msx')
     
-    with open(file_path, "wb") as outfile:
-        #create_msx_config_header(config.get('type', ('MSX1',{})), config.get('video_standard', ('PAL',{})), outfile)
-        create_msx_config_header(config, outfile)
-        create_msx_config_device(config.get('devices', []), outfile, files_with_sha1, constants)
-        create_msx_config_primary(config.get('primary', {}), outfile, files_with_sha1, constants)
-        create_msx_config_kbd_layout(config.get('kbd_layout', None), outfile, constants) 
+    try:
+        with open(file_path, "wb") as outfile:
+            #create_msx_config_header(config.get('type', ('MSX1',{})), config.get('video_standard', ('PAL',{})), outfile)
+            create_msx_config_header(config, outfile)
+            create_msx_config_device(config.get('devices', []), outfile, files_with_sha1, constants)
+            create_msx_config_primary(config.get('primary', {}), outfile, files_with_sha1, constants)
+            create_msx_config_kbd_layout(config.get('kbd_layout', None), outfile, constants) 
+    except Exception as e:
+        print(e)
+        os.remove(file_path)
+    
              
 def create_msx_conf(file_name, path, files_with_sha1, constants, outpt_dir, root_dir):
     """
