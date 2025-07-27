@@ -299,12 +299,12 @@ localparam CONF_STR = {
    "H2F4,ROM,Load,31100000;",
    "h6S3,DSK,Mount Drive 1;",
    "h7S4,DSK,Mount Drive 2;",
-   "h12-;",
-   "h12SC4,VHD,Load SD card;",
+   "h0-;",
+   "h0SC4,VHD,Load SD card;",
    "h3O[12],Reset after Mount,No,Yes;",
-   "H10-;",
-   "H10R[38],SRAM Save;",
-   "H10R[39],SRAM Load;",
+   "HA-;",
+   "HAR[38],SRAM Save;",
+   "HAR[39],SRAM Load;",
    "-;",
    "h3O[11],Internal Mapper,2048KB RAM,4096KB RAM;",
 
@@ -312,8 +312,8 @@ localparam CONF_STR = {
 	"h3O[16],CPU type,Z80,R800;",
 
    "O[40],Tape Input,File,ADC;",
-   "H11F5,CAS,Cas File,31700000;",
-   "H11T9,Tape Rewind;",
+   "HBF5,CAS,Cas File,31700000;",
+   "HBT9,Tape Rewind;",
    "-;",
    "P1,Video settings;",
    "P1O[2:1],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
@@ -335,15 +335,14 @@ wire [1:0] sdram_size;
 wire [7:0] info;
 wire info_req;
 
-assign status_menumask[0] = '0;
+assign status_menumask[0] = io_device[DEV_OCM_BOOT][0].enable || cart_conf[0].typ == CART_TYP_MFRSD;
 assign status_menumask[1] = ROM_A_load_hide || io_device[DEV_OCM_BOOT][0].enable ;
 assign status_menumask[2] = ROM_B_load_hide || io_device[DEV_OCM_BOOT][0].enable ;
 assign status_menumask[3] = io_device[DEV_OCM_BOOT][0].enable;
 assign status_menumask[9:4] = msx_config.fdd[5:0];
 assign status_menumask[10] = lookup_SRAM[0].size + lookup_SRAM[1].size + lookup_SRAM[2].size + lookup_SRAM[3].size == 0;
 assign status_menumask[11] = msx_user_config.cas_audio_src == CAS_AUDIO_ADC;
-assign status_menumask[12] = io_device[DEV_OCM_BOOT][0].enable || cart_conf[0].typ == CART_TYP_MFRSD;
-assign status_menumask[15:13] = '0;
+assign status_menumask[15:12] = '0;
 assign sdram_size         = sdram_sz[15] ? sdram_sz[1:0] : 2'b00;
 
 assign info_req = error != ERR_NONE;
