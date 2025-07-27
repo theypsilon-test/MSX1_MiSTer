@@ -28,6 +28,8 @@ module memory_upload
     output logic                reset
 );
 
+    typedef enum logic [2:0] { size_MSX_PACK, size_FW_PACK, size_ROM_A, size_ROM_B, size_CRC } size_idx_t;
+
     // Parametry
     localparam DDR3_BASE_FW_ADDR = 28'h300000;
     localparam DDR3_CRC32_TABLE_ADDR = 28'h1600000;
@@ -45,19 +47,19 @@ module memory_upload
         load <= 1'b0;
         if (~ioctl_download & ioctl_download_last) begin
             case (ioctl_index[5:0])
-                6'd1: begin ioctl_size[0] <= ioctl_addr; load <= 1'b1; end  // MSX PACK
-                6'd2: begin ioctl_size[1] <= ioctl_addr; load <= 1'b1; end  // FW PACK
-                6'd3: begin ioctl_size[2] <= ioctl_addr; load <= 1'b1; end  // ROM A
-                6'd4: begin ioctl_size[3] <= ioctl_addr; load <= 1'b1; end  // ROM B
-                6'd6: begin ioctl_size[4] <= ioctl_addr; end                // Další případy
+                6'd1: begin ioctl_size[size_MSX_PACK] <= ioctl_addr; load <= 1'b1; end  // MSX PACK
+                6'd2: begin ioctl_size[size_FW_PACK] <= ioctl_addr; load <= 1'b1; end  // FW PACK
+                6'd3: begin ioctl_size[size_ROM_A] <= ioctl_addr; load <= 1'b1; end  // ROM A
+                6'd4: begin ioctl_size[size_ROM_B] <= ioctl_addr; load <= 1'b1; end  // ROM B
+                6'd6: begin ioctl_size[size_CRC] <= ioctl_addr; end                // Další případy
                 default: ;
             endcase
         end
 
         // Vynulování velikostí ROM při vysunutí
         if (rom_eject) begin
-            ioctl_size[2] <= 27'd0;
-            ioctl_size[3] <= 27'd0;
+            ioctl_size[size_ROM_A] <= 27'd0;
+            ioctl_size[size_ROM_B] <= 27'd0;
             load <= 1'b1;
         end
 
@@ -238,7 +240,7 @@ module memory_upload
                         msx_config.wait_count    <= 3'd1;
                         msx_config.cpu_clock_sel <= '0;
                         msx_config.fdd           <= '0;
-                        if (ioctl_size[1] > 0) begin
+                        if (ioctl_size[size_FW_PACK] > 0) begin
                             state      <= STATE_READ_CONF;
                             next_state <= STATE_CHECK_FW_CONF;
                             ddr3_addr  <= DDR3_BASE_FW_ADDR;
@@ -247,7 +249,7 @@ module memory_upload
                     end
                 end
                 STATE_READ_CONF: begin                                  // Přečte požadovaný počet bytů do konfigurace
-                    if (fw_space ? ioctl_size[1] > 27'(ddr3_addr - DDR3_BASE_FW_ADDR) : ioctl_size[0] > ddr3_addr[26:0]) begin  // Kontrola konce dat
+                    if (fw_space ? ioctl_size[size_FW_PACK] > 27'(ddr3_addr - DDR3_BASE_FW_ADDR) : ioctl_size[size_MSX_PACK] > ddr3_addr[26:0]) begin  // Kontrola konce dat
                         conf[head_addr] <= ddr3_dout;
                         ddr3_rd         <= '1;
                         if (head_addr == read_cnt) begin
@@ -477,16 +479,16 @@ module memory_upload
                             $display("BLOCK CART ID:%d CONF:%x", conf[3][0], cart_conf[conf[3][0]].typ);
                             cart_id    <= conf[3][0];
                             if (cart_conf[conf[3][0]].typ == CART_TYP_ROM) begin
-                                if (ioctl_size[conf[3][0] ? 3'd3 : 3'd2] > '0) begin
-                                    $display("BLOCK CART %d LOAD START ref: %d addr:%x size:%x - %x", conf[3][0], ref_ram, ram_addr, ioctl_size[conf[3][0] ? 3 : 2], ioctl_size[conf[3][0] ? 3 : 2][26:14]);
+                                if (ioctl_size[conf[3][0] ? size_ROM_B : size_ROM_A] > '0) begin
+                                    $display("BLOCK CART %d LOAD START ref: %d addr:%x size:%x - %x", conf[3][0], ref_ram, ram_addr, ioctl_size[conf[3][0] ? size_ROM_B : size_ROM_A], ioctl_size[conf[3][0] ? size_ROM_B : size_ROM_A][26:14]);
                                     lookup_RAM[ref_ram].addr <= ram_addr;                                                   // Uložíme adresu ROM
-                                    lookup_RAM[ref_ram].size <= {3'b0, ioctl_size[conf[3][0] ? 3'd3 : 3'd2][26:13]};        // Uložíme velikost ROM
+                                    lookup_RAM[ref_ram].size <= {3'b0, ioctl_size[conf[3][0] ? size_ROM_B : size_ROM_A][26:13]};        // Uložíme velikost ROM
                                     lookup_RAM[ref_ram].ro   <= '1;                                                         // Uložíme ochranu paměti ROM
                                     state                    <= STATE_FILL_RAM;                                             // Načítáme ROM
                                     next_state               <= STATE_SEARCH_CRC32_INIT;                                    // Po nahrání budeme hledat CRC
                                     save_addr                <= ddr3_addr - 1'b1;                                           // Uchováme adresu -1 kvůli již načtenému prefetch bajtu
                                     ddr3_addr                <= conf[3][0] ? 28'h1100000 : 28'hC00000;                      // Adresa ROM v DDR
-                                    data_size                <= ioctl_size[conf[3][0] ? 3'd3 : 3'd2][24:0];                 // Velikost ROM
+                                    data_size                <= ioctl_size[conf[3][0] ? size_ROM_B : size_ROM_A][24:0];                 // Velikost ROM
                                     ddr3_rd                  <= '1;                                                         // Prefetch
                                     ref_add                  <= '1;                                                         // Ukládáme referenci
                                     crc_en                   <= '1;                                                         // Počítáme CRC
@@ -494,7 +496,7 @@ module memory_upload
                                     ref_sram                 <= 2'd0;
                                 end
                             end else begin                                                                // Neni ROM jdeme do FW
-                                if (ioctl_size[1] > '0) begin                                             // Máme FW?
+                                if (ioctl_size[size_FW_PACK] > '0) begin                                  // Máme FW?
                                     save_addr  <= ddr3_addr - 1'b1;                                       // Uchováme adresu -1 kvůli již načtenému prefetch bajtu
                                     ddr3_addr  <= 28'h300010 + {22'b0, cart_conf[conf[3][0]].typ,2'b00};  // FW Area + ID zařízení
                                     ddr3_rd    <= '1;                                                     // Preferch
@@ -528,7 +530,7 @@ module memory_upload
                                 temp_io_device.param      = conf[4];
                                 temp_io_device.device_ref = current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
                                 io_device[device_t'(conf[3])][fw_space ? {1'b0, cart_id} : 2'd2] <= temp_io_device;
-                                io_ref_mapper                                       <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
+                                io_ref_mapper                                       <= current_io_ref_mapper == '0 ? io_ref_mapper + 3'd1 : io_ref_mapper;
                                 current_io_ref_mapper                               <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
                                 last_device_num                                     <= fw_space ? {1'b0, cart_id} : 2'd2;
                                 $display("BLOCK IO_DEVICE[%x] IS FIXED pos:%x reference %d", device_t'(conf[3]), fw_space ? {1'b0, cart_id} : 2'd2, current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper );
@@ -540,7 +542,7 @@ module memory_upload
                                     temp_io_device.enable             = 1'b1;
                                     temp_io_device.param              = conf[4];
                                     temp_io_device.device_ref         = current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
-                                    io_ref_mapper                    <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
+                                    io_ref_mapper                    <= current_io_ref_mapper == '0 ? io_ref_mapper + 3'd1 : io_ref_mapper;
                                     current_io_ref_mapper            <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
                                     last_device_num                  <= 0;
                                     io_device[device_t'(conf[3])][0] <= temp_io_device;
@@ -550,7 +552,7 @@ module memory_upload
                                     temp_io_device.enable             = 1'b1;
                                     temp_io_device.param              = conf[4];
                                     temp_io_device.device_ref         = current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
-                                    io_ref_mapper                    <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
+                                    io_ref_mapper                    <= current_io_ref_mapper == '0 ? io_ref_mapper + 3'd1 : io_ref_mapper;
                                     current_io_ref_mapper            <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
                                     last_device_num                  <= 1;
                                     io_device[device_t'(conf[3])][1] <= temp_io_device;
@@ -560,7 +562,7 @@ module memory_upload
                                     temp_io_device.enable             = 1'b1;
                                     temp_io_device.param              = conf[4];
                                     temp_io_device.device_ref         = current_io_ref_mapper == '0 ? io_ref_mapper     : current_io_ref_mapper;
-                                    io_ref_mapper                    <= current_io_ref_mapper == '0 ? io_ref_mapper + 1 : io_ref_mapper;
+                                    io_ref_mapper                    <= current_io_ref_mapper == '0 ? io_ref_mapper + 3'd1 : io_ref_mapper;
                                     current_io_ref_mapper            <= current_io_ref_mapper == '0 ? io_ref_mapper : current_io_ref_mapper;
                                     last_device_num                  <= 2;
                                     io_device[device_t'(conf[3])][2] <= temp_io_device;
@@ -718,7 +720,7 @@ module memory_upload
                     end
                 end
                 STATE_SEARCH_CRC32_INIT: begin
-                    if (ioctl_size[4] == 0) begin
+                    if (ioctl_size[size_CRC] == 0) begin
                         $display("NO CRC32 DB");
                         ddr3_addr <= save_addr;
                         ddr3_rd   <= '1;
@@ -735,7 +737,7 @@ module memory_upload
                     temp[ddr3_addr[2:0]] = ddr3_dout;
                     if (ddr3_addr[2:0] == 3'd0 && rom_crc32 == {temp[4], temp[3], temp[2], temp[1]}) begin
                         $display("FIND CRC32: %x mapper:%x sram:%x", rom_crc32, temp[5], temp[6]);       // CRC32 nalezeno
-                        if (ioctl_size[1] > '0) begin                                                    // Máme FW?
+                        if (ioctl_size[size_FW_PACK] > '0) begin                                                    // Máme FW?
                             ddr3_addr  <= 28'h300010 + {18'b0, temp[5], 2'b00};
                             ddr3_rd    <= '1;
                             read_cnt   <= 4;
@@ -747,7 +749,7 @@ module memory_upload
                             state <= STATE_IDLE;
                         end
                     end else begin
-                        if ((ddr3_addr - DDR3_CRC32_TABLE_ADDR) == {1'b0, ioctl_size[4]}) begin
+                        if ((ddr3_addr - DDR3_CRC32_TABLE_ADDR) == {1'b0, ioctl_size[size_CRC]}) begin
                             $display("NOT FIND CRC32: %x", rom_crc32);
                             // TODO: Nastav linear mapper a pokračuj.
                             ddr3_addr <= save_addr;

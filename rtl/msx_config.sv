@@ -24,7 +24,7 @@ wire [3:0] slot_B_select   = HPS_status[32:29];
 
     cart_typ_t cart_A;
     always_comb begin : Slot1
-        case(HPS_status[20:17])
+        case(slot_A_select)
             4'd0: cart_conf[0].typ = CART_TYP_ROM;
             4'd1: cart_conf[0].typ = CART_TYP_FDC;
             4'd2: cart_conf[0].typ = CART_TYP_SCC;
@@ -39,7 +39,7 @@ wire [3:0] slot_B_select   = HPS_status[32:29];
 
     cart_typ_t cart_B;
     always_comb begin : Slot2
-        case(HPS_status[32:29])
+        case(slot_B_select)
             4'd0: cart_conf[1].typ = CART_TYP_ROM;
             4'd1: cart_conf[1].typ = CART_TYP_FDC;
             4'd2: cart_conf[1].typ = CART_TYP_SCC;

@@ -28,7 +28,9 @@ module track_buffer #(ID = 0)
 
     wire changed = {reg_track, reg_USEL, reg_side} != {track, USEL, side};
     
-    
+    assign block_device[0].wr = 0;     //TODO Write functionality
+    assign block_device[1].wr = 0;     //TODO Write functionality
+
     assign sd_ack = reg_USEL ? block_device[1].ack : block_device[0].ack;
     assign ready  = !changed && !load && !load_busy && disk_mounted;
 

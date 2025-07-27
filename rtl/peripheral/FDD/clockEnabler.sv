@@ -17,7 +17,7 @@ module clockEnabler #(
     // Generování enable signálu
     always_ff @(posedge clk) begin
         if (counter > 0) begin
-            counter <= counter - 1;
+            counter <= counter - counter'(1);
         end else begin
             counter <= ($clog2(maxCount))'(maxCount);
         end

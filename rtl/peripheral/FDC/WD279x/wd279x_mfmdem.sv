@@ -181,7 +181,7 @@ module wd279x_mfmdem #(
                         RXED      <= 1'b1;
                         charcount <= 4'b0;
                     end else begin
-                        charcount <= charcount + 1;
+                        charcount <= charcount + 4'd1;
                     end
                 end
                 RXDAT <= {datsft[14], datsft[12], datsft[10], datsft[8], datsft[6], datsft[4], datsft[2], datsft[0]};

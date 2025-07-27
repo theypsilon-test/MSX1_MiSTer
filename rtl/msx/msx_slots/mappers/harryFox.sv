@@ -62,12 +62,12 @@ module mapper_harryFox (
         end else if (cs && cpu_bus.wr && cpu_bus.req) begin
             case (cpu_bus.addr[15:12])
                 4'h6: begin
-                    bank[block_info.id][1] = {1'b0, cpu_bus.data[0], 1'b0};
-                    $display("Write Hary Fox to  bank 1  %x address %x value %x",  {1'b0, cpu_bus.data[0], 1'b0}, cpu_bus.addr, cpu_bus.data);
+                    bank[block_info.id][1] <= {1'b0, cpu_bus.data[0], 1'b0};
+                    //$display("Write Hary Fox to  bank 1  %x address %x value %x",  {1'b0, cpu_bus.data[0], 1'b0}, cpu_bus.addr, cpu_bus.data);
                 end
                 4'h7: begin
-                    bank[block_info.id][2] = {1'b0, cpu_bus.data[0], 1'b1};
-                    $display("Write Hary Fox to  bank 2  %x address %x value %x",  {1'b0, cpu_bus.data[0], 1'b1}, cpu_bus.addr, cpu_bus.data);
+                    bank[block_info.id][2] <= {1'b0, cpu_bus.data[0], 1'b1};
+                    //$display("Write Hary Fox to  bank 2  %x address %x value %x",  {1'b0, cpu_bus.data[0], 1'b1}, cpu_bus.addr, cpu_bus.data);
                 end
                 default: ;
             endcase

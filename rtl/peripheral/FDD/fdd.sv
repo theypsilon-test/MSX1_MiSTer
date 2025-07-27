@@ -78,7 +78,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, ID=0, TEST
 
     logic [1:0] motor_run;         // Stav motoru
 
-    motor #(.TIMEOUTms(30000), .DELAYms(3)) FDD_motor(
+    motor #(.TIMEOUTms(16'd30000), .DELAYms(3'd3)) FDD_motor(
         .clk(clk),
         .msclk(msclk),
         .reset(reset),
@@ -106,7 +106,7 @@ module fdd #(parameter sysCLK, SECTORS=9, SECTOR_SIZE=512, TRACKS=80, ID=0, TEST
     logic  [7:0] buffer_q;
     logic        track_ready;
 
-    track #(.DELAYms(3), .MAX_TRACKS(80), .ID(ID)) FDD_track(
+    track #(.DELAYms(3'd3), .MAX_TRACKS(80), .ID(ID)) FDD_track(
         .clk(clk),
         .msclk(msclk),
         .reset(reset),

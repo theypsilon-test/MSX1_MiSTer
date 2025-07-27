@@ -65,8 +65,8 @@ module devices  #(parameter sysCLK)
     output                  keybeep,
     output                  reset_lock,
     output                  reset_request,
-    output                  cpu_wait,
-    output            [1:0] cpu_clock_sel,
+    //output                  cpu_wait,
+    //output            [1:0] cpu_clock_sel,
     output                  ocm_megaSD_enable,
     output                  ocm_slot1_mode,
     output [1:0]            ocm_slot2_mode
@@ -291,7 +291,8 @@ module devices  #(parameter sysCLK)
         .kb_upload_memory(kb_upload_memory),
         .ps2_key(ps2_key),
         .slot_config(slot_config),
-        .keybeep(keybeep)
+        .keybeep(keybeep),
+        .tape_motor_on(tape_motor_on)
     );
 
     wire [7:0] reset_status_data;

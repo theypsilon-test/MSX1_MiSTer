@@ -101,7 +101,7 @@ module wd279x_command_I
 	always_ff @(posedge clk) begin
 		track_write <= 0;
 		last_index <= INDEXn;
-		if (last_index && !INDEXn) index_count <= index_count + 1;
+		if (last_index && !INDEXn) index_count <= index_count + 3'd1;
 		if (~MRn || interrupt) begin
 			STEPn <= 1;
 			SDIRn <= 1;
@@ -139,24 +139,24 @@ module wd279x_command_I
 								end
 								2'b01: begin							// Step
 									if (SDIRn) begin
-										track_rq      <= track + 1;
-										track_out <= track + 1;
+										track_rq      <= track + 8'd1;
+										track_out <= track + 8'd1;
 									end else begin
-										track_rq      <= track - 1;
-										track_out <= track - 1;
+										track_rq      <= track - 8'd1;
+										track_out <= track - 8'd1;
 									end
 									track_write <= command[4];
 								end
 								2'b10: begin							// Step in
 									SDIRn           <= 1;
-									track_rq        <= track + 1;
-									track_out   <= track + 1;
+									track_rq        <= track + 8'd1;
+									track_out   <= track + 8'd1;
 									track_write <= command[4];
 								end
 								2'b11: begin							// Step out
 									SDIRn           <= 0;
-									track_rq        <= track - 1;
-									track_out   <= track - 1;
+									track_rq        <= track - 8'd1;
+									track_out   <= track - 8'd1;
 									track_write <= command[4];
 								end
 							endcase					
@@ -170,10 +170,10 @@ module wd279x_command_I
 					end else begin
 						if (track_rq > track) begin
 							SDIRn <= 1;
-							track_out <= track_out + 1;
+							track_out <= track_out + 8'd1;
 						end else begin
 							SDIRn <= 0;
-							track_out <= track_out - 1;
+							track_out <= track_out - 8'd1;
 						end
 						track_write <= 1;
 					end
@@ -203,7 +203,7 @@ module wd279x_command_I
 							else 
 								state <= STATE_VERIFY;
 						end else begin
-							wait_count <= wait_count - 1;
+							wait_count <= wait_count - 5'd1;
 						end
 					end
 				end
@@ -220,7 +220,7 @@ module wd279x_command_I
 				STATE_VERIFY_II: begin
 					if (wait_count != 0) begin
 						if (msclk) begin
-							wait_count <= wait_count - 1;
+							wait_count <= wait_count - 5'd1;
 							index_count <= 0;
 						end
 					end else begin			// Lze kontrolovat

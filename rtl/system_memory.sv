@@ -36,7 +36,7 @@ module system_memory #(parameter BRAM_WIDTH = 18) (
     assign q = bram_cs ? bram_data : memory_bus_sdram_ch1.q;
 
     assign memory_bus_sdram_ch1.addr =
-        (BRAM_WIDTH == 0) ? addr : addr - (1 << BRAM_WIDTH);
+        (BRAM_WIDTH == 0) ? addr : addr - (27'd1 << BRAM_WIDTH);
     assign memory_bus_sdram_ch1.data    = data;
     assign memory_bus_sdram_ch1.rnw     = rnw;
     assign memory_bus_sdram_ch1.ram_cs  = sdram_cs;

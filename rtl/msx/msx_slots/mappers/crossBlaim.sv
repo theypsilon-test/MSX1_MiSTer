@@ -62,11 +62,11 @@ module mapper_crossBlaim (
         end else if (cs & cpu_bus.wr & cpu_bus.req) begin
             case (cpu_bus.data[1:0])
                 2'd0, 2'd1 :
-                    bank[block_info.id] = '{'b001, 'b000, 'b001, 'b001};
+                    bank[block_info.id] <= '{'b001, 'b000, 'b001, 'b001};
                 2'd2:
-                    bank[block_info.id] = '{'b100, 'b000, 'b010, 'b100};
+                    bank[block_info.id] <= '{'b100, 'b000, 'b010, 'b100};
                 2'd3:
-                    bank[block_info.id] = '{'b100, 'b000, 'b011, 'b100};
+                    bank[block_info.id] <= '{'b100, 'b000, 'b011, 'b100};
                 endcase
         end
     end

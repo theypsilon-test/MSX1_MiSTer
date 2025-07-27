@@ -71,7 +71,7 @@ module transmit #(parameter sysCLK)
     logic        mfm_txma1;
     logic        mfm_txmc2;
     
-    assign next_sector = sector + 1;
+    assign next_sector = sector + 6'd1;
     assign buffer_addr = (sector_sz * sector) + {2'd0,buff_pos};
     assign sector_sz   = 11'd128 << floppy_sectors_size;
     
@@ -91,14 +91,14 @@ module transmit #(parameter sysCLK)
         end else begin
             if (drive_motor_rpm) begin
                 fdd_state_next <= FDD_GAP4a;
-                write_count    <= floppy_mfm ?  80 : 40;
+                write_count    <= floppy_mfm ?  11'd80 : 11'd40;
                 txdat          <= floppy_mfm ?  8'h4E : 8'hFF;
                 sector         <= 0;
                 INDEXn         <= 0;
             end
             if (txemp) begin
                 if (write_count > 0) begin
-                    write_count <= write_count - 1;
+                    write_count <= write_count - 11'd1;
                     case(write_type)
                         WRITE_DATA: txwr      <= 1;
                         WRITE_A1:   mfm_txma1 <= 1;
@@ -109,7 +109,7 @@ module transmit #(parameter sysCLK)
                     endcase
                     if (fdd_state_next == FDD_DATA) begin
                         txdat    <= buffer_q;
-                        buff_pos <= buff_pos + 1;              
+                        buff_pos <= buff_pos + 11'd1;              
                     end
                 end else begin
                     case (fdd_state_next)
@@ -118,7 +118,7 @@ module transmit #(parameter sysCLK)
                             txdat              <= floppy_mfm ?  8'h4E : 8'hFF;
                         end
                         FDD_GAP4a: begin
-                            write_count        <= floppy_mfm ?  12 : 6;
+                            write_count        <= floppy_mfm ?  11'd12 : 11'd6;
                             txdat              <= 8'd00;
                             fdd_state_next     <= FDD_SYNC_1;
                         end
@@ -142,12 +142,12 @@ module transmit #(parameter sysCLK)
                             fdd_state_next <= FDD_IAM_2;
                         end
                         FDD_IAM_2: begin
-                            write_count    <= floppy_mfm ?  50 : 26;
+                            write_count    <= floppy_mfm ?  11'd50 : 11'd26;
                             txdat          <= floppy_mfm ?  8'h4E : 8'hFF;
                             fdd_state_next <= FDD_GAP1;
                         end
                         FDD_GAP1: begin
-                            write_count    <= floppy_mfm ?  12 : 6;
+                            write_count    <= floppy_mfm ?  11'd12 : 11'd6;
                             txdat          <= 8'd00;
                             fdd_state_next <= FDD_SYNC_2;
                         end
@@ -209,12 +209,12 @@ module transmit #(parameter sysCLK)
                         end
                         FDD_CRC2: begin
                             write_type     <= WRITE_DATA;
-                            write_count    <= floppy_mfm ?  22 : 11;
+                            write_count    <= floppy_mfm ?  11'd22 : 11'd11;
                             txdat          <= floppy_mfm ?  8'h4E : 8'hFF;
                             fdd_state_next <= FDD_GAP2;
                         end
                         FDD_GAP2: begin
-                            write_count    <= floppy_mfm ?  12 : 6;
+                            write_count    <= floppy_mfm ?  11'd12 : 11'd6;
                             txdat          <= 8'd00;
                             fdd_state_next <= FDD_SYNC_3;
                         end
@@ -266,7 +266,7 @@ module transmit #(parameter sysCLK)
                         end
                         FDD_CRC_D2: begin
                             write_type     <= WRITE_DATA;
-                            write_count    <= floppy_mfm ?  83 : 42;        // TODO ověřit
+                            write_count    <= floppy_mfm ?  11'd83 : 11'd42;        // TODO ověřit
                             txdat          <= floppy_mfm ?  8'h4E : 8'hFF;
                             fdd_state_next <= FDC_GAP3;
                         end
@@ -308,7 +308,7 @@ fmmod fmmod(
       .txmfe(fm_txmfe),
       .txend(),
       .txemp(fm_txemp),
-      .brk(0),
+      .brk(1'b0),
       .sft(floppy_bitRate),
    
       .bitout(fm_bitout),
@@ -323,7 +323,7 @@ mfmmod mfmmod(
       .txwr(floppy_mfm & txwr),
       .txma1(mfm_txma1),
       .txmc2(mfm_txmc2),
-      .brk(0),
+      .brk(1'b0),
    
       .txemp(mfm_txemp),
       .txend(),
