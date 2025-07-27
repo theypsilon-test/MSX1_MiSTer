@@ -1,5 +1,8 @@
 # MSX1/MSX2 for [MiSTer Board](https://github.com/MiSTer-devel/Main_MiSTer/wiki)
 
+> [!CAUTION]
+> **WIP Notice**: This core is currently in **WIP (Work in Progress)** status. Some components are still under development and may include debug outputs or experimental features. Certain functionalities may not yet work 100% as intended.
+
 ## MSX1 Core Overview
 The MSX1 core is not a direct synthesis of a specific MSX computer model. Instead, it provides a **dynamically configurable hardware environment** based on a selected definition and configuration file. Each MSX model definition includes not only the hardware setup but also the corresponding **ROM binary content.**
 
