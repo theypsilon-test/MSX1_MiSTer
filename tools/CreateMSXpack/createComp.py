@@ -6,7 +6,7 @@ import argparse
 from tools import load_constants, find_files_with_sha1, find_xml_files, convert_to_int_or_string, get_int_or_string_value, convert_to_int, convert_to_8bit, get_device_param
 
 ROM_DIR = 'ROM'
-XML_DIR_COMP = 'Computer_testy'
+XML_DIR_COMP = 'Computer'
 DIR_SAVE = 'MSX'
 
 def parse_msx_block(root):
