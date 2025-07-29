@@ -102,5 +102,17 @@ module blockDevMux #(parameter VDNUM) (
             
         end
     endgenerate
+    
+    assign sd_lba[0]                   = block_device_SD.lba;
+    assign sd_blk_cnt[0]               = block_device_SD.blk_cnt;
+    assign sd_rd[0]                    = block_device_SD.rd;
+    assign sd_wr[0]                    = block_device_SD.wr;
+    assign sd_buff_din[0]              = block_device_SD.buff_din;
+
+    assign block_device_SD.ack         = sd_ack[0];
+    assign block_device_SD.buff_addr   = sd_buff_addr;
+    assign block_device_SD.buff_dout   = sd_buff_dout;
+    assign block_device_SD.buff_wr     = sd_buff_wr;
+    assign block_device_SD.img_mounted = img_mounted[0];          
 
 endmodule

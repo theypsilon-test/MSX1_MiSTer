@@ -304,7 +304,7 @@ localparam CONF_STR = {
    "h6S3,DSK,Mount Drive 1;",
    "h7S4,DSK,Mount Drive 2;",
    "h0-;",
-   "h0SC4,VHD,Load SD card;",
+   "h0SC0,VHD,Load SD card;",
    "h3O[12],Reset after Mount,No,Yes;",
    "HA-;",
    "HAR[38],SRAM Save;",
@@ -333,7 +333,7 @@ localparam CONF_STR = {
 };
 /*verilator tracing_on*/
 assign hard_reset = RESET || status[0] || upload_reset;
-assign reset = hard_reset || status[10] || status[21] || (status[12] && img_mounted[4] && io_device[DEV_WD2793][0].enable) ;
+assign reset = hard_reset || status[10] || status[21] || (status[12] && block_device_SD.device_mp.img_mounted && io_device[DEV_WD2793][0].enable) ;
 
 wire [15:0] status_menumask;
 wire [1:0] sdram_size;
@@ -492,7 +492,7 @@ wire vsdmiso;
 wire sdmiso = vsd_sel ? vsdmiso : SD_MISO;
 
 reg vsd_sel = 0;
-always @(posedge clock_bus.base_mp.clk) if(img_mounted[4]) vsd_sel <= |img_size; //TODO je potřeba hlídat náběžnou hranu img mounted
+always @(posedge clock_bus.base_mp.clk) if(block_device_SD.device_mp.img_mounted) vsd_sel <= |img_size; //TODO je potřeba hlídat náběžnou hranu img mounted
 
 assign SD_CS   = vsd_sel;
 assign SD_SCK  = sdclk  & ~vsd_sel;
@@ -530,10 +530,9 @@ spi_divmmc spi
 
 sd_card sd_card
 (
-    .*,
     .reset(reset),
     .clk_sys(clock_bus.base_mp.clk),
-    .img_mounted(img_mounted[4]),
+    .img_mounted(block_device_SD.device_mp.img_mounted),
     .img_size(img_size),
     .sd_lba(block_device_SD.device_mp.lba),
     .sd_rd(block_device_SD.device_mp.rd),
@@ -778,7 +777,7 @@ nvram_backup nvram_backup
    .lookup_SRAM(lookup_SRAM),
    .load_req(status[39] | load_sram),
    .save_req(status[38]),
-   .img_mounted(img_mounted[3:0]),
+   .img_mounted(4'b0000 /*img_mounted[3:0]*/), //TODO
    .img_readonly(img_readonly),
    .img_size(img_size[31:0]),
    /*
