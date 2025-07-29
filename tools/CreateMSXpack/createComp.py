@@ -163,7 +163,8 @@ def add_block_type_to_file(address, typ, params, outfile, constants):
     """
     block_type = constants['block'][typ]
     data = struct.pack('BBBBBBBB', constants['conf']['BLOCK'], address, block_type, params[0], params[1], params[2], params[3], params[4])
-    print(f"BLOCK: {constants['conf']['BLOCK']} {address:02X} {block_type:02X} {params[0]:02X} {params[1]:02X} {params[2]:02X} {params[3]:02X} {params[4]:02X} {address >> 6}/{(address >> 4) & 3}/{(address >> 2) & 3} block_count: {((address&3)+1)} {typ}({block_type})")
+    if debug_output:
+        print(f"BLOCK: {constants['conf']['BLOCK']} {address:02X} {block_type:02X} {params[0]:02X} {params[1]:02X} {params[2]:02X} {params[3]:02X} {params[4]:02X} {address >> 6}/{(address >> 4) & 3}/{(address >> 2) & 3} block_count: {((address&3)+1)} {typ}({block_type})")
     outfile.write(data)
     
     for i in range(len(params)):
@@ -472,7 +473,8 @@ def create_msx_config_device(device, outfile, files_with_sha1, constants):
             continue       
         
         data = struct.pack('BBBBBBBB', constants['conf']['DEVICE'], constants['device'][device], port, port_mask, param, size, 0, 0)
-        print(f"DEVIC: {constants['conf']['DEVICE']} {constants['device'][device]:02X} {port:02X} {port_mask:02X} {param:02X} {size:02X} {0:02X} {0:02X}")
+        if debug_output:
+            print(f"DEVIC: {constants['conf']['DEVICE']} {constants['device'][device]:02X} {port:02X} {port_mask:02X} {param:02X} {size:02X} {0:02X} {0:02X}")
         outfile.write(data)
 
         if filename:
@@ -539,6 +541,7 @@ def create_msx_conf(file_name, path, files_with_sha1, constants, outpt_dir, root
         print(f"Error processing file {file_path}: {e}")
 
 
+debug_output = False
 
 if __name__ == '__main__':   
     parser = argparse.ArgumentParser(description="Process ROM and XML files")
@@ -548,9 +551,13 @@ if __name__ == '__main__':
                         help='Path to the XML files directory (default: %(default)s)')
     parser.add_argument('--output-dir', type=str, default=DIR_SAVE,
                         help='Path to the output directory (default: %(default)s)')
+    parser.add_argument('--debug', action='store_true', help='Debug output')
 
     args = parser.parse_args()
     
+    if args.debug:
+        debug_output = True
+        
     files_with_sha1 = find_files_with_sha1(args.rom_dir)
     constants = load_constants()
 
