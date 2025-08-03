@@ -213,6 +213,13 @@ module mappers (
         .ocm_slot2_mode(ocm_slot2_mode)
     );
 
+    mapper_out superSwangi_out();
+    mapper_superSwangi mapper_superSwangi (
+        .cpu_bus(cpu_bus),
+        .block_info(block_info),
+        .out(superSwangi_out)
+    );
+
     assign data                 = fm_pac_out.data 
                                 & national_out.data 
                                 & mfrsd_out.data 
@@ -237,7 +244,8 @@ module mappers (
                                 & zemina90_out.addr
                                 & mfrsd_out.addr
                                 & ese_ram_out.addr
-                                & mega_ram_out.addr;
+                                & mega_ram_out.addr
+                                & superSwangi_out.addr;
 
     assign memory_bus.rnw       = offset_out.rnw
                                 & mirror_out.rnw
@@ -271,7 +279,8 @@ module mappers (
                                 | zemina90_out.ram_cs
                                 | mfrsd_out.ram_cs
                                 | ese_ram_out.ram_cs
-                                | mega_ram_out.ram_cs;
+                                | mega_ram_out.ram_cs
+                                | superSwangi_out.ram_cs;
 
     assign memory_bus.sram_cs   = ascii8_out.sram_cs
                                 | ascii16_out.sram_cs
