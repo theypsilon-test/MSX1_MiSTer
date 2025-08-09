@@ -141,6 +141,11 @@
       <mapper>SUPERSWANGI</mapper>
     </block>
   </fw>
+  <fw name="MSXWrite">
+    <block>
+      <mapper>MSXWRITE</mapper>
+    </block>
+  </fw>
   <fw name="FM_PAC">
     <block>
       <filename>FM_PAC_EN.ROM</filename>
