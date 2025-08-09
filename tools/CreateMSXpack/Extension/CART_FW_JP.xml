@@ -141,8 +141,8 @@
     </block>
   </fw>
   <fw name="Synthesizer">
-    <block>
-      <mapper>GENRIC_16KB</mapper>
+    <block start="1" count="2" offset="0">
+      <mapper>OFFSET</mapper>
       <device>DAC</device>
     </block>
   </fw>
