@@ -140,6 +140,17 @@
       <mapper>SUPERSWANGI</mapper>
     </block>
   </fw>
+  <fw name="Synthesizer">
+    <block>
+      <mapper>GENRIC_16KB</mapper>
+      <device>DAC</device>
+    </block>
+  </fw>
+  <fw name="MSXWrite">
+    <block>
+      <mapper>MSXWRITE</mapper>
+    </block>
+  </fw>
   <fw name="FM_PAC">
     <block>
       <filename>FM_PAC_EN.ROM</filename>

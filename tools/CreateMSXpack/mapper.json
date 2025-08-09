@@ -32,5 +32,6 @@
   "TURBO_R_FDC" : 30,
   "YAMAHA_SFG" : 31,
   "MIRROR" : 32,
-  "SUPERSWANGI" : 33
+  "SUPERSWANGI" : 33,
+  "MSXWRITE" : 34
 }
